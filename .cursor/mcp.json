@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "deso-mcp": {
+      "command": "node",
+      "args": ["mcp-server.js"],
+      "cwd": "/Users/mossified/Sites/deso-mcp"
+    }
+  }
+}

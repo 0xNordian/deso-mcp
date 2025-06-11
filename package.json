@@ -1,0 +1,19 @@
+{
+  "name": "deso-mcp",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "mcp-server.js",
+  "scripts": {
+    "start": "node mcp-server.js",
+    "dev": "node --watch mcp-server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.6.0",
+    "express": "^5.1.0",
+    "graphql": "^16.11.0"
+  }
+}
