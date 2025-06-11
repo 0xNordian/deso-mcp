@@ -13,7 +13,7 @@ class ComprehensiveDesoMCPServer {
     this.server = new Server(
       {
         name: "deso-mcp-comprehensive",
-        version: "2.2.0",
+        version: "2.3.0",
       },
       {
         capabilities: {
@@ -38,7 +38,7 @@ class ComprehensiveDesoMCPServer {
               properties: {
                 category: {
                   type: "string",
-                  enum: ["social", "financial", "nft", "dao", "tokens", "access", "associations", "derived-keys", "messages", "data", "notifications", "media", "admin", "blockchain", "all"],
+                  enum: ["social", "financial", "nft", "dao", "tokens", "access", "associations", "derived-keys", "messages", "data", "notifications", "media", "admin", "blockchain", "identity", "all"],
                   description: "API category to explore"
                 },
                 endpoint: {
@@ -60,7 +60,7 @@ class ComprehensiveDesoMCPServer {
               properties: {
                 topic: {
                   type: "string",
-                  enum: ["setup", "identity", "transactions", "data", "permissions", "examples", "troubleshooting"],
+                  enum: ["setup", "identity", "authentication", "transactions", "data", "permissions", "examples", "troubleshooting"],
                   description: "Topic to get guidance on"
                 },
                 framework: {
@@ -1062,6 +1062,111 @@ class ComprehensiveDesoMCPServer {
             }
           }
         }
+      },
+      identity: {
+        description: "DeSo Identity Service for authentication, key management, and message encryption/decryption",
+        backendFile: "identity.deso.org - Angular/TypeScript app",
+        endpoints: {
+          "iframe-sign": {
+            method: "postMessage",
+            url: "Identity iframe API",
+            handler: "identity.service.ts - sign()",
+            description: "Sign transactions through Identity iframe (AccessLevel 3-4 required)",
+            desoJs: "identity.sign()",
+            params: {
+              required: ["transactionHex", "accessLevel", "accessLevelHmac", "encryptedSeedHex"],
+              optional: ["derivedPublicKeyBase58Check"]
+            }
+          },
+          "iframe-encrypt": {
+            method: "postMessage",
+            url: "Identity iframe API",
+            handler: "identity.service.ts - encrypt()",
+            description: "Encrypt messages for private messaging (AccessLevel 2+ required)",
+            desoJs: "identity.encrypt()",
+            params: {
+              required: ["recipientPublicKey", "message", "accessLevel", "accessLevelHmac", "encryptedSeedHex"],
+              optional: ["derivedPublicKeyBase58Check", "encryptedMessagingKeyRandomness", "ownerPublicKeyBase58Check"]
+            }
+          },
+          "iframe-decrypt": {
+            method: "postMessage",
+            url: "Identity iframe API",
+            handler: "identity.service.ts - decrypt()",
+            description: "Decrypt messages and unlockable NFT content (AccessLevel 2+ required)",
+            desoJs: "identity.decrypt()",
+            params: {
+              required: ["encryptedMessages", "accessLevel", "accessLevelHmac", "encryptedSeedHex"],
+              optional: ["derivedPublicKeyBase58Check", "encryptedMessagingKeyRandomness", "ownerPublicKeyBase58Check"]
+            }
+          },
+          "iframe-jwt": {
+            method: "postMessage",
+            url: "Identity iframe API",
+            handler: "identity.service.ts - jwt()",
+            description: "Generate JWT tokens for API authentication (AccessLevel 2+ required)",
+            desoJs: "identity.jwt()",
+            params: {
+              required: ["accessLevel", "accessLevelHmac", "encryptedSeedHex"],
+              optional: ["derivedPublicKeyBase58Check"]
+            }
+          },
+          "window-login": {
+            method: "window.open",
+            url: "https://identity.deso.org/log-in",
+            handler: "log-in component",
+            description: "User login/signup with access level request",
+            desoJs: "identity.login()",
+            params: {
+              required: [],
+              optional: ["accessLevelRequest", "testnet", "webview", "jumio", "referralCode", "hideGoogle"]
+            }
+          },
+          "window-logout": {
+            method: "window.open",
+            url: "https://identity.deso.org/logout",
+            handler: "logout component",
+            description: "User logout and permission revocation",
+            desoJs: "identity.logout()",
+            params: {
+              required: ["publicKey"],
+              optional: ["testnet", "webview"]
+            }
+          },
+          "window-approve": {
+            method: "window.open",
+            url: "https://identity.deso.org/approve",
+            handler: "approve component",
+            description: "Manual transaction approval for restricted access levels",
+            desoJs: "identity.approve()",
+            params: {
+              required: ["tx"],
+              optional: ["testnet", "webview"]
+            }
+          },
+          "window-derive": {
+            method: "window.open",
+            url: "https://identity.deso.org/derive",
+            handler: "derive component",
+            description: "Generate derived keys for mobile/server applications",
+            desoJs: "identity.derive()",
+            params: {
+              required: ["publicKey"],
+              optional: ["testnet", "webview", "callback", "deleteKey", "expirationDays", "transactionSpendingLimitResponse"]
+            }
+          },
+          "window-messaging-group": {
+            method: "window.open",
+            url: "https://identity.deso.org/messaging-group",
+            handler: "messaging-group component",
+            description: "Get messaging group key randomness for derived key encryption",
+            desoJs: "identity.getMessagingGroup()",
+            params: {
+              required: ["publicKey"],
+              optional: ["testnet", "webview"]
+            }
+          }
+        }
       }
     };
 
@@ -1367,6 +1472,227 @@ const followers = await getFollowersForUser({
   Username: 'nader'
 });
 \`\`\``
+      },
+      authentication: {
+        title: "DeSo Identity Authentication Deep Dive",
+        content: `# DeSo Identity Authentication
+
+## Architecture Overview
+
+DeSo Identity operates on two communication channels:
+- **iframe API**: Background operations (signing, encryption, decryption)
+- **Window API**: User interactions (login, approval, key management)
+
+## Access Levels
+
+\`\`\`javascript
+// Access Level 2 - Approval required for all transactions
+// (Default - safest option)
+const login = await identity.login({
+  accessLevelRequest: 2
+});
+
+// Access Level 3 - Approval required for spending transactions  
+// (Social actions authorized, buys/sells need approval)
+const login = await identity.login({
+  accessLevelRequest: 3
+});
+
+// Access Level 4 - Full permission 
+// (All transactions authorized - use carefully)
+const login = await identity.login({
+  accessLevelRequest: 4
+});
+\`\`\`
+
+## Complete Identity Setup
+
+\`\`\`javascript
+import { identity } from 'deso-protocol';
+
+class DesoIdentityManager {
+  constructor() {
+    this.iframe = null;
+    this.currentUser = null;
+    this.setupIdentityIframe();
+    this.setupEventListeners();
+  }
+  
+  setupIdentityIframe() {
+    // Create hidden iframe for background operations
+    this.iframe = document.createElement('iframe');
+    this.iframe.src = 'https://identity.deso.org/embed?v=2';
+    this.iframe.style.display = 'none';
+    document.body.appendChild(this.iframe);
+  }
+  
+  setupEventListeners() {
+    window.addEventListener('message', (event) => {
+      if (event.origin !== 'https://identity.deso.org') return;
+      
+      const { data } = event;
+      if (data.service !== 'identity') return;
+      
+      switch (data.method) {
+        case 'initialize':
+          this.handleInitialize(event);
+          break;
+        case 'login':
+          this.handleLogin(data);
+          break;
+        case 'approve':
+          this.handleApprove(data);
+          break;
+      }
+    });
+  }
+  
+  handleInitialize(event) {
+    // Respond to identity initialization
+    event.source.postMessage({
+      id: event.data.id,
+      service: 'identity',
+      payload: {}
+    }, 'https://identity.deso.org');
+  }
+  
+  async login(accessLevel = 2) {
+    return new Promise((resolve, reject) => {
+      const loginWindow = window.open(
+        \`https://identity.deso.org/log-in?accessLevelRequest=\${accessLevel}\`,
+        'identity',
+        'width=800,height=600'
+      );
+      
+      const handleMessage = (event) => {
+        if (event.data.method === 'login') {
+          window.removeEventListener('message', handleMessage);
+          loginWindow.close();
+          
+          this.currentUser = event.data.payload.publicKeyAdded;
+          this.users = event.data.payload.users;
+          resolve(event.data.payload);
+        }
+      };
+      
+      window.addEventListener('message', handleMessage);
+    });
+  }
+  
+  async signTransaction(transactionHex) {
+    if (!this.currentUser) throw new Error('User not logged in');
+    
+    const userInfo = this.users[this.currentUser];
+    
+    return new Promise((resolve, reject) => {
+      const messageId = this.generateUUID();
+      
+      const handleResponse = (event) => {
+        if (event.data.id === messageId) {
+          window.removeEventListener('message', handleResponse);
+          
+          if (event.data.payload.approvalRequired) {
+            this.requestApproval(transactionHex).then(resolve).catch(reject);
+          } else {
+            resolve(event.data.payload.signedTransactionHex);
+          }
+        }
+      };
+      
+      window.addEventListener('message', handleResponse);
+      
+      this.iframe.contentWindow.postMessage({
+        id: messageId,
+        service: 'identity',
+        method: 'sign',
+        payload: {
+          transactionHex,
+          accessLevel: userInfo.accessLevel,
+          accessLevelHmac: userInfo.accessLevelHmac,
+          encryptedSeedHex: userInfo.encryptedSeedHex
+        }
+      }, 'https://identity.deso.org');
+    });
+  }
+  
+  async requestApproval(transactionHex) {
+    return new Promise((resolve, reject) => {
+      const approvalWindow = window.open(
+        \`https://identity.deso.org/approve?tx=\${transactionHex}\`,
+        'approval',
+        'width=800,height=600'
+      );
+      
+      const handleMessage = (event) => {
+        if (event.data.method === 'login' && event.data.payload.signedTransactionHex) {
+          window.removeEventListener('message', handleMessage);
+          approvalWindow.close();
+          resolve(event.data.payload.signedTransactionHex);
+        }
+      };
+      
+      window.addEventListener('message', handleMessage);
+    });
+  }
+  
+  generateUUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0;
+      const v = c == 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  }
+}
+
+// Usage
+const identityManager = new DesoIdentityManager();
+await identityManager.login(3); // Request access level 3
+const signedTx = await identityManager.signTransaction(transactionHex);
+\`\`\`
+
+## Derived Keys for Mobile/Server
+
+\`\`\`javascript
+// Generate derived key for mobile/server use
+const deriveResult = await identity.derive({
+  expirationDays: 30,
+  transactionSpendingLimitHex: getSpendingLimitHex({
+    GlobalDESOLimit: 1 * 1e9, // 1 DeSo
+    TransactionCountLimitMap: {
+      SUBMIT_POST: 10,
+      CREATE_FOLLOW_TXN_STATELESS: 20
+    }
+  })
+});
+
+// Use derived key for signing without user interaction
+const derivedSignResult = await signTransactionWithDerivedKey({
+  transactionHex,
+  derivedPrivateKey: deriveResult.derivedPrivateKey
+});
+\`\`\`
+
+## Message Encryption/Decryption
+
+\`\`\`javascript
+// Encrypt a message
+const encryptResult = await identity.encrypt({
+  recipientPublicKey: 'BC1YLi...',
+  message: 'Secret message content'
+});
+
+// Decrypt multiple messages
+const decryptResult = await identity.decrypt({
+  encryptedMessages: [
+    {
+      EncryptedHex: '0x...',
+      PublicKey: 'BC1YLi...',
+      IsSender: false,
+      Legacy: false
+    }
+  ]
+});
+\`\`\``
       }
     };
 
@@ -1661,6 +1987,350 @@ const daoResult = await daoCoin({
 });
 
 console.log('DAO coin operation:', daoResult);`
+      },
+      login: {
+        javascript: `// DeSo Identity login with access level
+import { identity } from 'deso-protocol';
+
+// Login with specific permission level
+const loginResult = await identity.login({
+  accessLevelRequest: 3 // Request access level 3 for social transactions
+});
+
+console.log('User logged in:', loginResult.publicKeyAdded);
+console.log('Access level granted:', loginResult.users[loginResult.publicKeyAdded].accessLevel);
+
+// Listen for identity changes
+identity.subscribe((state) => {
+  console.log('Identity event:', state.event);
+  if (state.currentUser) {
+    console.log('Current user:', state.currentUser.publicKey);
+  }
+});`,
+
+        react: `// React hook for DeSo Identity authentication
+import React, { useState, useEffect } from 'react';
+import { identity } from 'deso-protocol';
+
+function useDesoAuth() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(false);
+  
+  useEffect(() => {
+    const unsubscribe = identity.subscribe((state) => {
+      setUser(state.currentUser);
+      setLoading(false);
+    });
+    
+    return unsubscribe;
+  }, []);
+  
+  const login = async (accessLevel = 3) => {
+    setLoading(true);
+    try {
+      await identity.login({ accessLevelRequest: accessLevel });
+    } catch (error) {
+      console.error('Login error:', error);
+      setLoading(false);
+    }
+  };
+  
+  const logout = async () => {
+    await identity.logout();
+  };
+  
+  return { user, loading, login, logout };
+}
+
+// Component usage
+function AuthButton() {
+  const { user, loading, login, logout } = useDesoAuth();
+  
+  if (loading) return <div>Loading...</div>;
+  
+  return (
+    <div>
+      {user ? (
+        <div>
+          <span>Welcome {user.username || user.publicKey.slice(0, 8)}...</span>
+          <button onClick={logout}>Logout</button>
+        </div>
+      ) : (
+        <button onClick={() => login(3)}>Login with DeSo</button>
+      )}
+    </div>
+  );
+}`
+      },
+      encrypt: {
+        javascript: `// Encrypt messages for private messaging
+import { identity } from 'deso-protocol';
+
+${includeAuth ? `// Make sure user is logged in
+const currentUser = identity.snapshot().currentUser;
+if (!currentUser) {
+  await identity.login({ accessLevelRequest: 2 });
+}
+` : ''}
+const encryptResult = await identity.encrypt({
+  recipientPublicKey: 'BC1YLiQ86kwXaVaUVwKyKF5uo2Kxt8SSeZ2CzGTAVp2TRb4VJeFHLqd',
+  message: 'This is a secret message that only the recipient can read'
+});
+
+console.log('Encrypted message:', encryptResult.encryptedMessage);
+
+// For derived keys, additional parameters needed:
+const encryptWithDerived = await identity.encrypt({
+  recipientPublicKey: 'BC1YLiQ86kwXaVaUVwKyKF5uo2Kxt8SSeZ2CzGTAVp2TRb4VJeFHLqd',
+  message: 'Secret message with derived key',
+  derivedPublicKeyBase58Check: 'DERIVED_KEY_HERE',
+  ownerPublicKeyBase58Check: 'OWNER_KEY_HERE',
+  encryptedMessagingKeyRandomness: 'RANDOMNESS_HEX'
+});`,
+
+        react: `// React component for message encryption
+import React, { useState } from 'react';
+import { identity } from 'deso-protocol';
+
+function EncryptMessage({ recipientKey }) {
+  const [message, setMessage] = useState('');
+  const [encryptedResult, setEncryptedResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  
+  const handleEncrypt = async () => {
+    if (!message.trim()) return;
+    
+    setLoading(true);
+    try {
+      const result = await identity.encrypt({
+        recipientPublicKey: recipientKey,
+        message: message
+      });
+      
+      setEncryptedResult(result.encryptedMessage);
+      console.log('Message encrypted successfully');
+    } catch (error) {
+      console.error('Encryption error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  return (
+    <div>
+      <textarea
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        placeholder="Enter message to encrypt"
+        rows={3}
+      />
+      <button onClick={handleEncrypt} disabled={loading || !message.trim()}>
+        {loading ? 'Encrypting...' : 'Encrypt Message'}
+      </button>
+      {encryptedResult && (
+        <div>
+          <h4>Encrypted Result:</h4>
+          <code>{encryptedResult}</code>
+        </div>
+      )}
+    </div>
+  );
+}`
+      },
+      decrypt: {
+        javascript: `// Decrypt messages and unlock NFT content
+import { identity } from 'deso-protocol';
+
+${includeAuth ? `// Make sure user is logged in
+const currentUser = identity.snapshot().currentUser;
+if (!currentUser) {
+  await identity.login({ accessLevelRequest: 2 });
+}
+` : ''}
+// Decrypt multiple messages at once
+const decryptResult = await identity.decrypt({
+  encryptedMessages: [
+    {
+      EncryptedHex: '0x1234567890abcdef...',
+      PublicKey: 'BC1YLiQ86kwXaVaUVwKyKF5uo2Kxt8SSeZ2CzGTAVp2TRb4VJeFHLqd',
+      IsSender: false,
+      Legacy: false, // Set to true for V1 messages
+      Version: 2
+    }
+  ]
+});
+
+console.log('Decrypted messages:', decryptResult.decryptedMessages);
+
+// For NFT unlockable content
+const nftDecryptResult = await identity.decrypt({
+  encryptedMessages: [
+    {
+      EncryptedHex: nftEntry.EncryptedUnlockableText,
+      PublicKey: nftEntry.OwnerPublicKeyBase58Check,
+      IsSender: false,
+      Legacy: false
+    }
+  ]
+});`,
+
+        react: `// React component for message decryption
+import React, { useState } from 'react';
+import { identity } from 'deso-protocol';
+
+function DecryptMessages({ encryptedMessages }) {
+  const [decryptedMessages, setDecryptedMessages] = useState([]);
+  const [loading, setLoading] = useState(false);
+  
+  const handleDecrypt = async () => {
+    setLoading(true);
+    try {
+      const result = await identity.decrypt({
+        encryptedMessages: encryptedMessages
+      });
+      
+      setDecryptedMessages(result.decryptedMessages);
+    } catch (error) {
+      console.error('Decryption error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  return (
+    <div>
+      <button onClick={handleDecrypt} disabled={loading}>
+        {loading ? 'Decrypting...' : 'Decrypt Messages'}
+      </button>
+      
+      {decryptedMessages.length > 0 && (
+        <div>
+          <h4>Decrypted Messages:</h4>
+          {decryptedMessages.map((msg, index) => (
+            <div key={index} style={{ border: '1px solid #ccc', padding: '10px', margin: '5px' }}>
+              <p><strong>From:</strong> {msg.senderPublicKey}</p>
+              <p><strong>Message:</strong> {msg.decryptedMessage}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}`
+      },
+      "derived-key": {
+        javascript: `// Generate derived key for server/mobile apps
+import { identity } from 'deso-protocol';
+
+${includeAuth ? `// Login with master key first
+await identity.login({ accessLevelRequest: 4 });
+const currentUser = identity.snapshot().currentUser;
+` : ''}
+// Generate derived key with spending limits
+const deriveResult = await identity.derive({
+  publicKey: ${includeAuth ? 'currentUser.publicKey' : "'YOUR_PUBLIC_KEY'"},
+  expirationDays: 30,
+  transactionSpendingLimitHex: getTransactionSpendingLimitHex({
+    GlobalDESOLimit: 1 * 1e9, // 1 DeSo limit
+    TransactionCountLimitMap: {
+      SUBMIT_POST: 10,
+      CREATE_FOLLOW_TXN_STATELESS: 20,
+      CREATE_LIKE_STATELESS: 50
+    },
+    CreatorCoinOperationLimitMap: {
+      'CREATOR_PUBLIC_KEY': {
+        buy: 5,
+        sell: 5,
+        transfer: 2
+      }
+    }
+  })
+});
+
+console.log('Derived key generated:', deriveResult.derivedPublicKey);
+console.log('JWT token:', deriveResult.jwt);
+console.log('Derived JWT:', deriveResult.derivedJwt);
+
+// Store these securely for your app to use
+localStorage.setItem('derivedPrivateKey', deriveResult.derivedPrivateKey);
+localStorage.setItem('derivedJWT', deriveResult.derivedJwt);`,
+
+        react: `// React component for derived key management
+import React, { useState, useEffect } from 'react';
+import { identity } from 'deso-protocol';
+
+function DerivedKeyManager() {
+  const [derivedKeys, setDerivedKeys] = useState([]);
+  const [loading, setLoading] = useState(false);
+  
+  const generateDerivedKey = async () => {
+    setLoading(true);
+    try {
+      const currentUser = identity.snapshot().currentUser;
+      
+      const result = await identity.derive({
+        publicKey: currentUser.publicKey,
+        expirationDays: 30,
+        transactionSpendingLimitHex: getTransactionSpendingLimitHex({
+          GlobalDESOLimit: 0.1 * 1e9, // 0.1 DeSo limit
+          TransactionCountLimitMap: {
+            SUBMIT_POST: 5,
+            CREATE_FOLLOW_TXN_STATELESS: 10
+          }
+        })
+      });
+      
+      setDerivedKeys(prev => [...prev, {
+        id: result.derivedPublicKey,
+        publicKey: result.derivedPublicKey,
+        jwt: result.derivedJwt,
+        expirationBlock: result.expirationBlock,
+        createdAt: new Date()
+      }]);
+      
+    } catch (error) {
+      console.error('Derived key generation error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const deleteDerivedKey = async (publicKey) => {
+    try {
+      await identity.derive({
+        publicKey: publicKey,
+        deleteKey: true
+      });
+      
+      setDerivedKeys(prev => prev.filter(key => key.publicKey !== publicKey));
+    } catch (error) {
+      console.error('Key deletion error:', error);
+    }
+  };
+  
+  return (
+    <div>
+      <h3>Derived Key Management</h3>
+      
+      <button onClick={generateDerivedKey} disabled={loading}>
+        {loading ? 'Generating...' : 'Generate New Derived Key'}
+      </button>
+      
+      <div>
+        {derivedKeys.map(key => (
+          <div key={key.id} style={{ border: '1px solid #ccc', padding: '10px', margin: '10px' }}>
+            <p><strong>Public Key:</strong> {key.publicKey.slice(0, 20)}...</p>
+            <p><strong>Created:</strong> {key.createdAt.toLocaleDateString()}</p>
+            <p><strong>Expiration Block:</strong> {key.expirationBlock}</p>
+            <button onClick={() => deleteDerivedKey(key.publicKey)}>
+              Delete Key
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}`
       }
     };
 

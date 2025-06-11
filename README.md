@@ -1,10 +1,16 @@
-# DeSo MCP Server for Cursor IDE v2.2
+# DeSo MCP Server for Cursor IDE v2.3
 
-A comprehensive Model Context Protocol (MCP) server that provides **complete DeSo blockchain API coverage** for Cursor IDE. This server transforms Cursor's AI assistant into a DeSo development expert with extensive knowledge about all DeSo APIs, the deso-js SDK, backend implementation details, and production-ready code generation.
+A comprehensive Model Context Protocol (MCP) server that provides **complete DeSo blockchain API coverage** for Cursor IDE. This server transforms Cursor's AI assistant into a DeSo development expert with extensive knowledge about all DeSo APIs, the deso-js SDK, DeSo Identity authentication, backend implementation details, and production-ready code generation.
 
-## 🔥 **What's New in v2.2**
+## 🔥 **What's New in v2.3**
+- **Complete DeSo Identity Integration**: Full authentication system coverage
+- **9 Identity API Endpoints**: iframe & window APIs for login, signing, encryption
+- **Advanced Authentication Guide**: Access levels, derived keys, message encryption
+- **Identity Code Examples**: Login flows, encryption/decryption, derived key management
+
+## **What's New in v2.2**
 - **Complete Data API Coverage**: All endpoint categories from DeSo backend documentation
-- **40+ Data Endpoints**: Users, Posts, NFTs, Messages, Notifications, Access Groups, and more
+- **40+ Data Endpoints**: Users, Posts, NFTs, Messages, Notifications, Access Groups, and more  
 - **Enhanced API Explorer**: Comprehensive backend handler mapping and parameter documentation
 
 ## 🚀 What This Does
@@ -27,6 +33,9 @@ This MCP server transforms Cursor's AI assistant into a **DeSo development exper
 - [x] **Derived Keys APIs** (authorize, de-authorize derived keys)
 - [x] **Associations APIs** (create/delete user/post associations)
 - [x] **Access Groups APIs** (create, update, manage members)
+- [x] **Identity APIs** (9 endpoints for authentication and key management):
+  - **iframe APIs** (sign, encrypt, decrypt, jwt)
+  - **Window APIs** (login, logout, approve, derive, messaging-group)
 - [x] **Data APIs** (40+ endpoints across all categories):
   - **User Endpoints** (profiles, multiple users, leaderboards)
   - **Post Endpoints** (feeds, single posts, hot feed, user posts)  
@@ -48,6 +57,9 @@ This MCP server transforms Cursor's AI assistant into a **DeSo development exper
 - [x] Installation and setup instructions
 - [x] Configuration for web and React Native
 - [x] Identity and authentication management
+- [x] **Deep Authentication Guide**: iframe/window API patterns, access levels
+- [x] **Derived Key Management**: Mobile/server authentication flows
+- [x] **Message Encryption**: End-to-end encryption for DMs and unlockable content
 - [x] Transaction creation patterns
 - [x] Data fetching examples
 - [x] Permission management
@@ -64,6 +76,11 @@ This MCP server transforms Cursor's AI assistant into a **DeSo development exper
 - [x] Post creation
 - [x] Creator coin operations
 - [x] Diamond sending
+- [x] **Identity Operations**:
+  - [x] Login/logout flows with access levels
+  - [x] Message encryption/decryption
+  - [x] Derived key generation and management
+  - [x] Transaction signing with approval flows
 
 ### ✅ **Architecture Explainer (`explain_deso_architecture`)**
 - [x] Transaction flow explanation
@@ -150,6 +167,8 @@ pwd
 Once configured, you can ask Cursor's AI assistant questions like:
 
 ### API Exploration
+- *"Show me all the identity endpoints for DeSo authentication"*
+- *"What are the iframe vs window APIs in DeSo Identity?"*
 - *"Show me all the data endpoints available in DeSo"*
 - *"What notification APIs can I use to get user notifications?"*
 - *"How do I fetch DM messages using the messages API?"*
@@ -158,6 +177,9 @@ Once configured, you can ask Cursor's AI assistant questions like:
 - *"How do I get NFT bids and collections data?"*
 
 ### Code Generation  
+- *"Generate a React authentication component with DeSo Identity"*
+- *"Show me how to encrypt and decrypt messages using deso-js"*
+- *"Create a derived key manager for mobile apps"*
 - *"Generate a React component for creating and minting NFTs"*
 - *"Show me how to set up DAO coin limit orders using deso-js"*
 - *"Create a JavaScript function for managing derived key permissions"*
@@ -167,6 +189,9 @@ Once configured, you can ask Cursor's AI assistant questions like:
 - *"How do I set up the deso-js SDK in a React app?"*
 - *"What permissions do I need for posting transactions?"*
 - *"Show me how to configure identity management"*
+- *"What are the different access levels in DeSo Identity?"*
+- *"How do I set up derived keys for my server application?"*
+- *"What's the difference between iframe and window identity APIs?"*
 
 ### Architecture Understanding
 - *"Explain how DeSo transactions work"*
