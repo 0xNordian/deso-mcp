@@ -5,7 +5,9 @@
   "main": "mcp-server.js",
   "scripts": {
     "start": "node mcp-server.js",
-    "dev": "node --watch mcp-server.js"
+    "dev": "node --watch mcp-server.js",
+    "test": "echo '{\"jsonrpc\": \"2.0\", \"id\": 1, \"method\": \"tools/list\"}' | node mcp-server.js",
+    "test-follow": "echo '{\"jsonrpc\": \"2.0\", \"id\": 1, \"method\": \"tools/call\", \"params\": {\"name\": \"deso_api_explorer\", \"arguments\": {\"endpoint\": \"create-follow-txn-stateless\", \"includeCode\": true}}}' | node mcp-server.js"
   },
   "keywords": [],
   "author": "",
