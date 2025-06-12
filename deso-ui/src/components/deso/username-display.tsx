@@ -50,12 +50,37 @@ export function UsernameDisplay({
   // Fetch username data using Apollo Client
   const { data, loading, error } = useUsername(publicKey);
 
+  console.log('👤 UsernameDisplay component render:', {
+    publicKey,
+    loading,
+    error: error?.message,
+    hasData: !!data
+  });
+
   // Extract account data from Apollo Client response
   const profile = data?.accountByPublicKey;
 
+  console.log('👤 UsernameDisplay extracted profile:', {
+    hasProfile: !!profile,
+    username: profile?.username,
+    hasExtraData: !!profile?.extraData,
+    extraDataKeys: profile?.extraData ? Object.keys(profile.extraData) : []
+  });
+
+  // Parse extraData if it exists
+  const extraData = profile?.extraData || {};
+
   const username = profile?.username;
-  const displayName = getDisplayName(username, profile?.extraData);
-  const verified = profile?.extraData?.isVerified === 'true' || validatedProps.isVerified;
+  const displayName = getDisplayName(username, extraData);
+  const verified = extraData?.IsVerified === 'true' || validatedProps.isVerified;
+
+  console.log('👤 UsernameDisplay processed data:', {
+    username,
+    displayName,
+    verified,
+    hasDisplayName: !!displayName,
+    willShowError: !!error || !username
+  });
 
   // Handle copy to clipboard
   const handleCopy = async (e: React.MouseEvent) => {

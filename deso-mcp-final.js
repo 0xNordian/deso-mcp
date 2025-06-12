@@ -1499,7 +1499,7 @@ function startMessagePolling(userPublicKey: string, callback: Function) {
 }
 \`\`\``;
     } else {
-      response += `\n\n## Code Example
+    response += `\n\n## Code Example
 \`\`\`javascript
 // Complete DeSo integration example
 import { identity, submitPost } from 'deso-protocol';

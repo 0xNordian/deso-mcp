@@ -48,12 +48,9 @@ export function ProfileCoverPhoto({
   children,
 }: ProfileCoverPhotoProps) {
   // Fetch profile data using Apollo Client
-  const { data, loading, error } = useProfile(publicKey);
+  const { profile, loading, error, coverPhoto } = useProfile(publicKey);
 
-  // Extract account data from Apollo Client response
-  const profile = data?.accountByPublicKey;
-
-  const coverPhotoUrl = profile?.extraData?.CoverPhoto;
+  const coverPhotoUrl = coverPhoto;
   const aspectClass = aspectRatioConfig[aspectRatio];
   const gradientClass = gradientConfig[fallbackGradient];
 

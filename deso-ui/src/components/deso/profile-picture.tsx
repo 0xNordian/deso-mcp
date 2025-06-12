@@ -50,19 +50,96 @@ export function ProfilePicture({
   // Fetch profile picture data using Apollo Client
   const { data, loading, error } = useProfilePicture(publicKey);
 
+  // Add direct fetch test to compare with Apollo Client
+  React.useEffect(() => {
+    if (publicKey && variant === 'default') { // Only test on default variant to avoid spam
+      console.log('🧪 Testing direct fetch...');
+      
+      fetch('https://graphql-prod.deso.com/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: `
+            query GetProfilePicture($publicKey: String!) {
+              accountByPublicKey(publicKey: $publicKey) {
+                profilePic
+                username
+                extraData
+              }
+            }
+          `,
+          variables: { publicKey }
+        })
+      })
+      .then(response => response.json())
+      .then(result => {
+        console.log('🧪 Direct fetch result:', {
+          success: !result.errors,
+          hasData: !!result.data?.accountByPublicKey,
+          username: result.data?.accountByPublicKey?.username,
+          errors: result.errors
+        });
+      })
+      .catch(err => {
+        console.log('🧪 Direct fetch failed:', err.message);
+      });
+    }
+  }, [publicKey, variant]);
+
+  console.log('🖼️ ProfilePicture component render:', {
+    publicKey,
+    loading,
+    error: error?.message,
+    hasData: !!data,
+    variant
+  });
+
   // Extract account data from Apollo Client response
   const profile = data?.accountByPublicKey;
+  
+  console.log('🖼️ ProfilePicture extracted profile:', {
+    hasProfile: !!profile,
+    username: profile?.username,
+    hasProfilePic: !!profile?.profilePic,
+    profilePicType: typeof profile?.profilePic,
+    profilePicLength: profile?.profilePic?.length,
+    hasExtraData: !!profile?.extraData,
+    extraDataKeys: profile?.extraData ? Object.keys(profile.extraData) : []
+  });
+  
+  // Parse extraData if it exists
+  const extraData = profile?.extraData || {};
 
   const sizeClasses = sizeConfig[validatedProps.size];
   
   // Choose between regular profile pic and NFT profile pic
   const isNFT = variant === 'nft';
   const profilePicUrl = isNFT 
-    ? profile?.extraData?.NFTProfilePictureUrl 
+    ? extraData?.NFTProfilePictureUrl 
     : buildProfilePictureUrl(profile?.profilePic);
   
+  console.log('🖼️ ProfilePicture URL processing:', {
+    isNFT,
+    nftUrl: extraData?.NFTProfilePictureUrl,
+    rawProfilePic: profile?.profilePic ? `${profile.profilePic.substring(0, 50)}...` : null,
+    finalUrl: profilePicUrl ? `${profilePicUrl.substring(0, 50)}...` : null,
+    hasValidUrl: !!profilePicUrl
+  });
+  
   const fallbackInitial = getUsernameInitial(profile?.username);
-  const isVerified = profile?.extraData?.isVerified === 'true' || false;
+  const isVerified = extraData?.IsVerified === 'true' || false;
+
+  console.log('🖼️ ProfilePicture render state:', {
+    loading,
+    error: !!error,
+    hasProfilePicUrl: !!profilePicUrl,
+    fallbackInitial,
+    isVerified,
+    willShowImage: !loading && !error && !!profilePicUrl,
+    willShowFallback: !loading && !error && !profilePicUrl
+  });
 
   // Loading state
   if (loading) {
@@ -176,24 +253,45 @@ export function ProfilePicture({
   // Default circular variant
   return (
     <div className={cn('relative inline-block', className)}>
-      <Avatar 
-        className={cn(
-          sizeClasses.avatar,
-          'transition-all duration-200 hover:scale-105 hover:shadow-md',
-          onClick && 'cursor-pointer'
-        )}
-        onClick={onClick}
-      >
-        <AvatarImage 
-          src={profilePicUrl} 
-          alt={`${profile?.username || 'User'}'s profile picture`}
-          loading={lazy ? 'lazy' : 'eager'}
-          className="object-cover"
-        />
-        <AvatarFallback className={cn('bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold', sizeClasses.text)}>
+      {/* Temporary direct img test */}
+      {profilePicUrl ? (
+        <div className={cn('relative', sizeClasses.avatar)}>
+          <img
+            src={profilePicUrl}
+            alt={`${profile?.username || 'User'}'s profile picture`}
+            loading={lazy ? 'lazy' : 'eager'}
+            className={cn(
+              'object-cover rounded-full transition-all duration-200 hover:scale-105 hover:shadow-md',
+              sizeClasses.avatar,
+              onClick && 'cursor-pointer'
+            )}
+            onClick={onClick}
+          />
+          {/* Fallback div that shows if image fails */}
+          <div 
+            className={cn(
+              'absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold rounded-full',
+              sizeClasses.avatar,
+              sizeClasses.text
+            )}
+            style={{ zIndex: -1 }}
+          >
+            {fallbackInitial}
+          </div>
+        </div>
+      ) : (
+        <div 
+          className={cn(
+            'flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold rounded-full transition-all duration-200 hover:scale-105 hover:shadow-md',
+            sizeClasses.avatar,
+            sizeClasses.text,
+            onClick && 'cursor-pointer'
+          )}
+          onClick={onClick}
+        >
           {fallbackInitial}
-        </AvatarFallback>
-      </Avatar>
+        </div>
+      )}
       
       {/* Verification Badge */}
       {validatedProps.showVerification && isVerified && (
