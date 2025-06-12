@@ -1,5 +1,34 @@
 #!/usr/bin/env node
 
+/**
+ * DeSo MCP Server v3.0 - Comprehensive DeSo Development Assistant
+ * 
+ * Enhanced with real debugging experience and implementation patterns from building
+ * a complete DeSo messaging application. Includes solutions to all major pitfalls
+ * and best practices learned through extensive debugging sessions.
+ * 
+ * NEW IN v3.0:
+ * 🛠️ deso_debugging_guide - Comprehensive debugging for common DeSo issues
+ * 🏗️ deso_implementation_patterns - Best practices from deso-chat analysis
+ * 
+ * CORE DEBUGGING FIXES INCLUDED:
+ * ✅ Message Decryption: DecryptedMessage vs MessageText property fix
+ * ✅ Access Groups: Empty string handling vs undefined checks  
+ * ✅ Infinite Loops: useCallback dependency management
+ * ✅ API Responses: Proper response structure handling per endpoint
+ * ✅ Authentication: Complete identity event handling and user switching
+ * ✅ React Integration: Key warnings, state management, error boundaries
+ * 
+ * IMPLEMENTATION PATTERNS:
+ * 📱 Complete messaging flow with encryption and access groups
+ * 🛡️ Comprehensive error handling with retry logic
+ * 🔄 Professional state management patterns
+ * 🎯 Real-time polling and optimistic updates
+ * 
+ * Based on real debugging experience building a production DeSo messaging app
+ * with reference to deso-chat implementation patterns.
+ */
+
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
@@ -13,7 +42,7 @@ import path from 'path';
 const server = new Server(
   {
     name: "deso-mcp-final",
-    version: "2.3.0",
+    version: "3.0.0", // Updated with comprehensive debugging tools
   },
   {
     capabilities: {
@@ -150,6 +179,45 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["path"]
         }
+      },
+      {
+        name: "deso_debugging_guide",
+        description: "Comprehensive debugging guide for common DeSo integration issues with solutions",
+        inputSchema: {
+          type: "object",
+          properties: {
+            issue: {
+              type: "string",
+              enum: ["message-decryption", "access-groups", "infinite-loops", "api-responses", "authentication", "react-errors", "all"],
+              description: "Specific issue to debug or 'all' for complete guide"
+            },
+            includeCode: {
+              type: "boolean",
+              description: "Include code examples and fixes"
+            }
+          },
+          required: ["issue"]
+        }
+      },
+      {
+        name: "deso_implementation_patterns",
+        description: "Best practices and implementation patterns learned from deso-chat and real debugging",
+        inputSchema: {
+          type: "object",
+          properties: {
+            pattern: {
+              type: "string",
+              enum: ["messaging-flow", "error-handling", "state-management", "api-integration", "user-switching", "real-time-updates", "all"],
+              description: "Implementation pattern to explore"
+            },
+            framework: {
+              type: "string",
+              enum: ["react", "vanilla", "nextjs"],
+              description: "Framework context"
+            }
+          },
+          required: ["pattern"]
+        }
       }
     ];
     
@@ -181,6 +249,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return await repositorySearch(args);
       case "read_repository_document":
         return await readRepositoryDocument(args);
+      case "deso_debugging_guide":
+        return await desoDebuggingGuide(args);
+      case "deso_implementation_patterns":
+        return await desoImplementationPatterns(args);
       default:
         throw new Error(`Unknown DeSo tool: ${name}`);
     }
@@ -197,8 +269,8 @@ async function exploreDesoApi(args) {
   // Complete API Details from original comprehensive server (FULLY RESTORED)
   const apiDetails = {
           social: {
-        description: "Social interaction endpoints for posts, follows, likes, and diamonds",
-        backendFile: "routes/transaction.go, routes/post.go",
+        description: "Social interaction endpoints for posts, follows, likes, diamonds, and messaging",
+        backendFile: "routes/transaction.go, routes/post.go, routes/new_message.go",
         documentation: {
           tutorials: ["docs/deso-tutorial-build-apps.md"],
           architecture: ["docs/architecture-overview/"],
@@ -249,15 +321,181 @@ async function exploreDesoApi(args) {
             optional: ["ProfilePublicKeyBase58Check", "NewUsername", "NewDescription", "NewProfilePic", "IsHidden", "ExtraData"]
           }
         },
+        "send-diamonds": {
+          method: "POST",
+          url: "/api/v0/send-diamonds",
+          handler: "SendDiamonds",
+          description: "Send diamond tips to posts",
+          desoJs: "sendDiamonds", 
+          params: {
+            required: ["SenderPublicKeyBase58Check", "ReceiverPublicKeyBase58Check", "DiamondPostHashHex", "DiamondLevel", "MinFeeRateNanosPerKB"],
+            optional: ["ExtraData", "TransactionFees"]
+          }
+        }
+      }
+    },
+    messages: {
+      description: "Modern DeSo messaging system with DM and group chat support",
+      backendFile: "routes/new_message.go",
+      documentation: {
+        endpoints: ["docs/deso-backend/api/messages-endpoints.md"],
+        transactions: ["docs/deso-backend/construct-transactions/social-transactions-api.md"]
+      },
+      endpoints: {
+        "send-dm-message": {
+          method: "POST",
+          url: "/api/v0/send-dm-message",
+          handler: "SendDmMessage",
+          description: "Send private message between users (replaces deprecated send-message-stateless)",
+          desoJs: "sendDMMessage",
+          params: {
+            required: [
+              "SenderAccessGroupOwnerPublicKeyBase58Check",
+              "SenderAccessGroupPublicKeyBase58Check", 
+              "SenderAccessGroupKeyName",
+              "RecipientAccessGroupOwnerPublicKeyBase58Check",
+              "RecipientAccessGroupPublicKeyBase58Check",
+              "RecipientAccessGroupKeyName",
+              "EncryptedMessageText",
+              "MinFeeRateNanosPerKB"
+            ],
+            optional: ["TransactionFees", "ExtraData"]
+          }
+        },
+        "update-dm-message": {
+          method: "POST",
+          url: "/api/v0/update-dm-message",
+          handler: "UpdateDmMessage", 
+          description: "Update existing direct message",
+          desoJs: "updateDMMessage",
+          params: {
+            required: [
+              "SenderAccessGroupOwnerPublicKey",
+              "SenderAccessGroupPublicKey",
+              "SenderAccessGroupKeyName",
+              "RecipientAccessGroupOwnerPublicKey", 
+              "RecipientAccessGroupPublicKey",
+              "RecipientAccessGroupKeyName",
+              "EncryptedMessageText",
+              "TimestampNanosString"
+            ],
+            optional: ["MinFeeRateNanosPerKB", "TransactionFees", "ExtraData"]
+          }
+        },
+        "get-user-dm-threads-ordered-by-timestamp": {
+          method: "POST",
+          url: "/api/v0/get-user-dm-threads-ordered-by-timestamp",
+          handler: "GetUserDmThreadsOrderedByTimestamp",
+          description: "Get user's DM conversation list ordered by most recent message",
+          desoJs: "getAllMessageThreads",
+          params: {
+            required: ["UserPublicKeyBase58Check"],
+            optional: []
+          }
+        },
+        "get-paginated-messages-for-dm-thread": {
+          method: "POST", 
+          url: "/api/v0/get-paginated-messages-for-dm-thread",
+          handler: "GetPaginatedMessagesForDmThread",
+          description: "Get messages for specific DM conversation with pagination",
+          desoJs: "getPaginatedDMThread",
+          params: {
+            required: [
+              "UserGroupOwnerPublicKeyBase58Check",
+              "UserGroupKeyName", 
+              "PartyGroupOwnerPublicKeyBase58Check",
+              "PartyGroupKeyName",
+              "MaxMessagesToFetch"
+            ],
+            optional: ["StartTimestampString", "StartTimestamp"]
+          }
+        },
+        "send-group-chat-message": {
+          method: "POST",
+          url: "/api/v0/send-group-chat-message", 
+          handler: "SendGroupChatMessage",
+          description: "Send message to group chat",
+          desoJs: "sendGroupChatMessage",
+          params: {
+            required: [
+              "SenderAccessGroupOwnerPublicKey",
+              "SenderAccessGroupPublicKeyBase58Check",
+              "SenderAccessGroupKeyName", 
+              "RecipientAccessGroupOwnerPublicKeyBase58Check",
+              "RecipientAccessGroupPublicKeyBase58Check",
+              "RecipientAccessGroupKeyName",
+              "EncryptedMessageText"
+            ],
+            optional: ["MinFeeRateNanosPerKB", "TransactionFees", "ExtraData"]
+          }
+        },
+        "update-group-chat-message": {
+          method: "POST",
+          url: "/api/v0/update-group-chat-message",
+          handler: "UpdateGroupChatMessage", 
+          description: "Update existing group chat message",
+          desoJs: "updateGroupChatMessage",
+          params: {
+            required: [
+              "SenderAccessGroupOwnerPublicKey",
+              "SenderAccessGroupPublicKey",
+              "SenderAccessGroupKeyName",
+              "RecipientAccessGroupOwnerPublicKey",
+              "RecipientAccessGroupPublicKey", 
+              "RecipientAccessGroupKeyName",
+              "EncryptedMessageText",
+              "TimestampNanosString"
+            ],
+            optional: ["MinFeeRateNanosPerKB", "TransactionFees", "ExtraData"]
+          }
+        },
+        "get-user-group-chat-threads-ordered-by-timestamp": {
+          method: "POST",
+          url: "/api/v0/get-user-group-chat-threads-ordered-by-timestamp", 
+          handler: "GetUserGroupChatThreadsOrderedByTimestamp",
+          description: "Get user's group chat list ordered by most recent message",
+          desoJs: "getAllMessageThreads", 
+          params: {
+            required: ["UserPublicKeyBase58Check"],
+            optional: []
+          }
+        },
+        "get-paginated-messages-for-group-chat-thread": {
+          method: "POST",
+          url: "/api/v0/get-paginated-messages-for-group-chat-thread",
+          handler: "GetPaginatedMessagesForGroupChatThread",
+          description: "Get messages for specific group chat with pagination", 
+          desoJs: "getPaginatedGroupChatThread",
+          params: {
+            required: [
+              "UserPublicKeyBase58Check",
+              "AccessGroupKeyName", 
+              "MaxMessagesToFetch"
+            ],
+            optional: ["StartTimestampString", "StartTimestamp"]
+          }
+        },
+        "get-all-user-message-threads": {
+          method: "POST",
+          url: "/api/v0/get-all-user-message-threads",
+          handler: "GetAllUserMessageThreads", 
+          description: "Get all user conversations (DMs + group chats) ordered by timestamp",
+          desoJs: "getAllMessageThreads",
+          params: {
+            required: ["UserPublicKeyBase58Check"],
+            optional: []
+          }
+        },
         "send-message-stateless": {
           method: "POST",
           url: "/api/v0/send-message-stateless",
           handler: "SendMessageStateless",
-          description: "Send private message between users",
-          desoJs: "sendDMMessage",
+          description: "⚠️ DEPRECATED - Use send-dm-message instead. Legacy message sending endpoint",
+          desoJs: "sendDMMessage (maps to new endpoint)",
           params: {
             required: ["SenderPublicKeyBase58Check", "RecipientPublicKeyBase58Check", "MessageText", "MinFeeRateNanosPerKB"],
-            optional: ["EncryptedMessageText", "SenderMessagingPublicKey", "SenderMessagingKeyName", "RecipientMessagingPublicKey", "RecipientMessagingKeyName"]
+            optional: ["EncryptedMessageText", "SenderMessagingPublicKey", "SenderMessagingKeyName", "RecipientMessagingPublicKey", "RecipientMessagingKeyName", "ExtraData"],
+            deprecated: true
           }
         }
       }
@@ -285,17 +523,6 @@ async function exploreDesoApi(args) {
           desoJs: "sendDeso",
           params: {
             required: ["SenderPublicKeyBase58Check", "RecipientPublicKeyOrUsername", "AmountNanos", "MinFeeRateNanosPerKB"],
-            optional: ["ExtraData", "TransactionFees"]
-          }
-        },
-        "send-diamonds": {
-          method: "POST",
-          url: "/api/v0/send-diamonds",
-          handler: "SendDiamonds",
-          description: "Send diamond tips to posts",
-          desoJs: "sendDiamonds", 
-          params: {
-            required: ["SenderPublicKeyBase58Check", "ReceiverPublicKeyBase58Check", "DiamondPostHashHex", "DiamondLevel", "MinFeeRateNanosPerKB"],
             optional: ["ExtraData", "TransactionFees"]
           }
         },
@@ -441,6 +668,59 @@ async function exploreDesoApi(args) {
           params: {
             required: ["TransactorPublicKeyBase58Check", "CancelOrderID", "MinFeeRateNanosPerKB"],
             optional: []
+          }
+        }
+      }
+    },
+    access: {
+      description: "Access group management for DeSo messaging and permissions",
+      backendFile: "routes/access_group.go",
+      documentation: {
+        endpoints: ["docs/deso-backend/api/access-group-endpoints.md"],
+        transactions: ["docs/deso-backend/construct-transactions/access-groups-api.md"]
+      },
+      endpoints: {
+        "get-all-user-access-groups": {
+          method: "POST",
+          url: "/api/v0/get-all-user-access-groups",
+          handler: "GetAllUserAccessGroups",
+          description: "Get all access groups owned by and member of for a user",
+          desoJs: "getAllUserAccessGroups",
+          params: {
+            required: ["PublicKeyBase58Check"],
+            optional: []
+          }
+        },
+        "check-party-access-groups": {
+          method: "POST",
+          url: "/api/v0/check-party-access-groups",
+          handler: "CheckPartyAccessGroups",
+          description: "Check if both sender and receiver have requested access groups",
+          desoJs: "checkPartyAccessGroups",
+          params: {
+            required: [
+              "SenderPublicKeyBase58Check",
+              "SenderAccessGroupKeyName", 
+              "RecipientPublicKeyBase58Check",
+              "RecipientAccessGroupKeyName"
+            ],
+            optional: []
+          }
+        },
+        "create-access-group": {
+          method: "POST",
+          url: "/api/v0/create-access-group",
+          handler: "CreateAccessGroup",
+          description: "Create a new access group for messaging",
+          desoJs: "createAccessGroup",
+          params: {
+            required: [
+              "AccessGroupOwnerPublicKeyBase58Check",
+              "AccessGroupPublicKeyBase58Check",
+              "AccessGroupKeyName",
+              "MinFeeRateNanosPerKB"
+            ],
+            optional: ["TransactionFees", "ExtraData"]
           }
         }
       }
@@ -980,7 +1260,57 @@ The frontend shows practical usage of the SDK for common operations like posting
 ### Documentation:
 - Frontend docs: \`repos/docs/deso-frontend/\`
 - Tutorial: \`repos/docs/deso-tutorial-build-apps.md\`
-- Applications guide: \`repos/docs/deso-applications.md\``
+- Applications guide: \`repos/docs/deso-applications.md\``,
+
+    "messaging-architecture": `# DeSo Messaging Architecture (Access Groups)
+
+## Modern Messaging System (from deso-chat analysis)
+
+DeSo implements end-to-end encrypted messaging using Access Groups:
+
+### Core Components:
+1. **Access Groups**: Encryption containers for messages
+2. **Derived Keys**: Handle encryption without identity popups  
+3. **Message APIs**: Modern endpoints for DM and group chat
+4. **Real-time Polling**: Live message updates
+
+### Access Group Pattern:
+\`\`\`typescript
+// Auto-setup default messaging access group
+const { AccessGroupsOwned } = await getAllAccessGroups({
+  PublicKeyBase58Check: userPublicKey
+});
+
+if (!AccessGroupsOwned?.find(g => g.AccessGroupKeyName === "default-key")) {
+  await createAccessGroup({
+    AccessGroupOwnerPublicKeyBase58Check: userPublicKey,
+    AccessGroupPublicKeyBase58Check: messagingPublicKey,
+    AccessGroupKeyName: "default-key",
+    MinFeeRateNanosPerKB: 1000
+  });
+}
+\`\`\`
+
+### Message Flow:
+1. **Check Access Groups**: Verify sender/receiver have required groups
+2. **Encrypt Message**: Use recipient's access group public key
+3. **Send Message**: Via sendDMMessage or sendGroupChatMessage
+4. **Retrieve Messages**: Use getAllMessageThreads + pagination
+5. **Decrypt Messages**: Use identity.decryptMessage with access groups
+
+### Key APIs:
+- \`getAllMessageThreads\` - Get conversation list
+- \`getPaginatedDMThread\` - Get DM messages with pagination
+- \`getPaginatedGroupChatThread\` - Get group messages with pagination
+- \`sendDMMessage\` - Send encrypted direct message
+- \`sendGroupChatMessage\` - Send encrypted group message
+
+### Implementation Patterns:
+- **Spending Limits**: Set unlimited NEW_MESSAGE transactions
+- **Error Handling**: Retry access group fetching if decryption fails
+- **Mobile Optimization**: Longer polling intervals (20s vs 5s)
+- **State Management**: Conversation maps with message arrays
+- **Real-time Updates**: Polling with conversation-specific updates`
   };
 
   let response;
@@ -1044,7 +1374,132 @@ Or use \`read_repository_document\` to read specific files like:
 - \`deso-js/README.md\``;
 
   if (includeCode) {
-    response += `\n\n## Code Example
+    if (topic === "messaging-architecture") {
+      response += `\n\n## Complete Messaging Implementation Example
+\`\`\`typescript
+// DeSo Messaging Setup (from deso-chat analysis)
+import { 
+  configure, identity, getAllAccessGroups, createAccessGroup,
+  checkPartyAccessGroups, sendDMMessage, getAllMessageThreads,
+  getPaginatedDMThread, DeSoNetwork, NOTIFICATION_EVENTS
+} from 'deso-protocol';
+
+// 1. Configure SDK with messaging permissions
+configure({
+  identityURI: process.env.REACT_APP_IDENTITY_URL,
+  nodeURI: process.env.REACT_APP_NODE_URL,
+  network: DeSoNetwork.mainnet,
+  spendingLimitOptions: {
+    GlobalDESOLimit: 5 * 1e9,
+    TransactionCountLimitMap: {
+      AUTHORIZE_DERIVED_KEY: 1,
+      NEW_MESSAGE: "UNLIMITED"
+    },
+    AccessGroupLimitMap: [{
+      AccessGroupOwnerPublicKeyBase58Check: "",
+      ScopeType: "Any",
+      AccessGroupKeyName: "",
+      OperationType: "Any",
+      OpCount: "UNLIMITED"
+    }]
+  }
+});
+
+// 2. Setup user with auto-created access groups
+identity.subscribe(async ({ event, currentUser }) => {
+  if (event === NOTIFICATION_EVENTS.LOGIN_END && currentUser) {
+    const { messagingPublicKeyBase58Check } = currentUser.primaryDerivedKey;
+    
+    // Get existing access groups
+    const { AccessGroupsOwned } = await getAllAccessGroups({
+      PublicKeyBase58Check: currentUser.publicKey
+    });
+    
+    // Auto-create default messaging group if needed
+    if (!AccessGroupsOwned?.find(g => g.AccessGroupKeyName === "default-key")) {
+      await createAccessGroup({
+        AccessGroupOwnerPublicKeyBase58Check: currentUser.publicKey,
+        AccessGroupPublicKeyBase58Check: messagingPublicKeyBase58Check,
+        AccessGroupKeyName: "default-key",
+        MinFeeRateNanosPerKB: 1000
+      });
+    }
+  }
+});
+
+// 3. Send encrypted message
+async function sendMessage(recipientPublicKey: string, messageText: string) {
+  const currentUser = identity.snapshot().currentUser;
+  
+  // Check both parties have required access groups
+  const response = await checkPartyAccessGroups({
+    SenderPublicKeyBase58Check: currentUser.publicKey,
+    SenderAccessGroupKeyName: "default-key",
+    RecipientPublicKeyBase58Check: recipientPublicKey,
+    RecipientAccessGroupKeyName: "default-key"
+  });
+  
+  // Encrypt message
+  const encryptedMessage = await identity.encryptMessage(
+    response.RecipientAccessGroupPublicKeyBase58Check,
+    messageText
+  );
+  
+  // Send message
+  const result = await sendDMMessage({
+    SenderAccessGroupOwnerPublicKeyBase58Check: currentUser.publicKey,
+    SenderAccessGroupPublicKeyBase58Check: response.SenderAccessGroupPublicKeyBase58Check,
+    SenderAccessGroupKeyName: "default-key",
+    RecipientAccessGroupOwnerPublicKeyBase58Check: recipientPublicKey,
+    RecipientAccessGroupPublicKeyBase58Check: response.RecipientAccessGroupPublicKeyBase58Check,
+    RecipientAccessGroupKeyName: "default-key",
+    EncryptedMessageText: encryptedMessage,
+    MinFeeRateNanosPerKB: 1000
+  });
+  
+  return result.submittedTransactionResponse.TxnHashHex;
+}
+
+// 4. Get conversations and messages
+async function getConversations(userPublicKey: string) {
+  // Get all conversation threads
+  const threads = await getAllMessageThreads({
+    UserPublicKeyBase58Check: userPublicKey
+  });
+  
+  // Get access groups for decryption
+  const { AccessGroupsOwned, AccessGroupsMember } = await getAllAccessGroups({
+    PublicKeyBase58Check: userPublicKey
+  });
+  const allAccessGroups = (AccessGroupsOwned || []).concat(AccessGroupsMember || []);
+  
+  // Decrypt messages
+  const decryptedMessages = await Promise.all(
+    threads.MessageThreads.map(m => identity.decryptMessage(m, allAccessGroups))
+  );
+  
+  return {
+    conversations: organizeIntoConversations(decryptedMessages),
+    profiles: threads.PublicKeyToProfileEntryResponse
+  };
+}
+
+// 5. Real-time polling pattern
+function startMessagePolling(userPublicKey: string, callback: Function) {
+  const pollInterval = setInterval(async () => {
+    try {
+      const { conversations } = await getConversations(userPublicKey);
+      callback(conversations);
+    } catch (error) {
+      console.error('Polling error:', error);
+    }
+  }, 5000); // 5 second intervals
+  
+  return () => clearInterval(pollInterval);
+}
+\`\`\``;
+    } else {
+      response += `\n\n## Code Example
 \`\`\`javascript
 // Complete DeSo integration example
 import { identity, submitPost } from 'deso-protocol';
@@ -1061,6 +1516,7 @@ const result = await submitPost({
 
 console.log('Transaction:', result.TransactionIDBase58Check);
 \`\`\``;
+     }
   }
 
   return {
@@ -1354,6 +1810,1169 @@ Try using the \`repository_search\` tool first to find the correct document path
   }
 }
 
+// Comprehensive DeSo debugging guide based on real debugging experience
+async function desoDebuggingGuide(args) {
+  const { issue, includeCode = false } = args;
+  
+  const debuggingGuides = {
+    "message-decryption": {
+      title: "🔐 Message Decryption Issues",
+      content: `# Message Decryption Debugging
+
+## 🚨 CRITICAL: DecryptedMessage vs MessageText
+
+**The #1 Issue:** Using wrong property name for decrypted messages
+
+### ❌ WRONG (Common Mistake)
+\`\`\`javascript
+if (decryptedMessage.MessageText) {
+  messageText = decryptedMessage.MessageText; // This is WRONG!
+}
+\`\`\`
+
+### ✅ CORRECT (Actual Fix)
+\`\`\`javascript
+if (decryptedMessage.DecryptedMessage) {
+  messageText = decryptedMessage.DecryptedMessage; // This is RIGHT!
+}
+\`\`\`
+
+## 🔍 Debugging Steps
+
+1. **Check Console Logs**: Look for \`hasMessageText: false\` vs \`hasDecryptedMessage: true\`
+2. **Inspect Response Structure**: Use \`Object.keys(decryptedMessage)\` to see available properties
+3. **Reference Implementation**: Always check deso-chat for correct patterns
+
+## 🛠️ Complete Decryption Pattern
+\`\`\`javascript
+// Proper message decryption handling
+for (const decryptedMessage of decrypted) {
+  let messageText = '[Encrypted Message]';
+  
+  if (decryptedMessage.error) {
+    messageText = '[Decryption Failed]';
+  } else if (decryptedMessage.DecryptedMessage) {
+    // ✅ CORRECT: Use DecryptedMessage property
+    messageText = decryptedMessage.DecryptedMessage;
+  } else if (decryptedMessage.MessageInfo?.ExtraData?.unencrypted === "true") {
+    // Handle unencrypted messages (hex-encoded)
+    try {
+      const hexString = decryptedMessage.MessageInfo.EncryptedText;
+      const bytes = new Uint8Array(Buffer.from(hexString, 'hex'));
+      messageText = new TextDecoder().decode(bytes);
+    } catch (error) {
+      messageText = '[Decoding Failed]';
+    }
+  }
+}
+\`\`\`
+
+## 🔧 Common Error Messages
+- **"incorrect MAC"**: Normal for old/incompatible messages - handle gracefully
+- **"access group key not found"**: Need to fetch updated access groups
+- **Empty DecryptedMessage**: Check if message is unencrypted (ExtraData.unencrypted)`
+    },
+    
+    "access-groups": {
+      title: "🔑 Access Group Issues",
+      content: `# Access Group Debugging
+
+## 🚨 CRITICAL: Empty String vs Undefined
+
+**The Issue:** \`checkPartyAccessGroups\` returns empty strings, not undefined!
+
+### ❌ WRONG (Common Mistake)
+\`\`\`javascript
+if (response.SenderAccessGroupKeyName) {
+  // This fails when API returns empty string!
+}
+\`\`\`
+
+### ✅ CORRECT (Actual Fix)
+\`\`\`javascript
+const senderKeyName = response.SenderAccessGroupKeyName || DEFAULT_KEY_MESSAGING_GROUP_NAME;
+const recipientKeyName = response.RecipientAccessGroupKeyName || DEFAULT_KEY_MESSAGING_GROUP_NAME;
+\`\`\`
+
+## 🔍 Access Group Flow
+
+1. **Check Party Access Groups**: Always check both sender and recipient
+2. **Handle Empty Responses**: API returns empty strings when groups don't exist
+3. **Fallback to Default**: Use "default-key" as fallback
+4. **Auto-Create Groups**: Create default messaging groups if needed
+
+## 🛠️ Complete Access Group Pattern
+\`\`\`javascript
+// Proper access group handling
+const response = await checkPartyAccessGroups({
+  SenderPublicKeyBase58Check: senderPublicKey,
+  SenderAccessGroupKeyName: DEFAULT_KEY_MESSAGING_GROUP_NAME,
+  RecipientPublicKeyBase58Check: recipientPublicKey,
+  RecipientAccessGroupKeyName: DEFAULT_KEY_MESSAGING_GROUP_NAME
+});
+
+// ✅ CORRECT: Handle empty strings properly
+const senderKeyName = response.SenderAccessGroupKeyName || DEFAULT_KEY_MESSAGING_GROUP_NAME;
+const recipientKeyName = response.RecipientAccessGroupKeyName || DEFAULT_KEY_MESSAGING_GROUP_NAME;
+
+if (!senderKeyName || !recipientKeyName) {
+  throw new Error('Access groups not available for messaging');
+}
+\`\`\`
+
+## 🔧 Error Messages to Watch For
+- **"SenderAccessGroupKeyName is undefined"**: Check for empty string handling
+- **"access group key not found"**: Need to create or fetch access groups
+- **"insufficient permissions"**: Check derived key permissions for access groups`
+    },
+    
+    "infinite-loops": {
+      title: "🔄 Infinite Loop Issues",
+      content: `# Infinite Loop Debugging
+
+## 🚨 CRITICAL: useCallback Dependencies
+
+**The Issue:** Missing or incorrect dependencies in useCallback hooks
+
+### ❌ WRONG (Causes Infinite Loops)
+\`\`\`javascript
+const searchUsers = useCallback(async (query) => {
+  // Missing dependencies!
+}, []); // Empty dependency array is often wrong
+\`\`\`
+
+### ✅ CORRECT (Prevents Infinite Loops)
+\`\`\`javascript
+const searchUsers = useCallback(async (query) => {
+  if (!query.trim()) return;
+  // Implementation...
+}, [getSingleProfile, setUsers, setLoading]); // Include ALL dependencies
+\`\`\`
+
+## 🔍 Debugging Steps
+
+1. **Check React DevTools**: Look for "Maximum update depth exceeded"
+2. **Add Dependency Warnings**: Use ESLint react-hooks/exhaustive-deps
+3. **Add Debouncing**: Prevent rapid API calls
+4. **Isolate State Updates**: Separate loading states from data states
+
+## 🛠️ Complete Debounced Search Pattern
+\`\`\`javascript
+// Proper debounced search with correct dependencies
+const [searchQuery, setSearchQuery] = useState('');
+const [debouncedQuery, setDebouncedQuery] = useState('');
+
+// Debounce the search query
+useEffect(() => {
+  const timer = setTimeout(() => {
+    setDebouncedQuery(searchQuery);
+  }, 500); // 500ms debounce
+
+  return () => clearTimeout(timer);
+}, [searchQuery]);
+
+// Search function with proper dependencies
+const searchUsers = useCallback(async (query) => {
+  if (!query.trim()) {
+    setUsers([]);
+    return;
+  }
+  
+  setLoading(true);
+  try {
+    const profile = await getSingleProfile({ Username: query });
+    setUsers(profile ? [profile] : []);
+  } catch (error) {
+    setError(error.message);
+    setUsers([]);
+  } finally {
+    setLoading(false);
+  }
+}, [getSingleProfile]); // Only include stable dependencies
+
+// Trigger search when debounced query changes
+useEffect(() => {
+  if (debouncedQuery) {
+    searchUsers(debouncedQuery);
+  }
+}, [debouncedQuery, searchUsers]);
+\`\`\`
+
+## 🔧 Common Patterns That Cause Loops
+- **Missing useCallback**: Functions recreated on every render
+- **Incorrect dependencies**: Including unstable objects/functions
+- **State updates in render**: Causing immediate re-renders
+- **Effect cleanup issues**: Not properly cleaning up timers/subscriptions`
+    },
+    
+    "api-responses": {
+      title: "📡 API Response Structure Issues",
+      content: `# API Response Structure Debugging
+
+## 🚨 CRITICAL: Different Endpoints, Different Structures
+
+**The Issue:** Each DeSo endpoint has different response structures!
+
+### Key Response Differences:
+- \`getAllMessageThreads\` → \`MessageThreads\` array
+- \`getPaginatedDMThread\` → \`ThreadMessages\` array  
+- \`getAllAccessGroups\` → \`AccessGroupsOwned\` + \`AccessGroupsMember\`
+
+## 🔍 Debugging API Responses
+
+### 1. Always Log Response Structure
+\`\`\`javascript
+const response = await getPaginatedDMThread(params);
+console.log('API Response keys:', Object.keys(response));
+console.log('Messages array:', response.ThreadMessages?.length);
+\`\`\`
+
+### 2. Handle Empty/Null Responses
+\`\`\`javascript
+// ✅ CORRECT: Always validate response structure
+const messages = response?.ThreadMessages || [];
+const profiles = response?.PublicKeyToProfileEntryResponse || {};
+\`\`\`
+
+### 3. Check for JSON Parsing Errors
+\`\`\`javascript
+// ✅ CORRECT: Validate before parsing
+if (!response || response.trim() === '') {
+  throw new Error('Empty response from API');
+}
+
+try {
+  const data = JSON.parse(response);
+  return data;
+} catch (error) {
+  throw new Error(\`Invalid JSON response: \${error.message}\`);
+}
+\`\`\`
+
+## 🛠️ Complete API Error Handling Pattern
+\`\`\`javascript
+async function safeApiCall(apiFunction, params, fallback = null) {
+  try {
+    const response = await apiFunction(params);
+    
+    // Validate response structure
+    if (!response || typeof response !== 'object') {
+      throw new Error('Invalid API response structure');
+    }
+    
+    return response;
+  } catch (error) {
+    console.error('API call failed:', error);
+    
+    // Categorize errors for user-friendly messages
+    if (error.message.includes('404')) {
+      throw new Error('User not found');
+    } else if (error.message.includes('network')) {
+      throw new Error('Network connection issue');
+    } else {
+      throw new Error(\`API error: \${error.message}\`);
+    }
+  }
+}
+\`\`\`
+
+## 🔧 Common API Issues
+- **"Cannot read property of undefined"**: Missing null checks
+- **"Unexpected end of JSON input"**: Empty response handling
+- **"404 errors"**: User/resource not found - handle gracefully
+- **Rate limiting**: Implement proper retry logic with exponential backoff`
+    },
+    
+    "authentication": {
+      title: "🔐 Authentication & User Switching Issues",
+      content: `# Authentication Debugging
+
+## 🚨 CRITICAL: Identity Event Handling
+
+**The Issue:** Not properly handling identity state changes and user switching
+
+### ✅ CORRECT: Complete Identity Setup
+\`\`\`javascript
+// Proper identity subscription with user switching
+identity.subscribe(({ currentUser, alternateUsers, event }) => {
+  console.log('Identity event:', event);
+  
+  if (event === 'LOGIN_END' && currentUser) {
+    setUser({
+      isAuthenticated: true,
+      username: currentUser.username || currentUser.publicKey?.slice(0, 10) + '...',
+      publicKey: currentUser.publicKey,
+      alternateUsers: alternateUsers || []
+    });
+  } else if (event === 'LOGOUT') {
+    setUser({
+      isAuthenticated: false,
+      username: null,
+      publicKey: null,
+      alternateUsers: []
+    });
+  }
+});
+\`\`\`
+
+## 🔍 User Switching Implementation
+
+### Account Switcher Component
+\`\`\`javascript
+function AccountSwitcher({ currentUser, alternateUsers }) {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  const handleSwitchUser = async (publicKey) => {
+    try {
+      await identity.setActiveUser(publicKey);
+      setIsOpen(false);
+    } catch (error) {
+      console.error('Failed to switch user:', error);
+    }
+  };
+  
+  return (
+    <div className="relative">
+      <button onClick={() => setIsOpen(!isOpen)}>
+        {currentUser.username}
+        <ChevronDownIcon />
+      </button>
+      
+      {isOpen && (
+        <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-lg">
+          {alternateUsers.map(user => (
+            <button
+              key={user.publicKey}
+              onClick={() => handleSwitchUser(user.publicKey)}
+              className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+            >
+              {user.username || user.publicKey.slice(0, 10) + '...'}
+            </button>
+          ))}
+          <hr />
+          <button
+            onClick={() => identity.login()}
+            className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+          >
+            Add Another Account
+          </button>
+          <button
+            onClick={() => identity.logout()}
+            className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600"
+          >
+            Logout
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+\`\`\`
+
+## 🔧 Common Authentication Issues
+- **Identity not showing**: Check if LoginButton is in the header when authenticated
+- **User switching not working**: Ensure proper identity.setActiveUser() usage
+- **Permissions issues**: Check derived key permissions for messaging/transactions
+- **State not updating**: Verify identity.subscribe() is properly set up`
+    },
+    
+    "react-errors": {
+      title: "⚛️ React-Specific Issues",
+      content: `# React Integration Debugging
+
+## 🚨 CRITICAL: Key Warnings & State Management
+
+### 1. Unique Key Generation
+\`\`\`javascript
+// ❌ WRONG: Non-unique keys
+{messages.map((msg, index) => (
+  <div key={index}> // Don't use array index!
+))}
+
+// ✅ CORRECT: Unique, stable keys
+{messages.map((msg) => (
+  <div key={\`\${msg.timestampNanos}-\${msg.senderPublicKey}\`}>
+))}
+\`\`\`
+
+### 2. Proper Loading State Management
+\`\`\`javascript
+// ✅ CORRECT: Separate loading states
+const [isLoading, setIsLoading] = useState(false);
+const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+const [isLoadingConversations, setIsLoadingConversations] = useState(false);
+\`\`\`
+
+### 3. Error Boundary Implementation
+\`\`\`javascript
+class DeSoErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  
+  componentDidCatch(error, errorInfo) {
+    console.error('DeSo Error:', error, errorInfo);
+  }
+  
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="error-fallback">
+          <h2>Something went wrong with DeSo integration</h2>
+          <details>
+            {this.state.error?.message}
+          </details>
+          <button onClick={() => this.setState({ hasError: false, error: null })}>
+            Try Again
+          </button>
+        </div>
+      );
+    }
+    
+    return this.props.children;
+  }
+}
+\`\`\`
+
+## 🔧 Common React Issues
+- **"Maximum update depth exceeded"**: Check useCallback dependencies
+- **"Cannot read property of undefined"**: Add proper null checks
+- **"Each child should have unique key"**: Use stable, unique identifiers
+- **State not updating**: Verify proper state setter usage and dependencies`
+    }
+  };
+
+  if (issue === 'all') {
+    let response = `# 🛠️ Complete DeSo Debugging Guide
+
+Based on real debugging experience and fixes applied during development.
+
+## 🎯 Quick Reference
+
+| Issue | Key Fix | Common Error |
+|-------|---------|--------------|
+| Message Decryption | Use \`DecryptedMessage\` not \`MessageText\` | "[Encrypted Message]" showing |
+| Access Groups | Handle empty strings, not undefined | "SenderAccessGroupKeyName is undefined" |
+| Infinite Loops | Fix useCallback dependencies | "Maximum update depth exceeded" |
+| API Responses | Check response structure per endpoint | "Cannot read property of undefined" |
+| Authentication | Proper identity.subscribe() setup | User switching not working |
+| React Errors | Unique keys, proper state management | Key warnings, state issues |
+
+## 🔍 Debugging Methodology
+
+1. **Check Console Logs**: Look for specific error patterns
+2. **Inspect Response Structure**: Use \`Object.keys()\` to see available properties  
+3. **Reference deso-chat**: Always check reference implementation
+4. **Add Comprehensive Logging**: Use emoji-coded logging for easy identification
+5. **Test Edge Cases**: Empty responses, failed API calls, network issues
+
+`;
+
+    for (const [key, guide] of Object.entries(debuggingGuides)) {
+      response += `\n## ${guide.title}\n\n`;
+      response += guide.content.split('\n').slice(2, 8).join('\n'); // Summary
+      response += `\n\n*Use \`deso_debugging_guide\` with issue="${key}" for complete details*\n\n`;
+    }
+
+    return { content: [{ type: "text", text: response }] };
+  }
+
+  if (debuggingGuides[issue]) {
+    const guide = debuggingGuides[issue];
+    let response = guide.content;
+    
+    if (includeCode) {
+      response += `\n\n## 🧪 Testing & Validation
+
+### Debug Logging Pattern
+\`\`\`javascript
+// Emoji-coded logging for easy debugging
+const log = {
+  info: (category, message, data) => console.log(\`🔵 [\${category}] \${message}\`, data),
+  warn: (category, message, data) => console.warn(\`⚠️ [\${category}] \${message}\`, data),
+  error: (category, message, data) => console.error(\`❌ [\${category}] \${message}\`, data),
+  debug: (category, message, data) => console.debug(\`🔍 [\${category}] \${message}\`, data),
+  success: (category, message, data) => console.log(\`✅ [\${category}] \${message}\`, data)
+};
+\`\`\`
+
+### Validation Helpers
+\`\`\`javascript
+// Helper functions for common validations
+const validateApiResponse = (response, expectedKeys) => {
+  if (!response || typeof response !== 'object') {
+    throw new Error('Invalid API response');
+  }
+  
+  for (const key of expectedKeys) {
+    if (!(key in response)) {
+      console.warn(\`Missing expected key: \${key}\`);
+    }
+  }
+  
+  return response;
+};
+
+const validatePublicKey = (publicKey) => {
+  if (!publicKey || typeof publicKey !== 'string' || publicKey.length < 50) {
+    throw new Error('Invalid public key format');
+  }
+  return publicKey;
+};
+\`\`\``;
+    }
+    
+    return { content: [{ type: "text", text: response }] };
+  }
+
+  return { content: [{ type: "text", text: `Unknown issue: ${issue}. Available: ${Object.keys(debuggingGuides).join(', ')}` }] };
+}
+
+// Implementation patterns based on deso-chat analysis and debugging experience
+async function desoImplementationPatterns(args) {
+  const { pattern, framework = 'react' } = args;
+  
+  const patterns = {
+    "messaging-flow": {
+      title: "📱 Complete Messaging Flow Pattern",
+      content: `# DeSo Messaging Implementation Pattern
+
+## 🎯 Complete Flow (from deso-chat analysis)
+
+### 1. SDK Configuration with Messaging Permissions
+\`\`\`javascript
+import { configure, DeSoNetwork } from 'deso-protocol';
+
+configure({
+  identityURI: process.env.REACT_APP_IDENTITY_URL,
+  nodeURI: process.env.REACT_APP_NODE_URL,
+  network: DeSoNetwork.mainnet,
+  spendingLimitOptions: {
+    GlobalDESOLimit: 5 * 1e9, // 5 DeSo
+    TransactionCountLimitMap: {
+      AUTHORIZE_DERIVED_KEY: 1,
+      NEW_MESSAGE: "UNLIMITED" // ✅ CRITICAL: Unlimited messaging
+    },
+    AccessGroupLimitMap: [{
+      AccessGroupOwnerPublicKeyBase58Check: "",
+      ScopeType: "Any",
+      AccessGroupKeyName: "",
+      OperationType: "Any", 
+      OpCount: "UNLIMITED"
+    }]
+  }
+});
+\`\`\`
+
+### 2. Access Group Auto-Setup Pattern
+\`\`\`javascript
+// Auto-create default messaging access group
+const setupMessagingForUser = async (userPublicKey, messagingPublicKey) => {
+  const { AccessGroupsOwned } = await getAllAccessGroups({
+    PublicKeyBase58Check: userPublicKey
+  });
+  
+  // Check if default messaging group exists
+  const hasDefaultGroup = AccessGroupsOwned?.find(
+    group => group.AccessGroupKeyName === "default-key"
+  );
+  
+  if (!hasDefaultGroup) {
+    await createAccessGroup({
+      AccessGroupOwnerPublicKeyBase58Check: userPublicKey,
+      AccessGroupPublicKeyBase58Check: messagingPublicKey,
+      AccessGroupKeyName: "default-key",
+      MinFeeRateNanosPerKB: 1000
+    });
+  }
+};
+\`\`\`
+
+### 3. Message Sending with Access Group Validation
+\`\`\`javascript
+const sendMessage = async (senderPublicKey, recipientPublicKey, messageText) => {
+  // 1. Check party access groups
+  const response = await checkPartyAccessGroups({
+    SenderPublicKeyBase58Check: senderPublicKey,
+    SenderAccessGroupKeyName: "default-key",
+    RecipientPublicKeyBase58Check: recipientPublicKey,
+    RecipientAccessGroupKeyName: "default-key"
+  });
+  
+  // 2. Handle empty string responses (not undefined!)
+  const senderKeyName = response.SenderAccessGroupKeyName || "default-key";
+  const recipientKeyName = response.RecipientAccessGroupKeyName || "default-key";
+  
+  // 3. Encrypt message
+  let encryptedMessage;
+  let isUnencrypted = false;
+  const ExtraData = {};
+  
+  if (response.RecipientAccessGroupPublicKeyBase58Check) {
+    encryptedMessage = await identity.encryptMessage(
+      response.RecipientAccessGroupPublicKeyBase58Check,
+      messageText
+    );
+  } else {
+    // Fallback to unencrypted (hex-encoded)
+    encryptedMessage = bytesToHex(new TextEncoder().encode(messageText));
+    isUnencrypted = true;
+    ExtraData["unencrypted"] = "true";
+  }
+  
+  // 4. Send message
+  const result = await sendDMMessage({
+    SenderAccessGroupOwnerPublicKeyBase58Check: senderPublicKey,
+    SenderAccessGroupPublicKeyBase58Check: response.SenderAccessGroupPublicKeyBase58Check,
+    SenderAccessGroupKeyName: senderKeyName,
+    RecipientAccessGroupOwnerPublicKeyBase58Check: recipientPublicKey,
+    RecipientAccessGroupPublicKeyBase58Check: isUnencrypted 
+      ? response.RecipientPublicKeyBase58Check 
+      : response.RecipientAccessGroupPublicKeyBase58Check,
+    RecipientAccessGroupKeyName: recipientKeyName,
+    EncryptedMessageText: encryptedMessage,
+    ExtraData,
+    MinFeeRateNanosPerKB: 1000
+  });
+  
+  return result.submittedTransactionResponse.TxnHashHex;
+};
+\`\`\`
+
+### 4. Message Retrieval and Decryption Pattern
+\`\`\`javascript
+const getConversationsWithDecryption = async (userPublicKey) => {
+  // 1. Get all message threads
+  const threads = await getAllMessageThreads({
+    UserPublicKeyBase58Check: userPublicKey
+  });
+  
+  // 2. Get access groups for decryption
+  const { AccessGroupsOwned, AccessGroupsMember } = await getAllAccessGroups({
+    PublicKeyBase58Check: userPublicKey
+  });
+  const allAccessGroups = (AccessGroupsOwned || []).concat(AccessGroupsMember || []);
+  
+  // 3. Decrypt messages with retry logic
+  const { decrypted } = await decryptAccessGroupMessagesWithRetry(
+    userPublicKey,
+    threads.MessageThreads,
+    allAccessGroups
+  );
+  
+  // 4. Process decrypted messages
+  const conversations = {};
+  for (const decryptedMessage of decrypted) {
+    if (!decryptedMessage.MessageInfo) continue;
+    
+    const otherUserKey = decryptedMessage.IsSender 
+      ? decryptedMessage.RecipientInfo.OwnerPublicKeyBase58Check
+      : decryptedMessage.SenderInfo.OwnerPublicKeyBase58Check;
+    
+    // ✅ CRITICAL: Use DecryptedMessage property, not MessageText!
+    let messageText = '[Encrypted Message]';
+    if (decryptedMessage.error) {
+      messageText = '[Decryption Failed]';
+    } else if (decryptedMessage.DecryptedMessage) {
+      messageText = decryptedMessage.DecryptedMessage;
+    } else if (decryptedMessage.MessageInfo.ExtraData?.unencrypted === "true") {
+      // Handle unencrypted messages
+      try {
+        const hexString = decryptedMessage.MessageInfo.EncryptedText;
+        const bytes = new Uint8Array(Buffer.from(hexString, 'hex'));
+        messageText = new TextDecoder().decode(bytes);
+      } catch (error) {
+        messageText = '[Decoding Failed]';
+      }
+    }
+    
+    if (!conversations[otherUserKey]) {
+      conversations[otherUserKey] = {
+        messages: [],
+        ChatType: decryptedMessage.ChatType,
+        lastMessage: messageText,
+        lastTimestamp: decryptedMessage.MessageInfo.TimestampNanos
+      };
+    }
+    
+    conversations[otherUserKey].messages.push({
+      id: \`\${decryptedMessage.MessageInfo.TimestampNanos}-\${decryptedMessage.SenderInfo.OwnerPublicKeyBase58Check}\`,
+      messageText,
+      timestampNanos: decryptedMessage.MessageInfo.TimestampNanos,
+      isFromSender: decryptedMessage.IsSender,
+      isEncrypted: !decryptedMessage.MessageInfo.ExtraData?.unencrypted
+    });
+  }
+  
+  return {
+    conversations,
+    profiles: threads.PublicKeyToProfileEntryResponse
+  };
+};
+\`\`\`
+
+### 5. Real-time Polling Pattern
+\`\`\`javascript
+const useMessagePolling = (userPublicKey, interval = 5000) => {
+  const [conversations, setConversations] = useState({});
+  const [isPolling, setIsPolling] = useState(false);
+  
+  useEffect(() => {
+    if (!userPublicKey) return;
+    
+    const pollMessages = async () => {
+      try {
+        setIsPolling(true);
+        const { conversations: newConversations } = await getConversationsWithDecryption(userPublicKey);
+        setConversations(newConversations);
+      } catch (error) {
+        console.error('Polling error:', error);
+      } finally {
+        setIsPolling(false);
+      }
+    };
+    
+    // Initial load
+    pollMessages();
+    
+    // Set up polling
+    const pollInterval = setInterval(pollMessages, interval);
+    
+    return () => clearInterval(pollInterval);
+  }, [userPublicKey, interval]);
+  
+  return { conversations, isPolling };
+};
+\`\`\``
+    },
+    
+    "error-handling": {
+      title: "🛡️ Comprehensive Error Handling Pattern",
+      content: `# DeSo Error Handling Best Practices
+
+## 🎯 Categorized Error Handling
+
+### 1. API Error Classification
+\`\`\`javascript
+const classifyError = (error) => {
+  const message = error.message.toLowerCase();
+  
+  if (message.includes('404') || message.includes('not found')) {
+    return {
+      type: 'NOT_FOUND',
+      userMessage: 'User or resource not found',
+      technical: error.message,
+      recoverable: false
+    };
+  }
+  
+  if (message.includes('network') || message.includes('fetch')) {
+    return {
+      type: 'NETWORK',
+      userMessage: 'Network connection issue. Please try again.',
+      technical: error.message,
+      recoverable: true
+    };
+  }
+  
+  if (message.includes('incorrect mac')) {
+    return {
+      type: 'DECRYPTION',
+      userMessage: 'Message could not be decrypted',
+      technical: error.message,
+      recoverable: false
+    };
+  }
+  
+  if (message.includes('access group')) {
+    return {
+      type: 'ACCESS_GROUP',
+      userMessage: 'Messaging permissions issue',
+      technical: error.message,
+      recoverable: true
+    };
+  }
+  
+  return {
+    type: 'UNKNOWN',
+    userMessage: 'An unexpected error occurred',
+    technical: error.message,
+    recoverable: false
+  };
+};
+\`\`\`
+
+### 2. Retry Logic with Exponential Backoff
+\`\`\`javascript
+const withRetry = async (apiCall, maxRetries = 3, baseDelay = 1000) => {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await apiCall();
+    } catch (error) {
+      const errorInfo = classifyError(error);
+      
+      if (!errorInfo.recoverable || attempt === maxRetries) {
+        throw error;
+      }
+      
+      const delay = baseDelay * Math.pow(2, attempt - 1);
+      console.warn(\`Attempt \${attempt} failed, retrying in \${delay}ms...\`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+};
+\`\`\`
+
+### 3. React Error Boundary for DeSo Operations
+\`\`\`javascript
+class DeSoErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { 
+      hasError: false, 
+      error: null,
+      errorInfo: null 
+    };
+  }
+  
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  
+  componentDidCatch(error, errorInfo) {
+    const classified = classifyError(error);
+    console.error('DeSo Error Boundary:', {
+      error,
+      errorInfo,
+      classified
+    });
+    
+    this.setState({ errorInfo: classified });
+  }
+  
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="error-boundary">
+          <h2>DeSo Integration Error</h2>
+          <p>{this.state.errorInfo?.userMessage}</p>
+          {process.env.NODE_ENV === 'development' && (
+            <details>
+              <summary>Technical Details</summary>
+              <pre>{this.state.errorInfo?.technical}</pre>
+            </details>
+          )}
+          <button onClick={() => this.setState({ hasError: false, error: null })}>
+            Try Again
+          </button>
+        </div>
+      );
+    }
+    
+    return this.props.children;
+  }
+}
+\`\`\`
+
+### 4. Graceful Degradation Pattern
+\`\`\`javascript
+const useDesoWithFallback = (apiCall, fallbackValue = null) => {
+  const [data, setData] = useState(fallbackValue);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  
+  const execute = useCallback(async (...args) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const result = await withRetry(() => apiCall(...args));
+      setData(result);
+      return result;
+    } catch (err) {
+      const errorInfo = classifyError(err);
+      setError(errorInfo);
+      
+      // Return fallback for non-critical errors
+      if (errorInfo.type === 'NOT_FOUND') {
+        setData(fallbackValue);
+        return fallbackValue;
+      }
+      
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, [apiCall, fallbackValue]);
+  
+  return { data, error, loading, execute };
+};
+\`\`\``
+    },
+    
+    "state-management": {
+      title: "🔄 DeSo State Management Pattern",
+      content: `# DeSo State Management Best Practices
+
+## 🎯 Centralized DeSo State with Context
+
+### 1. DeSo Context Provider
+\`\`\`javascript
+const DeSoContext = createContext();
+
+export const DeSoProvider = ({ children }) => {
+  const [user, setUser] = useState({
+    isAuthenticated: false,
+    publicKey: null,
+    username: null,
+    alternateUsers: []
+  });
+  
+  const [messaging, setMessaging] = useState({
+    conversations: {},
+    messages: {},
+    loading: false,
+    error: null
+  });
+  
+  const [sdk, setSdk] = useState({
+    isInitialized: false,
+    functions: {}
+  });
+  
+  // Initialize SDK
+  useEffect(() => {
+    const initializeSdk = async () => {
+      try {
+        const desoFunctions = await import('deso-protocol');
+        setSdk({
+          isInitialized: true,
+          functions: desoFunctions
+        });
+      } catch (error) {
+        console.error('Failed to initialize DeSo SDK:', error);
+      }
+    };
+    
+    initializeSdk();
+  }, []);
+  
+  // Identity subscription
+  useEffect(() => {
+    if (!sdk.isInitialized) return;
+    
+    const { identity } = sdk.functions;
+    
+    const unsubscribe = identity.subscribe(({ currentUser, alternateUsers, event }) => {
+      if (event === 'LOGIN_END' && currentUser) {
+        setUser({
+          isAuthenticated: true,
+          publicKey: currentUser.publicKey,
+          username: currentUser.username || currentUser.publicKey?.slice(0, 10) + '...',
+          alternateUsers: alternateUsers || []
+        });
+      } else if (event === 'LOGOUT') {
+        setUser({
+          isAuthenticated: false,
+          publicKey: null,
+          username: null,
+          alternateUsers: []
+        });
+        setMessaging({
+          conversations: {},
+          messages: {},
+          loading: false,
+          error: null
+        });
+      }
+    });
+    
+    return unsubscribe;
+  }, [sdk.isInitialized]);
+  
+  const value = {
+    user,
+    messaging,
+    sdk,
+    setUser,
+    setMessaging
+  };
+  
+  return (
+    <DeSoContext.Provider value={value}>
+      {children}
+    </DeSoContext.Provider>
+  );
+};
+
+export const useDeSo = () => {
+  const context = useContext(DeSoContext);
+  if (!context) {
+    throw new Error('useDeSo must be used within DeSoProvider');
+  }
+  return context;
+};
+\`\`\`
+
+### 2. Custom Hooks for DeSo Operations
+\`\`\`javascript
+// Custom hook for messaging operations
+export const useDesoMessaging = () => {
+  const { user, messaging, setMessaging, sdk } = useDeSo();
+  
+  const sendMessage = useCallback(async (recipientPublicKey, messageText) => {
+    if (!user.isAuthenticated || !sdk.isInitialized) {
+      throw new Error('User not authenticated or SDK not initialized');
+    }
+    
+    setMessaging(prev => ({ ...prev, loading: true, error: null }));
+    
+    try {
+      const { sendDMMessage, checkPartyAccessGroups, identity } = sdk.functions;
+      
+      // Implementation from messaging-flow pattern...
+      const txnHash = await sendMessage(user.publicKey, recipientPublicKey, messageText);
+      
+      // Update local state optimistically
+      setMessaging(prev => ({
+        ...prev,
+        loading: false,
+        // Add optimistic message to state
+      }));
+      
+      return txnHash;
+    } catch (error) {
+      setMessaging(prev => ({ 
+        ...prev, 
+        loading: false, 
+        error: classifyError(error) 
+      }));
+      throw error;
+    }
+  }, [user, sdk, setMessaging]);
+  
+  const refreshConversations = useCallback(async () => {
+    if (!user.isAuthenticated) return;
+    
+    setMessaging(prev => ({ ...prev, loading: true }));
+    
+    try {
+      const { conversations } = await getConversationsWithDecryption(user.publicKey);
+      setMessaging(prev => ({
+        ...prev,
+        conversations,
+        loading: false,
+        error: null
+      }));
+    } catch (error) {
+      setMessaging(prev => ({
+        ...prev,
+        loading: false,
+        error: classifyError(error)
+      }));
+    }
+  }, [user.publicKey, setMessaging]);
+  
+  return {
+    conversations: messaging.conversations,
+    loading: messaging.loading,
+    error: messaging.error,
+    sendMessage,
+    refreshConversations
+  };
+};
+\`\`\`
+
+### 3. Optimistic Updates Pattern
+\`\`\`javascript
+const useOptimisticMessages = () => {
+  const { messaging, setMessaging } = useDeSo();
+  
+  const addOptimisticMessage = useCallback((conversationId, message) => {
+    const optimisticMessage = {
+      ...message,
+      id: \`optimistic-\${Date.now()}\`,
+      isOptimistic: true,
+      timestamp: Date.now()
+    };
+    
+    setMessaging(prev => ({
+      ...prev,
+      conversations: {
+        ...prev.conversations,
+        [conversationId]: {
+          ...prev.conversations[conversationId],
+          messages: [
+            optimisticMessage,
+            ...(prev.conversations[conversationId]?.messages || [])
+          ]
+        }
+      }
+    }));
+    
+    return optimisticMessage.id;
+  }, [setMessaging]);
+  
+  const confirmOptimisticMessage = useCallback((conversationId, optimisticId, confirmedMessage) => {
+    setMessaging(prev => ({
+      ...prev,
+      conversations: {
+        ...prev.conversations,
+        [conversationId]: {
+          ...prev.conversations[conversationId],
+          messages: prev.conversations[conversationId]?.messages.map(msg =>
+            msg.id === optimisticId ? { ...confirmedMessage, isOptimistic: false } : msg
+          ) || []
+        }
+      }
+    }));
+  }, [setMessaging]);
+  
+  return { addOptimisticMessage, confirmOptimisticMessage };
+};
+\`\`\``
+    }
+  };
+
+  if (pattern === 'all') {
+    let response = `# 🏗️ Complete DeSo Implementation Patterns
+
+Based on deso-chat analysis and real debugging experience.
+
+## 🎯 Pattern Overview
+
+| Pattern | Purpose | Key Benefits |
+|---------|---------|--------------|
+| Messaging Flow | Complete message send/receive | Proper encryption, access groups |
+| Error Handling | Robust error management | User-friendly errors, retry logic |
+| State Management | Centralized DeSo state | Clean architecture, reusability |
+| API Integration | Consistent API usage | Proper response handling |
+| User Switching | Multi-account support | Professional UX |
+| Real-time Updates | Live message polling | Current conversation state |
+
+`;
+
+    for (const [key, patternInfo] of Object.entries(patterns)) {
+      response += `\n## ${patternInfo.title}\n\n`;
+      response += patternInfo.content.split('\n').slice(2, 8).join('\n'); // Summary
+      response += `\n\n*Use \`deso_implementation_patterns\` with pattern="${key}" for complete implementation*\n\n`;
+    }
+
+    return { content: [{ type: "text", text: response }] };
+  }
+
+  if (patterns[pattern]) {
+    return { content: [{ type: "text", text: patterns[pattern].content }] };
+  }
+
+  return { content: [{ type: "text", text: `Unknown pattern: ${pattern}. Available: ${Object.keys(patterns).join(', ')}` }] };
+}
+
 // Start server with robust error handling
 async function main() {
   try {
@@ -1365,7 +2984,8 @@ async function main() {
     };
     
     await server.connect(transport);
-          console.error("🚀 DeSo MCP Server v2.3 connected successfully with 6 tools!");
+          console.error("🚀 DeSo MCP Server v3.0 connected successfully with 8 comprehensive tools!");
+    console.error("🛠️ NEW: Advanced debugging guide and implementation patterns included!");
     
     // Keep process alive
     process.on('SIGINT', () => {
