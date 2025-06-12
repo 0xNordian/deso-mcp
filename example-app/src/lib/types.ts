@@ -4,7 +4,9 @@ export interface DesoUser {
   username: string;
   profilePic?: string;
   description?: string;
-  isVerified?: boolean;
+  isVerified: boolean;
+  accessLevel?: number; // DeSo access level (0, 2, 3, 4)
+  derivedPublicKey?: string; // Derived public key for messaging
 }
 
 // Message types

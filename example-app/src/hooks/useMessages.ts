@@ -485,26 +485,91 @@ export function useMessages(recipientPublicKey?: string) {
   const [error, setError] = useState<string | null>(null);
   const [isPolling, setIsPolling] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<number | null>(null);
+  const [newMessageCount, setNewMessageCount] = useState(0);
   
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const conversationPollingRef = useRef<NodeJS.Timeout | null>(null);
   const sdkInitialized = useRef(false);
+  const lastRecipientRef = useRef<string | undefined>(undefined);
+  const lastMessageCountRef = useRef<number>(0);
+  const userActiveRef = useRef(true);
+  const lastActivityRef = useRef(Date.now());
+
+  // Track user activity for smart polling
+  useEffect(() => {
+    const handleActivity = () => {
+      userActiveRef.current = true;
+      lastActivityRef.current = Date.now();
+    };
+
+    const handleInactivity = () => {
+      // Consider user inactive after 30 seconds of no activity
+      if (Date.now() - lastActivityRef.current > 30000) {
+        userActiveRef.current = false;
+      }
+    };
+
+    // Listen for user activity
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+    events.forEach(event => {
+      document.addEventListener(event, handleActivity, true);
+    });
+
+    // Check for inactivity every 30 seconds
+    const inactivityTimer = setInterval(handleInactivity, 30000);
+
+    return () => {
+      events.forEach(event => {
+        document.removeEventListener(event, handleActivity, true);
+      });
+      clearInterval(inactivityTimer);
+    };
+  }, []);
 
   // Initialize SDK
   useEffect(() => {
     const initSDK = async () => {
-      if (!sdkInitialized.current) {
+      if (sdkInitialized.current) return;
+      
+      try {
+        log.info('SDK', 'Initializing DeSo SDK...');
         const initialized = await initializeDesoSDK();
         sdkInitialized.current = initialized;
+        
+        if (initialized) {
+          log.success('SDK', 'DeSo SDK initialized successfully');
+          // Trigger initial fetch after SDK is ready
+          if (currentUser?.publicKey) {
+            if (recipientPublicKey) {
+              log.info('SDK', 'Auto-fetching messages after SDK init');
+              fetchMessages(recipientPublicKey);
+            } else {
+              log.info('SDK', 'Auto-fetching conversations after SDK init');
+              fetchConversations();
+            }
+          }
+        } else {
+          log.error('SDK', 'Failed to initialize DeSo SDK');
+          setError('Failed to initialize DeSo SDK');
+        }
+      } catch (err) {
+        log.error('SDK', 'Error initializing DeSo SDK:', err);
+        setError('Failed to initialize DeSo SDK');
       }
     };
     
     initSDK();
-  }, []);
+  }, [currentUser?.publicKey, recipientPublicKey]);
 
   // Fetch conversations
   const fetchConversations = useCallback(async () => {
-    if (!currentUser?.publicKey || !sdkInitialized.current) {
-      log.warn('FETCH_CONVERSATIONS', 'User not authenticated or SDK not initialized');
+    if (!currentUser?.publicKey) {
+      log.warn('FETCH_CONVERSATIONS', 'User not authenticated');
+      return;
+    }
+    
+    if (!sdkInitialized.current) {
+      log.warn('FETCH_CONVERSATIONS', 'SDK not initialized yet');
       return;
     }
 
@@ -512,7 +577,15 @@ export function useMessages(recipientPublicKey?: string) {
     setError(null);
     
     try {
+      log.info('FETCH_CONVERSATIONS', 'Starting conversation fetch');
       const conversationList = await getConversationsWithProfiles(currentUser.publicKey);
+      
+      // Check for new conversations
+      if (conversationList.length > conversations.length) {
+        const newConversations = conversationList.length - conversations.length;
+        log.info('NEW_CONVERSATIONS', `Found ${newConversations} new conversation(s)`);
+      }
+      
       setConversations(conversationList);
       setLastRefresh(Date.now());
       log.success('FETCH_CONVERSATIONS', `Fetched ${conversationList.length} conversations`);
@@ -523,12 +596,17 @@ export function useMessages(recipientPublicKey?: string) {
     } finally {
       setLoading(false);
     }
-  }, [currentUser?.publicKey]);
+  }, [currentUser?.publicKey, conversations.length]);
 
   // Fetch messages for specific conversation
   const fetchMessages = useCallback(async (otherUserPublicKey: string) => {
-    if (!currentUser?.publicKey || !sdkInitialized.current) {
-      log.warn('FETCH_MESSAGES', 'User not authenticated or SDK not initialized');
+    if (!currentUser?.publicKey) {
+      log.warn('FETCH_MESSAGES', 'User not authenticated');
+      return;
+    }
+    
+    if (!sdkInitialized.current) {
+      log.warn('FETCH_MESSAGES', 'SDK not initialized yet');
       return;
     }
 
@@ -536,11 +614,30 @@ export function useMessages(recipientPublicKey?: string) {
     setError(null);
     
     try {
+      log.info('FETCH_MESSAGES', `Starting message fetch for ${otherUserPublicKey.slice(0, 10)}...`);
       const messageList = await getMessagesForConversation(
         currentUser.publicKey,
         otherUserPublicKey
       );
+      
+      // Check for new messages
+      const previousMessageCount = lastMessageCountRef.current;
+      if (messageList.length > previousMessageCount && previousMessageCount > 0) {
+        const newMessages = messageList.length - previousMessageCount;
+        setNewMessageCount(prev => prev + newMessages);
+        log.info('NEW_MESSAGES', `Found ${newMessages} new message(s)! 🎉`);
+        
+        // Show notification for new messages (if browser supports it)
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification('New DeSo Message', {
+            body: `You have ${newMessages} new message(s)`,
+            icon: '/favicon.ico'
+          });
+        }
+      }
+      
       setMessages(messageList);
+      lastMessageCountRef.current = messageList.length;
       setLastRefresh(Date.now());
       log.success('FETCH_MESSAGES', `Fetched ${messageList.length} messages`);
     } catch (err) {
@@ -590,49 +687,121 @@ export function useMessages(recipientPublicKey?: string) {
     }
   }, [currentUser?.publicKey, fetchMessages, fetchConversations]);
 
-  // Start polling for new messages
+  // Enhanced polling with smart intervals
   const startPolling = useCallback(() => {
     if (pollingIntervalRef.current) return;
     
     setIsPolling(true);
-    pollingIntervalRef.current = setInterval(() => {
+    
+    const poll = () => {
+      // Smart polling intervals based on user activity
+      const isActive = userActiveRef.current;
+      const interval = isActive ? 3000 : 10000; // 3s when active, 10s when inactive
+      
       if (recipientPublicKey) {
         fetchMessages(recipientPublicKey);
-      } else {
+      }
+      
+      // Schedule next poll
+      pollingIntervalRef.current = setTimeout(poll, interval);
+    };
+    
+    // Start first poll
+    poll();
+    log.info('POLLING', 'Started enhanced message polling with smart intervals');
+  }, [recipientPublicKey, fetchMessages]);
+
+  // Background conversation polling (always running when authenticated)
+  const startConversationPolling = useCallback(() => {
+    if (conversationPollingRef.current) return;
+    
+    const pollConversations = () => {
+      if (currentUser?.publicKey && sdkInitialized.current) {
         fetchConversations();
       }
-    }, 10000); // Poll every 10 seconds
+      
+      // Poll conversations every 15 seconds
+      conversationPollingRef.current = setTimeout(pollConversations, 15000);
+    };
     
-    log.info('POLLING', 'Started message polling');
-  }, [recipientPublicKey, fetchMessages, fetchConversations]);
+    // Start first poll
+    pollConversations();
+    log.info('BACKGROUND_POLLING', 'Started background conversation polling');
+  }, [currentUser?.publicKey, fetchConversations]);
 
   // Stop polling
   const stopPolling = useCallback(() => {
     if (pollingIntervalRef.current) {
-      clearInterval(pollingIntervalRef.current);
+      clearTimeout(pollingIntervalRef.current);
       pollingIntervalRef.current = null;
       setIsPolling(false);
       log.info('POLLING', 'Stopped message polling');
     }
   }, []);
 
-  // Auto-fetch on mount and when recipient changes
+  // Stop conversation polling
+  const stopConversationPolling = useCallback(() => {
+    if (conversationPollingRef.current) {
+      clearTimeout(conversationPollingRef.current);
+      conversationPollingRef.current = null;
+      log.info('BACKGROUND_POLLING', 'Stopped background conversation polling');
+    }
+  }, []);
+
+  // Request notification permission
   useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission().then(permission => {
+        log.info('NOTIFICATIONS', `Notification permission: ${permission}`);
+      });
+    }
+  }, []);
+
+  // Auto-fetch when recipient changes (improved logic)
+  useEffect(() => {
+    // Clear messages when switching recipients
+    if (lastRecipientRef.current !== recipientPublicKey) {
+      setMessages([]);
+      setError(null);
+      setNewMessageCount(0);
+      lastMessageCountRef.current = 0;
+      lastRecipientRef.current = recipientPublicKey;
+    }
+
+    // Only fetch if we have a user and SDK is ready
     if (currentUser?.publicKey && sdkInitialized.current) {
       if (recipientPublicKey) {
+        log.info('AUTO_FETCH', `Recipient changed to ${recipientPublicKey.slice(0, 10)}..., fetching messages`);
         fetchMessages(recipientPublicKey);
+        startPolling(); // Start enhanced polling for this conversation
       } else {
+        log.info('AUTO_FETCH', 'No recipient, fetching conversations');
         fetchConversations();
+        stopPolling(); // Stop message polling when not in a conversation
       }
     }
-  }, [currentUser?.publicKey, recipientPublicKey, fetchMessages, fetchConversations]);
+  }, [currentUser?.publicKey, recipientPublicKey, fetchMessages, fetchConversations, startPolling, stopPolling]);
+
+  // Start background conversation polling when user is authenticated
+  useEffect(() => {
+    if (currentUser?.publicKey && sdkInitialized.current) {
+      startConversationPolling();
+    } else {
+      stopConversationPolling();
+    }
+
+    return () => {
+      stopConversationPolling();
+    };
+  }, [currentUser?.publicKey, sdkInitialized.current, startConversationPolling, stopConversationPolling]);
 
   // Cleanup polling on unmount
   useEffect(() => {
     return () => {
       stopPolling();
+      stopConversationPolling();
     };
-  }, [stopPolling]);
+  }, [stopPolling, stopConversationPolling]);
 
   return {
     messages,
@@ -641,11 +810,13 @@ export function useMessages(recipientPublicKey?: string) {
     error,
     isPolling,
     lastRefresh,
+    newMessageCount,
     sendMessage,
     fetchMessages,
     fetchConversations,
     startPolling,
     stopPolling,
+    clearNewMessageCount: () => setNewMessageCount(0),
     refreshMessages: () => {
       if (recipientPublicKey) {
         fetchMessages(recipientPublicKey);

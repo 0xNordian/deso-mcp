@@ -13,11 +13,12 @@ import { DesoUser, ConversationInfo } from '@/lib/types';
 type ViewMode = 'conversations' | 'search' | 'chat';
 
 export default function Home() {
-  const { currentUser, isLoading: authLoading } = useAuth();
+  const { currentUser, isLoading: authLoading, hasMessagingPermissions } = useAuth();
   const [selectedUser, setSelectedUser] = useState<{
     publicKey: string;
     username: string;
     profilePic?: string;
+    isVerified: boolean;
   } | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('conversations');
   
@@ -28,7 +29,8 @@ export default function Home() {
     error: messageError,
     isPolling,
     lastRefresh,
-    fetchConversations 
+    fetchConversations,
+    newMessageCount
   } = useMessages(selectedUser?.publicKey);
 
   if (authLoading) {
@@ -65,8 +67,9 @@ export default function Home() {
     console.log('🎯 User selected:', user.username);
     setSelectedUser({
       publicKey: user.publicKey,
-      username: user.username || 'Unknown User',
-      profilePic: user.profilePic
+      username: user.username,
+      profilePic: user.profilePic,
+      isVerified: user.isVerified || false
     });
     setViewMode('chat');
   };
@@ -88,7 +91,8 @@ export default function Home() {
     setSelectedUser({
       publicKey: conversation.otherUserPublicKey,
       username: conversation.otherUsername,
-      profilePic: conversation.otherUserProfilePic
+      profilePic: conversation.otherUserProfilePic,
+      isVerified: false // Default value since ConversationInfo doesn't include verification status
     });
     setViewMode('chat');
   };
@@ -178,11 +182,7 @@ export default function Home() {
           
                      {viewMode === 'chat' && selectedUser && (
              <MessageThread
-               recipient={{
-                 publicKey: selectedUser.publicKey,
-                 username: selectedUser.username,
-                 profilePic: selectedUser.profilePic
-               }}
+               recipient={selectedUser}
                onBack={handleBackToConversations}
              />
            )}
@@ -198,49 +198,30 @@ export default function Home() {
               <div className="text-gray-400 mb-1">Authentication:</div>
               <div className="text-gray-200">
                 User: {currentUser?.username || 'Not logged in'}<br/>
-                Public Key: {currentUser?.publicKey ? 
-                  `${currentUser.publicKey.slice(0, 15)}...${currentUser.publicKey.slice(-10)}` : 
-                  'None'
-                }
+                Public Key: {currentUser?.publicKey ? currentUser.publicKey.slice(0, 20) + '...' : 'None'}<br/>
+                Messaging Permissions: {hasMessagingPermissions ? '✅ Granted' : '❌ Not granted'}<br/>
+                Auth Loading: {authLoading ? 'Yes' : 'No'}
               </div>
             </div>
             <div>
-              <div className="text-gray-400 mb-1">Messaging Status:</div>
+              <div className="text-gray-400 mb-1">Messaging System:</div>
               <div className="text-gray-200">
-                {messageLoading && <span className="text-yellow-400">⚡ Sending message...</span>}
-                {messageError && <span className="text-red-400">❌ Error: {messageError}</span>}
-                {!messageLoading && !messageError && <span className="text-green-400">✅ Ready</span>}
-              </div>
-            </div>
-            <div>
-              <div className="text-gray-400 mb-1">Conversations:</div>
-              <div className="text-gray-200">
-                Total: {conversations.length}<br/>
-                Selected: {selectedUser ? selectedUser.username : 'None'}
-              </div>
-            </div>
-            <div>
-              <div className="text-gray-400 mb-1">Selected Chat:</div>
-              <div className="text-gray-200">
-                {selectedUser ? (
-                  <>
-                    User: {selectedUser.username}<br/>
-                    Key: {selectedUser.publicKey.slice(0, 15)}...{selectedUser.publicKey.slice(-10)}<br/>
-                    Messages: {messages.length}
-                  </>
-                ) : (
-                  'No chat selected'
+                Messages: {messages.length}<br/>
+                Conversations: {conversations.length}<br/>
+                Loading: {messageLoading ? 'Yes' : 'No'}<br/>
+                Polling: {isPolling ? '🟢 Active' : '🔴 Inactive'}<br/>
+                {newMessageCount > 0 && (
+                  <>New Messages: <span className="text-yellow-400">+{newMessageCount} 🎉</span><br/></>
                 )}
+                Last Refresh: {lastRefresh ? new Date(lastRefresh).toLocaleTimeString() : 'Never'}
               </div>
             </div>
           </div>
-          <div className="mt-3 pt-3 border-t border-gray-700">
-            <div className="text-gray-400 mb-1">Last Refresh:</div>
-            <div className="text-gray-200 text-xs">
-              {lastRefresh ? new Date(lastRefresh).toLocaleTimeString() : 'Never'}
-              {isPolling && <span className="ml-2 text-green-400">🔄 Auto-refreshing</span>}
+          {messageError && (
+            <div className="mt-2 p-2 bg-red-900/20 border border-red-500/30 rounded text-red-400 text-xs">
+              Error: {messageError}
             </div>
-          </div>
+          )}
         </div>
       )}
 
