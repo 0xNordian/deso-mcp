@@ -6,6 +6,8 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
+import fs from 'fs/promises';
+import path from 'path';
 
 // Create server with explicit error handling
 const server = new Server(
@@ -115,6 +117,39 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["topic"]
         }
+      },
+      {
+        name: "repository_search",
+        description: "Search for documents in the DeSo repository",
+        inputSchema: {
+          type: "object",
+          properties: {
+            query: {
+              type: "string",
+              description: "Search query"
+            }
+          },
+          required: ["query"]
+        }
+      },
+      {
+        name: "read_repository_document",
+        description: "Read a specific document from the DeSo repository",
+        inputSchema: {
+          type: "object",
+          properties: {
+            path: {
+              type: "string",
+              description: "Relative path to the document (e.g., 'docs/deso-tutorial-build-apps.md')"
+            },
+            repository: {
+              type: "string",
+              enum: ["docs", "core", "identity", "frontend", "backend", "deso-js"],
+              description: "Repository name"
+            }
+          },
+          required: ["path"]
+        }
       }
     ];
     
@@ -142,6 +177,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return await generateDesoCode(args);
       case "explain_deso_architecture":
         return await explainDesoArchitecture(args);
+      case "repository_search":
+        return await repositorySearch(args);
+      case "read_repository_document":
+        return await readRepositoryDocument(args);
       default:
         throw new Error(`Unknown DeSo tool: ${name}`);
     }
@@ -157,9 +196,14 @@ async function exploreDesoApi(args) {
   
   // Complete API Details from original comprehensive server (FULLY RESTORED)
   const apiDetails = {
-    social: {
-      description: "Social interaction endpoints for posts, follows, likes, and diamonds",
-      backendFile: "routes/transaction.go, routes/post.go",
+          social: {
+        description: "Social interaction endpoints for posts, follows, likes, and diamonds",
+        backendFile: "routes/transaction.go, routes/post.go",
+        documentation: {
+          tutorials: ["docs/deso-tutorial-build-apps.md"],
+          architecture: ["docs/architecture-overview/"],
+          examples: ["docs/deso-applications.md"]
+        },
       endpoints: {
         "create-follow-txn-stateless": {
           method: "POST",
@@ -819,40 +863,210 @@ Your DeSo MCP server is generating code! ⚡`
 async function explainDesoArchitecture(args) {
   const { topic, includeCode = false } = args;
   
-  return {
-    content: [{
-      type: "text",
-      text: `# DeSo Architecture: ${topic}
+  // Enhanced architecture explanations with repository context
+  const architectureTopics = {
+    "transaction-flow": `# DeSo Transaction Architecture
 
-## DeSo Two-Phase Transaction System
+## Two-Phase Transaction System
 
-DeSo uses a unique two-phase approach:
+DeSo implements a unique two-phase transaction system for security and usability:
 
-1. **Construction Phase**: Backend creates unsigned transaction
-2. **Signing Phase**: Identity service signs with user keys  
-3. **Submission Phase**: Signed transaction submitted to blockchain
+### Phase 1: Transaction Construction
+- **Location:** Backend API (\`repos/backend/routes/\`)
+- **Purpose:** Create unsigned transaction with proper fees and validation
+- **Components:**
+  - Transaction handlers in \`routes/transaction.go\`
+  - Fee calculation in \`core/lib/transaction_fees.go\`
+  - Validation in \`core/lib/block_view.go\`
 
-## Key Components:
-- **Identity Service**: Manages authentication and key storage
+### Phase 2: Transaction Signing & Submission  
+- **Location:** Identity Service (\`repos/identity/\`)
+- **Purpose:** Sign transaction with user's private key
+- **Components:**
+  - Key management in Identity iframe
+  - Derived key authorization
+  - Transaction submission to mempool
+
+## Repository Structure:
+- \`repos/backend/\` - Go backend with transaction handlers
+- \`repos/identity/\` - TypeScript identity service
+- \`repos/deso-js/\` - JavaScript SDK abstraction
+- \`repos/frontend/\` - Reference frontend implementation`,
+
+    "identity-system": `# DeSo Identity Architecture
+
+## Identity Service Components
+
+### Core Identity (\`repos/identity/\`)
+The identity service manages user authentication and key storage:
+
+- **Iframe Communication**: Secure cross-origin messaging
+- **Key Storage**: Encrypted local storage of private keys  
 - **Derived Keys**: Limited permission keys for applications
-- **Backend API**: Handles transaction construction and data
-- **deso-js SDK**: Abstracts complexity for developers
+- **Access Levels**: Granular permission system
 
-${includeCode ? `
-## Example Transaction Flow:
+### Integration with deso-js (\`repos/deso-js/\`)
+The SDK provides seamless identity integration:
+
+\`\`\`typescript
+// Identity abstraction in deso-js
+import { identity } from 'deso-protocol';
+
+// Login flow
+await identity.login();
+const user = identity.snapshot().currentUser;
+
+// Permission management
+await identity.requestPermissions({
+  TransactionCountLimitMap: {
+    SUBMIT_POST: 5
+  }
+});
+\`\`\`
+
+## Documentation References:
+- Tutorial: \`repos/docs/deso-tutorial-build-apps.md\`
+- Identity Docs: \`repos/docs/deso-identity/\`
+- Architecture: \`repos/docs/architecture-overview/\``,
+
+    "backend-implementation": `# DeSo Backend Architecture
+
+## Go Backend Structure (\`repos/backend/\`)
+
+### Core Components:
+- \`main.go\` - Entry point and server setup
+- \`routes/\` - API endpoint handlers
+- \`apis/\` - External API integrations
+- \`config/\` - Configuration management
+
+### Key Route Files:
+- \`routes/transaction.go\` - Transaction construction
+- \`routes/post.go\` - Post-related endpoints
+- \`routes/user.go\` - User profile endpoints
+- \`routes/nft.go\` - NFT marketplace endpoints
+- \`routes/associations.go\` - Association system
+
+### Core Library (\`repos/core/\`)
+Shared blockchain logic:
+- Transaction types and validation
+- Block processing and consensus
+- Mempool management
+- Fee calculation
+
+## API Integration:
+The backend integrates with \`deso-js\` through standardized endpoints that match SDK function calls.`,
+
+    "frontend-patterns": `# DeSo Frontend Architecture
+
+## Reference Implementation (\`repos/frontend/\`)
+
+The reference frontend demonstrates best practices:
+
+### Component Structure:
+- Identity integration components
+- Transaction confirmation flows  
+- Real-time data fetching patterns
+- Error handling and loading states
+
+### Key Patterns:
+- React hooks for DeSo state management
+- TypeScript for type safety
+- Responsive design principles
+- Performance optimization
+
+## Integration with deso-js:
+The frontend shows practical usage of the SDK for common operations like posting, following, and transactions.
+
+### Documentation:
+- Frontend docs: \`repos/docs/deso-frontend/\`
+- Tutorial: \`repos/docs/deso-tutorial-build-apps.md\`
+- Applications guide: \`repos/docs/deso-applications.md\``
+  };
+
+  let response;
+  if (architectureTopics[topic]) {
+    response = architectureTopics[topic];
+  } else {
+    // Default comprehensive overview
+    response = `# DeSo Architecture Overview: ${topic}
+
+## Complete System Architecture
+
+DeSo is a decentralized social blockchain with several key repositories:
+
+### 1. Backend (\`repos/backend/\`)
+- **Language:** Go
+- **Purpose:** API server, transaction construction, data serving
+- **Key Files:** \`routes/\`, \`main.go\`, \`config/\`
+
+### 2. Core (\`repos/core/\`) 
+- **Language:** Go  
+- **Purpose:** Blockchain consensus, transaction validation
+- **Key Files:** Block processing, mempool, fees
+
+### 3. Identity (\`repos/identity/\`)
+- **Language:** TypeScript/Angular
+- **Purpose:** User authentication, key management
+- **Key Files:** Identity service, key derivation
+
+### 4. Frontend (\`repos/frontend/\`)
+- **Language:** TypeScript/Angular
+- **Purpose:** Reference web application
+- **Key Features:** Social feeds, messaging, creator coins
+
+### 5. deso-js (\`repos/deso-js/\`)
+- **Language:** TypeScript
+- **Purpose:** Developer SDK for easy integration
+- **Key Features:** Transaction abstraction, identity integration
+
+### 6. Documentation (\`repos/docs/\`)
+- **Format:** Markdown
+- **Content:** Tutorials, API docs, architecture guides
+- **Key Files:** Build tutorial, tokenomics, governance
+
+## Integration Flow:
+Frontend/Apps → deso-js SDK → Backend API → Core Blockchain
+
+For specific topics, try: "transaction-flow", "identity-system", "backend-implementation", or "frontend-patterns"`;
+  }
+
+  // Add repository search suggestion
+  response += `\n\n## 🔍 Explore Further
+Use the \`repository_search\` tool to find specific documentation:
+- Search "transaction" for transaction-related docs
+- Search "identity" for authentication guides  
+- Search "tutorial" for step-by-step guides
+- Search "API" for endpoint documentation
+
+Or use \`read_repository_document\` to read specific files like:
+- \`docs/deso-tutorial-build-apps.md\`
+- \`docs/architecture-overview/README.md\`
+- \`deso-js/README.md\``;
+
+  if (includeCode) {
+    response += `\n\n## Code Example
 \`\`\`javascript
-// SDK handles both phases automatically
+// Complete DeSo integration example
+import { identity, submitPost } from 'deso-protocol';
+
+// 1. Identity phase
+await identity.login();
+const user = identity.snapshot().currentUser;
+
+// 2. Transaction phase (SDK handles backend + signing)
 const result = await submitPost({
   UpdaterPublicKeyBase58Check: user.publicKey,
-  BodyObj: { Body: 'Hello!' }
+  BodyObj: { Body: 'Built with DeSo architecture!' }
 });
-// 1. SDK calls backend to construct transaction
-// 2. SDK calls identity to sign transaction  
-// 3. SDK submits signed transaction
-\`\`\`
-` : ''}
 
-Your DeSo MCP server is explaining architecture! 🏗️`
+console.log('Transaction:', result.TransactionIDBase58Check);
+\`\`\``;
+  }
+
+  return {
+    content: [{
+      type: "text", 
+      text: response
     }]
   };
 }
@@ -884,6 +1098,262 @@ const response = await fetch('https://node.deso.org${details.url}', {
 `;
 }
 
+async function repositorySearch(args) {
+  const { query } = args;
+  
+  try {
+    const results = await searchRepositoryDocuments(query);
+    
+    if (results.length === 0) {
+      return {
+        content: [{
+          type: "text",
+          text: `# Repository Search Results
+
+**Query:** "${query}"
+
+No matching documents found in the DeSo repository.
+
+**Available repositories:** docs, core, identity, frontend, backend, deso-js`
+        }]
+      };
+    }
+    
+    let response = `# Repository Search Results\n\n**Query:** "${query}"\n**Found:** ${results.length} matches\n\n`;
+    
+    for (const result of results.slice(0, 10)) { // Limit to top 10 results
+      response += `## ${result.title}\n`;
+      response += `**Path:** \`${result.path}\`\n`;
+      response += `**Repository:** ${result.repository}\n\n`;
+      response += `${result.excerpt}\n\n---\n\n`;
+    }
+    
+    if (results.length > 10) {
+      response += `*Showing top 10 of ${results.length} results*\n`;
+    }
+    
+    return {
+      content: [{
+        type: "text",
+        text: response
+      }]
+    };
+  } catch (error) {
+    console.error("Repository search error:", error);
+    return {
+      content: [{
+        type: "text",
+        text: `# Repository Search Error
+
+**Query:** "${query}"
+
+Error searching repository: ${error.message}
+
+This might be due to repository access permissions or path issues.`
+      }]
+    };
+  }
+}
+
+// Repository document search implementation
+async function searchRepositoryDocuments(query) {
+  const repositories = ['docs', 'core', 'identity', 'frontend', 'backend', 'deso-js'];
+  const reposPath = path.join(process.cwd(), 'repos');
+  const results = [];
+  const searchTerms = query.toLowerCase().split(' ');
+  
+  for (const repo of repositories) {
+    const repoPath = path.join(reposPath, repo);
+    
+    try {
+      const stats = await fs.stat(repoPath);
+      if (stats.isDirectory()) {
+        const repoResults = await searchInDirectory(repoPath, repo, searchTerms);
+        results.push(...repoResults);
+      }
+    } catch (error) {
+      console.error(`Error accessing ${repo}:`, error.message);
+      continue;
+    }
+  }
+  
+  // Sort by relevance (number of matching terms)
+  return results.sort((a, b) => b.score - a.score);
+}
+
+async function searchInDirectory(dirPath, repository, searchTerms) {
+  const results = [];
+  
+  try {
+    const entries = await fs.readdir(dirPath, { withFileTypes: true });
+    
+    for (const entry of entries) {
+      const fullPath = path.join(dirPath, entry.name);
+      
+      if (entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'node_modules') {
+        // Recursively search subdirectories
+        const subResults = await searchInDirectory(fullPath, repository, searchTerms);
+        results.push(...subResults);
+      } else if (entry.isFile() && isSearchableFile(entry.name)) {
+        try {
+          const content = await fs.readFile(fullPath, 'utf-8');
+          const matches = findMatches(content, searchTerms, fullPath, repository);
+          results.push(...matches);
+        } catch (error) {
+          // Skip files that can't be read
+          continue;
+        }
+      }
+    }
+  } catch (error) {
+    console.error(`Error reading directory ${dirPath}:`, error.message);
+  }
+  
+  return results;
+}
+
+function isSearchableFile(filename) {
+  const searchableExtensions = ['.md', '.txt', '.js', '.ts', '.go', '.json', '.yaml', '.yml', '.tsx', '.jsx'];
+  const ext = path.extname(filename).toLowerCase();
+  return searchableExtensions.includes(ext);
+}
+
+function findMatches(content, searchTerms, filePath, repository) {
+  const lines = content.split('\n');
+  const matches = [];
+  const contentLower = content.toLowerCase();
+  
+  // Calculate relevance score
+  let score = 0;
+  for (const term of searchTerms) {
+    const termCount = (contentLower.match(new RegExp(term, 'g')) || []).length;
+    score += termCount;
+  }
+  
+  if (score === 0) return [];
+  
+  // Find relevant excerpts
+  const relevantLines = [];
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const lineLower = line.toLowerCase();
+    
+    if (searchTerms.some(term => lineLower.includes(term))) {
+      // Include context lines
+      const start = Math.max(0, i - 2);
+      const end = Math.min(lines.length, i + 3);
+      relevantLines.push({
+        lineNumber: i + 1,
+        content: lines.slice(start, end).join('\n'),
+        matchLine: line
+      });
+    }
+  }
+  
+  // Create title from file path and content
+  const fileName = path.basename(filePath);  
+  const title = getDocumentTitle(content, fileName);
+  
+  // Create excerpt from best matches
+  const excerpt = createExcerpt(relevantLines, searchTerms);
+  
+  matches.push({
+    title,
+    path: path.relative(path.join(process.cwd(), 'repos'), filePath),
+    repository,
+    score,
+    excerpt,
+    matchCount: relevantLines.length
+  });
+  
+  return matches;
+}
+
+function getDocumentTitle(content, fileName) {
+  // Try to extract title from markdown headers
+  const lines = content.split('\n');
+  for (const line of lines.slice(0, 10)) { // Check first 10 lines
+    if (line.startsWith('# ')) {
+      return line.substring(2).trim();
+    }
+  }
+  
+  // Fallback to filename
+  return fileName.replace(path.extname(fileName), '').replace(/[-_]/g, ' ');
+}
+
+function createExcerpt(relevantLines, searchTerms) {
+  if (relevantLines.length === 0) return '';
+  
+  // Take the best matching excerpt
+  const bestMatch = relevantLines[0];
+  let excerpt = bestMatch.content;
+  
+  // Highlight search terms
+  for (const term of searchTerms) {
+    const regex = new RegExp(`(${term})`, 'gi');
+    excerpt = excerpt.replace(regex, '**$1**');
+  }
+  
+  // Limit excerpt length
+  if (excerpt.length > 500) {
+    excerpt = excerpt.substring(0, 500) + '...';
+  }
+  
+  return excerpt;
+}
+
+// Repository document reader
+async function readRepositoryDocument(args) {
+  const { path: docPath, repository } = args;
+  
+  try {
+    let fullPath;
+    if (repository) {
+      fullPath = path.join(process.cwd(), 'repos', repository, docPath);
+    } else {
+      // If no repository specified, check if path already includes it
+      fullPath = path.join(process.cwd(), 'repos', docPath);
+    }
+    
+    const content = await fs.readFile(fullPath, 'utf-8');
+    const fileName = path.basename(fullPath);
+    const title = getDocumentTitle(content, fileName);
+    
+    return {
+      content: [{
+        type: "text",
+        text: `# ${title}
+
+**Path:** \`${docPath}\`
+**Repository:** ${repository || 'auto-detected'}
+**File:** ${fileName}
+
+---
+
+${content}`
+      }]
+    };
+  } catch (error) {
+    console.error("Document read error:", error);
+    return {
+      content: [{
+        type: "text",
+        text: `# Document Read Error
+
+**Path:** "${docPath}"
+**Repository:** ${repository || 'auto-detect'}
+
+Error reading document: ${error.message}
+
+**Available repositories:** docs, core, identity, frontend, backend, deso-js
+
+Try using the \`repository_search\` tool first to find the correct document path.`
+      }]
+    };
+  }
+}
+
 // Start server with robust error handling
 async function main() {
   try {
@@ -895,7 +1365,7 @@ async function main() {
     };
     
     await server.connect(transport);
-    console.error("🚀 DeSo MCP Server v2.3 connected successfully with 4 tools!");
+          console.error("🚀 DeSo MCP Server v2.3 connected successfully with 6 tools!");
     
     // Keep process alive
     process.on('SIGINT', () => {
