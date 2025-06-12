@@ -6,6 +6,7 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
   ListResourcesRequestSchema,
+  InitializeRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 
 class ComprehensiveDesoMCPServer {
@@ -27,6 +28,21 @@ class ComprehensiveDesoMCPServer {
   }
 
   setupTools() {
+    // Handle initialization
+    this.server.setRequestHandler(InitializeRequestSchema, async () => {
+      return {
+        protocolVersion: "2024-11-05",
+        capabilities: {
+          tools: {},
+          resources: {}
+        },
+        serverInfo: {
+          name: "deso-mcp-comprehensive",
+          version: "2.3.0"
+        }
+      };
+    });
+
     this.server.setRequestHandler(ListToolsRequestSchema, async () => {
       return {
         tools: [
