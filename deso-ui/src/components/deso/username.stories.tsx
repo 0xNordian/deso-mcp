@@ -1,35 +1,94 @@
-import type { Meta, StoryObj } from '@storybook/react-vite'
-import { graphql, HttpResponse, delay } from 'msw'
+import type { Meta, StoryObj } from '@storybook/react'
 import { UsernameDisplay } from './username-display'
-import { mockProfiles, GRAPHQL_OPERATIONS } from '../../lib/mocks/deso-data'
+import { http, HttpResponse } from 'msw'
+import { mockProfiles, defaultProfile } from '../../lib/mocks/deso-data'
+import { DEFAULT_PUBLIC_KEY } from '../../lib/constants'
 
-const meta = {
+/**
+ * The UsernameDisplay component shows a user's username from the DeSo blockchain,
+ * with optional verification badge and copy button.
+ * 
+ * ## GraphQL Query
+ * 
+ * This component uses the following GraphQL query to fetch username data:
+ * 
+ * ```graphql
+ * query GetUsernameInfo($publicKey: String!) {
+ *   accountByPublicKey(publicKey: $publicKey) {
+ *     username
+ *     extraData {
+ *       IsVerified
+ *     }
+ *   }
+ * }
+ * ```
+ */
+
+const createMockHandler = (profile: any) => {
+  return http.post('https://graphql-prod.deso.com/graphql', async ({ request }) => {
+    const body = await request.json() as any
+    
+    if (body.operationName === 'GetUsernameInfo') {
+      return HttpResponse.json({
+        data: {
+          accountByPublicKey: profile.accountByPublicKey
+        }
+      })
+    }
+    
+    return HttpResponse.json({ data: null })
+  })
+}
+
+const meta: Meta<typeof UsernameDisplay> = {
   title: 'DeSo/Username',
   component: UsernameDisplay,
   parameters: {
     layout: 'centered',
     docs: {
       description: {
-        component: 'Display a user\'s username and display name from the DeSo blockchain.',
+        component: `
+# Username Display Component
+
+Display a user's username from the DeSo blockchain with optional verification badge and copy button.
+
+## GraphQL Query
+
+This component fetches username data using the following GraphQL query:
+
+\`\`\`graphql
+query GetUsernameInfo($publicKey: String!) {
+  accountByPublicKey(publicKey: $publicKey) {
+    username
+    extraData {
+      IsVerified
+    }
+  }
+}
+\`\`\`
+
+## Features
+
+- Shows username with @ prefix
+- Optional verification badge
+- Optional copy button
+- Truncation for long usernames
+- Customizable styling
+- Handles loading and error states gracefully
+`,
       },
     },
   },
+  tags: ['autodocs'],
   argTypes: {
-    publicKey: {
-      control: 'text',
-      description: 'The public key of the DeSo user',
-    },
     showVerification: {
       control: 'boolean',
-      description: 'Whether to show verification badge',
     },
     truncate: {
       control: 'boolean',
-      description: 'Whether to truncate long usernames',
     },
     maxLength: {
       control: 'number',
-      description: 'Maximum length for truncated text',
     },
     showCopyButton: {
       control: 'boolean',
@@ -44,128 +103,87 @@ const meta = {
       description: 'Additional CSS classes',
     },
   },
-} satisfies Meta<typeof UsernameDisplay>
+}
 
 export default meta
 type Story = StoryObj<typeof meta>
 
-// Mock GraphQL responses
-const createMockHandler = (data: any) => 
-  graphql.query(GRAPHQL_OPERATIONS.GetUsernameInfo, () => {
-    return HttpResponse.json({ data })
-  })
-
-const createErrorHandler = () =>
-  graphql.query(GRAPHQL_OPERATIONS.GetUsernameInfo, async () => {
-    await delay(800)
-    return HttpResponse.json({
-      errors: [{ message: 'Failed to fetch username data' }]
-    })
-  })
-
-const createLoadingHandler = () =>
-  graphql.query(GRAPHQL_OPERATIONS.GetUsernameInfo, async () => {
-    await delay(3000) // Long delay to show loading state
-    return HttpResponse.json({ data: mockProfiles.mossified })
-  })
-
-export const WithMossified: Story = {
+export const Default: Story = {
   args: {
-    publicKey: 'BC1YLgDnZU3JQ2dK6t2F9irkUr5gEg1sfb6BmsuF7ZDe6RRkAUn5iqy',
-    showVerification: true,
+    publicKey: DEFAULT_PUBLIC_KEY,
   },
   parameters: {
     msw: {
-      handlers: [createMockHandler(mockProfiles.mossified)],
+      handlers: [createMockHandler(defaultProfile)],
     },
   },
 }
 
-export const WithDiamondHands: Story = {
+export const WithVerification: Story = {
   args: {
-    publicKey: 'BC1YLhDuD4E9vHWbNLWLYfFytN4M8aX9WdPW8NrLYjH7J1b5JQRKvnN',
+    publicKey: DEFAULT_PUBLIC_KEY,
     showVerification: true,
   },
   parameters: {
     msw: {
-      handlers: [createMockHandler(mockProfiles.diamondhands)],
+      handlers: [createMockHandler(defaultProfile)],
     },
   },
 }
 
-export const WithCopyButton: Story = {
+export const Truncated: Story = {
   args: {
-    publicKey: 'BC1YLgDnZU3JQ2dK6t2F9irkUr5gEg1sfb6BmsuF7ZDe6RRkAUn5iqy',
-    showVerification: true,
-    showCopyButton: true,
-  },
-  parameters: {
-    msw: {
-      handlers: [createMockHandler(mockProfiles.mossified)],
-    },
-  },
-}
-
-export const WithTruncation: Story = {
-  args: {
-    publicKey: 'BC1YLgDnZU3JQ2dK6t2F9irkUr5gEg1sfb6BmsuF7ZDe6RRkAUn5iqy',
-    showVerification: true,
+    publicKey: DEFAULT_PUBLIC_KEY,
     truncate: true,
-    maxLength: 10,
+    maxLength: 8,
   },
   parameters: {
     msw: {
-      handlers: [createMockHandler(mockProfiles.mossified)],
+      handlers: [createMockHandler(defaultProfile)],
     },
   },
 }
 
-export const WithProfileLink: Story = {
+export const Loading: Story = {
   args: {
-    publicKey: 'BC1YLgDnZU3JQ2dK6t2F9irkUr5gEg1sfb6BmsuF7ZDe6RRkAUn5iqy',
-    showVerification: true,
-    linkToProfile: true,
+    publicKey: DEFAULT_PUBLIC_KEY,
   },
   parameters: {
     msw: {
-      handlers: [createMockHandler(mockProfiles.mossified)],
+      handlers: [
+        http.post('https://graphql-prod.deso.com/graphql', async () => {
+          await new Promise(resolve => setTimeout(resolve, 2000))
+          return HttpResponse.json({ data: null })
+        }),
+      ],
     },
   },
 }
 
-export const LoadingState: Story = {
+export const Error: Story = {
   args: {
-    publicKey: 'BC1YLgDnZU3JQ2dK6t2F9irkUr5gEg1sfb6BmsuF7ZDe6RRkAUn5iqy',
-    showVerification: true,
+    publicKey: 'invalid-key',
   },
   parameters: {
     msw: {
-      handlers: [createLoadingHandler()],
-    },
-  },
-}
-
-export const ErrorState: Story = {
-  args: {
-    publicKey: 'invalid-public-key',
-    showVerification: true,
-  },
-  parameters: {
-    msw: {
-      handlers: [createErrorHandler()],
+      handlers: [
+        http.post('https://graphql-prod.deso.com/graphql', () => {
+          return HttpResponse.json({ errors: [{ message: 'Profile not found' }] })
+        }),
+      ],
     },
   },
 }
 
 export const WithCustomStyling: Story = {
   args: {
-    publicKey: 'BC1YLgDnZU3JQ2dK6t2F9irkUr5gEg1sfb6BmsuF7ZDe6RRkAUn5iqy',
+    publicKey: DEFAULT_PUBLIC_KEY,
     showVerification: true,
     className: 'text-blue-600 font-bold text-lg',
   },
   parameters: {
     msw: {
-      handlers: [createMockHandler(mockProfiles.mossified)],
+      handlers: [createMockHandler(defaultProfile)],
     },
   },
 } 

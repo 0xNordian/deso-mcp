@@ -116,9 +116,21 @@ export function ProfilePicture({
   
   // Choose between regular profile pic and NFT profile pic
   const isNFT = variant === 'nft';
-  const profilePicUrl = isNFT 
-    ? extraData?.NFTProfilePictureUrl 
-    : buildProfilePictureUrl(profile?.profilePic);
+  
+  // Priority order: 1) Variant-specific, 2) NFT if available, 3) Regular profile pic
+  let profilePicUrl: string | undefined;
+  
+  if (isNFT) {
+    // For NFT variant, only use NFT profile picture
+    profilePicUrl = extraData?.NFTProfilePictureUrl;
+  } else {
+    // For default variant, prefer NFT if available, fallback to regular
+    const nftUrl = extraData?.NFTProfilePictureUrl;
+    const regularUrl = buildProfilePictureUrl(profile?.profilePic);
+    
+    // Use NFT profile picture if available and not explicitly requesting default
+    profilePicUrl = nftUrl || regularUrl;
+  }
   
   console.log('🖼️ ProfilePicture URL processing:', {
     isNFT,

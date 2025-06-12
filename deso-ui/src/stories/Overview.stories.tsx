@@ -3,9 +3,310 @@ import { ProfilePicture } from '../components/deso/profile-picture'
 import { UsernameDisplay } from '../components/deso/username-display'
 import { ProfileCoverPhoto } from '../components/deso/profile-cover-photo'
 import { VerificationBadge } from '../components/deso/verification-badge'
+import { UserInfo } from '../components/deso/user-info'
+import { http, HttpResponse } from 'msw'
+import { defaultProfile } from '../lib/mocks/deso-data'
+import { DEFAULT_PUBLIC_KEY } from '../lib/constants'
 
-const meta: Meta = {
-  title: 'DeSo/Overview',
+// Helper to create MSW handlers
+const createHandler = () => {
+  return http.post('https://graphql-prod.deso.com/graphql', async ({ request }) => {
+    const body = await request.json() as any;
+    return HttpResponse.json({ data: defaultProfile });
+  });
+};
+
+function Overview() {
+  return (
+    <div className="max-w-4xl mx-auto p-8 space-y-12">
+      {/* Header */}
+      <div className="text-center">
+        <h1 className="text-4xl font-bold text-gray-900 mb-4">DeSo UI Library</h1>
+        <p className="text-lg text-gray-600">
+          A collection of React components for building DeSo-powered applications with Storybook documentation.
+        </p>
+      </div>
+
+      {/* Profile Pictures Section */}
+      <section>
+        <h2 className="text-2xl font-semibold text-gray-800 mb-6">Profile Pictures</h2>
+        <div className="bg-white rounded-lg shadow-sm border p-6">
+          <h3 className="text-lg font-medium text-gray-700 mb-4">Different Sizes</h3>
+          <div className="flex items-center space-x-6">
+            <div className="text-center">
+              <ProfilePicture
+                publicKey={DEFAULT_PUBLIC_KEY}
+                size="xs"
+              />
+              <p className="text-sm text-gray-500 mt-2">XS</p>
+            </div>
+            <div className="text-center">
+              <ProfilePicture
+                publicKey={DEFAULT_PUBLIC_KEY}
+                size="sm"
+              />
+              <p className="text-sm text-gray-500 mt-2">SM</p>
+            </div>
+            <div className="text-center">
+              <ProfilePicture
+                publicKey={DEFAULT_PUBLIC_KEY}
+                size="md"
+              />
+              <p className="text-sm text-gray-500 mt-2">MD</p>
+            </div>
+            <div className="text-center">
+              <ProfilePicture
+                publicKey={DEFAULT_PUBLIC_KEY}
+                size="lg"
+              />
+              <p className="text-sm text-gray-500 mt-2">LG</p>
+            </div>
+            <div className="text-center">
+              <ProfilePicture
+                publicKey={DEFAULT_PUBLIC_KEY}
+                size="xl"
+              />
+              <p className="text-sm text-gray-500 mt-2">XL</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Username Display Section */}
+      <section>
+        <h2 className="text-2xl font-semibold text-gray-800 mb-6">Username Display</h2>
+        <div className="bg-white rounded-lg shadow-sm border p-6 space-y-4">
+          <div>
+            <h3 className="text-lg font-medium text-gray-700 mb-2">With Verification</h3>
+            <UsernameDisplay
+              publicKey={DEFAULT_PUBLIC_KEY}
+              showVerification={true}
+            />
+          </div>
+          <div>
+            <h3 className="text-lg font-medium text-gray-700 mb-2">With Copy Button</h3>
+            <UsernameDisplay
+              publicKey={DEFAULT_PUBLIC_KEY}
+              showCopyButton={true}
+            />
+          </div>
+          <div>
+            <h3 className="text-lg font-medium text-gray-700 mb-2">Truncated</h3>
+            <UsernameDisplay
+              publicKey={DEFAULT_PUBLIC_KEY}
+              truncate={true}
+              maxLength={8}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* UserInfo Section */}
+      <section>
+        <h2 className="text-2xl font-semibold text-gray-800 mb-6">User Info</h2>
+        <div className="bg-white rounded-lg shadow-sm border p-6 space-y-6">
+          <div>
+            <h3 className="text-lg font-medium text-gray-700 mb-4">Row Layout</h3>
+            <UserInfo
+              publicKey={DEFAULT_PUBLIC_KEY}
+              pictureSize="md"
+              showVerification={true}
+              showDisplayName={true}
+              layout="row"
+            />
+          </div>
+          <div>
+            <h3 className="text-lg font-medium text-gray-700 mb-4">Column Layout</h3>
+            <UserInfo
+              publicKey={DEFAULT_PUBLIC_KEY}
+              pictureSize="lg"
+              showVerification={true}
+              showDisplayName={true}
+              layout="column"
+            />
+          </div>
+          <div>
+            <h3 className="text-lg font-medium text-gray-700 mb-4">With Copy Button</h3>
+            <UserInfo
+              publicKey={DEFAULT_PUBLIC_KEY}
+              pictureSize="md"
+              showVerification={true}
+              showDisplayName={true}
+              showCopyButton={true}
+            />
+          </div>
+          <div>
+            <h3 className="text-lg font-medium text-gray-700 mb-4">Custom Styling</h3>
+            <UserInfo
+              publicKey={DEFAULT_PUBLIC_KEY}
+              pictureSize="md"
+              showVerification={true}
+              showDisplayName={true}
+              className="bg-gray-100 p-3 rounded-lg"
+              displayNameClassName="text-blue-600 font-bold"
+              usernameClassName="text-gray-600"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Verification Badge Section */}
+      <section>
+        <h2 className="text-2xl font-semibold text-gray-800 mb-6">Verification Badge</h2>
+        <div className="bg-white rounded-lg shadow-sm border p-6 space-y-4">
+          <div className="flex items-center space-x-4">
+            <VerificationBadge isVerified={true} />
+            <span className="text-gray-700">Verified Account</span>
+          </div>
+          <div className="flex items-center space-x-4">
+            <VerificationBadge isVerified={false} />
+            <span className="text-gray-700">Unverified Account</span>
+          </div>
+        </div>
+      </section>
+
+      {/* Cover Photo Section */}
+      <section>
+        <h2 className="text-2xl font-semibold text-gray-800 mb-6">Cover Photos</h2>
+        <div className="space-y-6">
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <h3 className="text-lg font-medium text-gray-700 mb-4">16:9 Aspect Ratio</h3>
+            <div className="max-w-md">
+              <ProfileCoverPhoto
+                publicKey={DEFAULT_PUBLIC_KEY}
+                aspectRatio="16:9"
+              />
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <h3 className="text-lg font-medium text-gray-700 mb-4">3:1 Ultra-wide</h3>
+            <div className="max-w-md">
+              <ProfileCoverPhoto
+                publicKey={DEFAULT_PUBLIC_KEY}
+                aspectRatio="3:1"
+              />
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <h3 className="text-lg font-medium text-gray-700 mb-4">With Overlay</h3>
+            <div className="max-w-md">
+              <ProfileCoverPhoto
+                publicKey={DEFAULT_PUBLIC_KEY}
+                aspectRatio="16:9"
+                showOverlay={true}
+                overlayOpacity={0.4}
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Composite Example */}
+      <section>
+        <h2 className="text-2xl font-semibold text-gray-800 mb-6">Composite Example</h2>
+        <div className="bg-white rounded-lg shadow-sm border overflow-hidden max-w-md mx-auto">
+          <ProfileCoverPhoto
+            publicKey={DEFAULT_PUBLIC_KEY}
+            aspectRatio="16:9"
+            showOverlay={true}
+            overlayOpacity={0.3}
+          >
+            <div className="absolute bottom-4 left-4">
+              <ProfilePicture
+                publicKey={DEFAULT_PUBLIC_KEY}
+                size="lg"
+                className="border-4 border-white shadow-lg"
+              />
+            </div>
+          </ProfileCoverPhoto>
+          
+          <div className="p-6">
+            <div className="flex items-center gap-2 mb-2">
+              <UsernameDisplay
+                publicKey={DEFAULT_PUBLIC_KEY}
+                showVerification={true}
+                showCopyButton={true}
+              />
+            </div>
+            <p className="text-gray-600 text-sm">
+              A beautiful composite layout combining all DeSo UI components with real blockchain data.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* GraphQL Queries Section */}
+      <section>
+        <h2 className="text-2xl font-semibold text-gray-800 mb-6">GraphQL Queries</h2>
+        <div className="bg-white rounded-lg shadow-sm border p-6 space-y-6">
+          <div>
+            <h3 className="text-lg font-medium text-gray-700 mb-2">ProfilePicture Query</h3>
+            <pre className="bg-gray-100 p-4 rounded-md overflow-auto text-sm">
+              {`query GetProfilePicture($publicKey: String!) {
+  accountByPublicKey(publicKey: $publicKey) {
+    profilePic
+    extraData {
+      NFTProfilePictureUrl
+    }
+  }
+}`}
+            </pre>
+          </div>
+          
+          <div>
+            <h3 className="text-lg font-medium text-gray-700 mb-2">UsernameDisplay Query</h3>
+            <pre className="bg-gray-100 p-4 rounded-md overflow-auto text-sm">
+              {`query GetUsernameInfo($publicKey: String!) {
+  accountByPublicKey(publicKey: $publicKey) {
+    username
+    extraData {
+      IsVerified
+    }
+  }
+}`}
+            </pre>
+          </div>
+          
+          <div>
+            <h3 className="text-lg font-medium text-gray-700 mb-2">ProfileCoverPhoto Query</h3>
+            <pre className="bg-gray-100 p-4 rounded-md overflow-auto text-sm">
+              {`query GetProfileData($publicKey: String!) {
+  accountByPublicKey(publicKey: $publicKey) {
+    extraData {
+      CoverPhotoUrl
+    }
+  }
+}`}
+            </pre>
+          </div>
+          
+          <div>
+            <h3 className="text-lg font-medium text-gray-700 mb-2">UserInfo Query</h3>
+            <pre className="bg-gray-100 p-4 rounded-md overflow-auto text-sm">
+              {`query GetProfileData($publicKey: String!) {
+  accountByPublicKey(publicKey: $publicKey) {
+    username
+    profilePic
+    extraData {
+      DisplayName
+      IsVerified
+      NFTProfilePictureUrl
+    }
+  }
+}`}
+            </pre>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+const meta: Meta<typeof Overview> = {
+  title: 'Overview',
+  component: Overview,
   parameters: {
     layout: 'fullscreen',
     docs: {
@@ -38,298 +339,14 @@ All components fetch real data from the DeSo blockchain using GraphQL queries to
         `,
       },
     },
-  },
-}
-
-export default meta
-type Story = StoryObj<typeof meta>
-
-// Profile card example
-export const ProfileCard: Story = {
-  render: () => (
-    <div className="max-w-sm mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
-      <ProfileCoverPhoto 
-        publicKey="BC1YLgi66tdjAaVfYpmM447cxsve3TpvfXD9h8X6JMak7gbKABoEVaT" 
-        className="h-32"
-      />
-      <div className="relative px-6 pb-6">
-        <div className="absolute -top-8 left-6">
-          <ProfilePicture 
-            publicKey="BC1YLgi66tdjAaVfYpmM447cxsve3TpvfXD9h8X6JMak7gbKABoEVaT"
-            size="lg"
-            className="border-4 border-white shadow-lg"
-          />
-        </div>
-        <div className="pt-12">
-          <div className="flex items-center gap-2 mb-2">
-            <UsernameDisplay 
-              publicKey="BC1YLgi66tdjAaVfYpmM447cxsve3TpvfXD9h8X6JMak7gbKABoEVaT"
-              className="text-xl font-bold"
-            />
-          </div>
-          <p className="text-gray-600 text-sm">
-            Building the future of decentralized social media on DeSo
-          </p>
-        </div>
-      </div>
-    </div>
-  ),
-  parameters: {
-    docs: {
-      description: {
-        story: 'A complete profile card using all components together',
-      },
+    msw: {
+      handlers: [createHandler()],
     },
   },
-}
+  tags: ['autodocs'],
+};
 
-// NFT Profile card
-export const NFTProfileCard: Story = {
-  render: () => (
-    <div className="max-w-sm mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
-      <ProfileCoverPhoto 
-        publicKey="BC1YLgi66tdjAaVfYpmM447cxsve3TpvfXD9h8X6JMak7gbKABoEVaT" 
-        className="h-32"
-      />
-      <div className="relative px-6 pb-6">
-        <div className="absolute -top-8 left-6">
-          <ProfilePicture 
-            publicKey="BC1YLgi66tdjAaVfYpmM447cxsve3TpvfXD9h8X6JMak7gbKABoEVaT"
-            variant="nft"
-            size="lg"
-            className="shadow-lg"
-          />
-        </div>
-        <div className="pt-12">
-          <div className="flex items-center gap-2 mb-2">
-            <UsernameDisplay 
-              publicKey="BC1YLgi66tdjAaVfYpmM447cxsve3TpvfXD9h8X6JMak7gbKABoEVaT"
-              className="text-xl font-bold"
-            />
-          </div>
-          <p className="text-gray-600 text-sm">
-            NFT collector and creator on DeSo
-          </p>
-        </div>
-      </div>
-    </div>
-  ),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Profile card featuring NFT hexagon profile picture',
-      },
-    },
-  },
-}
+export default meta;
+type Story = StoryObj<typeof meta>;
 
-// User list example
-export const UserList: Story = {
-  render: () => (
-    <div className="max-w-md mx-auto bg-white rounded-lg shadow-sm border">
-      <div className="p-4 border-b">
-        <h3 className="font-semibold text-gray-900">Active Users</h3>
-      </div>
-      <div className="divide-y">
-        <div className="p-4 flex items-center gap-3 hover:bg-gray-50">
-          <ProfilePicture 
-            publicKey="BC1YLgi66tdjAaVfYpmM447cxsve3TpvfXD9h8X6JMak7gbKABoEVaT"
-            size="md"
-          />
-          <div className="flex-1">
-            <div className="flex items-center gap-1">
-              <UsernameDisplay 
-                publicKey="BC1YLgi66tdjAaVfYpmM447cxsve3TpvfXD9h8X6JMak7gbKABoEVaT"
-                className="font-medium"
-              />
-            </div>
-            <p className="text-sm text-gray-500">Active 2 minutes ago</p>
-          </div>
-        </div>
-        <div className="p-4 flex items-center gap-3 hover:bg-gray-50">
-          <ProfilePicture 
-            publicKey="BC1YLhBLE1834FBJbQ9JU23JbPanNYMkUsdpJZrFVqNGsCe7YadYiUg"
-            size="md"
-          />
-          <div className="flex-1">
-            <div className="flex items-center gap-1">
-              <UsernameDisplay 
-                publicKey="BC1YLhBLE1834FBJbQ9JU23JbPanNYMkUsdpJZrFVqNGsCe7YadYiUg"
-                className="font-medium"
-              />
-            </div>
-            <p className="text-sm text-gray-500">Active 5 minutes ago</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  ),
-  parameters: {
-    docs: {
-      description: {
-        story: 'User list showing profile pictures and usernames',
-      },
-    },
-  },
-}
-
-// Verification badge showcase
-export const VerificationShowcase: Story = {
-  render: () => (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <div className="bg-white p-6 rounded-lg shadow-sm border">
-        <h3 className="font-semibold mb-4">Verification Badge Styles</h3>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
-            <div>
-              <div className="flex items-center gap-1">
-                <span className="font-medium">Default User</span>
-                <VerificationBadge isVerified={true} style="default" size="sm" />
-              </div>
-              <p className="text-sm text-gray-500">Verified account</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full"></div>
-            <div>
-              <div className="flex items-center gap-1">
-                <span className="font-medium">Premium User</span>
-                <VerificationBadge isVerified={true} style="premium" size="sm" />
-              </div>
-              <p className="text-sm text-gray-500">Premium verified</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"></div>
-            <div>
-              <div className="flex items-center gap-1">
-                <span className="font-medium">Creator</span>
-                <VerificationBadge isVerified={true} style="creator" size="sm" />
-              </div>
-              <p className="text-sm text-gray-500">Verified creator</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-red-500 to-red-600 rounded-full"></div>
-            <div>
-              <div className="flex items-center gap-1">
-                <span className="font-medium">Admin</span>
-                <VerificationBadge isVerified={true} style="admin" size="sm" />
-              </div>
-              <p className="text-sm text-gray-500">Platform admin</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  ),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Showcase of all verification badge styles',
-      },
-    },
-  },
-}
-
-// Size comparison
-export const SizeComparison: Story = {
-  render: () => (
-    <div className="max-w-4xl mx-auto space-y-8">
-      <div className="bg-white p-6 rounded-lg shadow-sm border">
-        <h3 className="font-semibold mb-4">Profile Picture Sizes</h3>
-        <div className="flex items-end gap-6">
-          <div className="text-center">
-            <ProfilePicture 
-              publicKey="BC1YLgi66tdjAaVfYpmM447cxsve3TpvfXD9h8X6JMak7gbKABoEVaT"
-              size="xs"
-            />
-            <p className="text-xs mt-2">xs</p>
-          </div>
-          <div className="text-center">
-            <ProfilePicture 
-              publicKey="BC1YLgi66tdjAaVfYpmM447cxsve3TpvfXD9h8X6JMak7gbKABoEVaT"
-              size="sm"
-            />
-            <p className="text-xs mt-2">sm</p>
-          </div>
-          <div className="text-center">
-            <ProfilePicture 
-              publicKey="BC1YLgi66tdjAaVfYpmM447cxsve3TpvfXD9h8X6JMak7gbKABoEVaT"
-              size="md"
-            />
-            <p className="text-xs mt-2">md</p>
-          </div>
-          <div className="text-center">
-            <ProfilePicture 
-              publicKey="BC1YLgi66tdjAaVfYpmM447cxsve3TpvfXD9h8X6JMak7gbKABoEVaT"
-              size="lg"
-            />
-            <p className="text-xs mt-2">lg</p>
-          </div>
-          <div className="text-center">
-            <ProfilePicture 
-              publicKey="BC1YLgi66tdjAaVfYpmM447cxsve3TpvfXD9h8X6JMak7gbKABoEVaT"
-              size="xl"
-            />
-            <p className="text-xs mt-2">xl</p>
-          </div>
-        </div>
-      </div>
-      
-      <div className="bg-white p-6 rounded-lg shadow-sm border">
-        <h3 className="font-semibold mb-4">NFT Profile Picture Sizes</h3>
-        <div className="flex items-end gap-6">
-          <div className="text-center">
-            <ProfilePicture 
-              publicKey="BC1YLgi66tdjAaVfYpmM447cxsve3TpvfXD9h8X6JMak7gbKABoEVaT"
-              variant="nft"
-              size="xs"
-            />
-            <p className="text-xs mt-2">xs</p>
-          </div>
-          <div className="text-center">
-            <ProfilePicture 
-              publicKey="BC1YLgi66tdjAaVfYpmM447cxsve3TpvfXD9h8X6JMak7gbKABoEVaT"
-              variant="nft"
-              size="sm"
-            />
-            <p className="text-xs mt-2">sm</p>
-          </div>
-          <div className="text-center">
-            <ProfilePicture 
-              publicKey="BC1YLgi66tdjAaVfYpmM447cxsve3TpvfXD9h8X6JMak7gbKABoEVaT"
-              variant="nft"
-              size="md"
-            />
-            <p className="text-xs mt-2">md</p>
-          </div>
-          <div className="text-center">
-            <ProfilePicture 
-              publicKey="BC1YLgi66tdjAaVfYpmM447cxsve3TpvfXD9h8X6JMak7gbKABoEVaT"
-              variant="nft"
-              size="lg"
-            />
-            <p className="text-xs mt-2">lg</p>
-          </div>
-          <div className="text-center">
-            <ProfilePicture 
-              publicKey="BC1YLgi66tdjAaVfYpmM447cxsve3TpvfXD9h8X6JMak7gbKABoEVaT"
-              variant="nft"
-              size="xl"
-            />
-            <p className="text-xs mt-2">xl</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  ),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Size comparison for both regular and NFT profile pictures',
-      },
-    },
-  },
-} 
+export const AllComponents: Story = {}; 

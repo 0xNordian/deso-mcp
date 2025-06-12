@@ -1,15 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { CheckCircle, Copy, Check } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 import { useUsername } from '@/hooks/useProfile';
 import { cn, getDisplayName, truncateText } from '@/lib/utils/deso';
 import { UsernameDisplaySchema } from '@/lib/schemas/deso';
 import type { UsernameDisplayProps } from '@/lib/schemas/deso';
+import { CopyButton } from './copy-button';
 
 interface UsernameDisplayComponentProps extends Partial<Omit<UsernameDisplayProps, 'username' | 'displayName'>> {
   publicKey: string;
@@ -35,8 +35,6 @@ export function UsernameDisplay({
   linkToProfile = false,
   ...props
 }: UsernameDisplayComponentProps) {
-  const [copied, setCopied] = useState(false);
-  
   // Validate props
   const validatedProps = UsernameDisplaySchema.parse({
     isVerified,
@@ -81,16 +79,6 @@ export function UsernameDisplay({
     hasDisplayName: !!displayName,
     willShowError: !!error || !username
   });
-
-  // Handle copy to clipboard
-  const handleCopy = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (username) {
-      await navigator.clipboard.writeText(username);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
 
   // Handle click
   const handleClick = () => {
@@ -170,26 +158,8 @@ export function UsernameDisplay({
         </div>
 
         {/* Copy Button */}
-        {showCopyButton && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0 hover:bg-muted"
-                onClick={handleCopy}
-              >
-                {copied ? (
-                  <Check className="h-3 w-3 text-green-500" />
-                ) : (
-                  <Copy className="h-3 w-3" />
-                )}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{copied ? 'Copied!' : 'Copy username'}</p>
-            </TooltipContent>
-          </Tooltip>
+        {showCopyButton && username && (
+          <CopyButton textToCopy={username} size="sm" />
         )}
       </div>
     </TooltipProvider>

@@ -1,158 +1,142 @@
-import type { Meta, StoryObj } from '@storybook/react-vite'
+import type { Meta, StoryObj } from '@storybook/react'
 import { VerificationBadge } from './verification-badge'
 
-const meta = {
+/**
+ * The VerificationBadge component displays a verification badge for DeSo users.
+ * This is a presentational component that doesn't make GraphQL queries directly,
+ * but is used by other components like UsernameDisplay.
+ */
+
+const meta: Meta<typeof VerificationBadge> = {
   title: 'DeSo/VerificationBadge',
   component: VerificationBadge,
   parameters: {
     layout: 'centered',
     docs: {
       description: {
-        component: 'Display a verification badge for verified DeSo users.',
+        component: `
+# Verification Badge Component
+
+A simple presentational component that displays a verification badge for DeSo users.
+
+## Usage
+
+This component doesn't make GraphQL queries directly but is used by other components like UsernameDisplay.
+The verification status is typically determined by checking the \`IsVerified\` field in a user's profile data:
+
+\`\`\`graphql
+query GetUsernameInfo($publicKey: String!) {
+  accountByPublicKey(publicKey: $publicKey) {
+    extraData {
+      IsVerified
+    }
+  }
+}
+\`\`\`
+
+## Features
+
+- Simple boolean prop to control verification state
+- Multiple size options
+- Multiple style variants
+`,
       },
     },
   },
+  tags: ['autodocs'],
   argTypes: {
     isVerified: {
       control: 'boolean',
       description: 'Whether the user is verified',
     },
-    style: {
-      control: { type: 'select' },
-      options: ['default', 'premium', 'creator', 'admin'],
-      description: 'Visual style of the badge',
-    },
     size: {
-      control: { type: 'select' },
+      control: 'select',
       options: ['sm', 'md', 'lg'],
-      description: 'Size of the verification badge',
+      description: 'Size of the badge',
+    },
+    style: {
+      control: 'select',
+      options: ['default', 'premium', 'creator', 'admin'],
+      description: 'Style variant of the badge',
     },
     showTooltip: {
       control: 'boolean',
       description: 'Whether to show tooltip on hover',
-    },
-    tooltipText: {
-      control: 'text',
-      description: 'Custom tooltip text (overrides default)',
-    },
-    animated: {
-      control: 'boolean',
-      description: 'Whether to show entrance animation',
     },
     className: {
       control: 'text',
       description: 'Additional CSS classes',
     },
   },
-} satisfies Meta<typeof VerificationBadge>
+}
 
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const DefaultVerified: Story = {
+export const Verified: Story = {
   args: {
     isVerified: true,
-    style: 'default',
-    size: 'md',
-    showTooltip: true,
-    animated: true,
   },
 }
 
-export const PremiumVerified: Story = {
+export const Unverified: Story = {
+  args: {
+    isVerified: false,
+  },
+}
+
+export const Small: Story = {
+  args: {
+    isVerified: true,
+    size: 'sm',
+  },
+}
+
+export const Medium: Story = {
+  args: {
+    isVerified: true,
+    size: 'md',
+  },
+}
+
+export const Large: Story = {
+  args: {
+    isVerified: true,
+    size: 'lg',
+  },
+}
+
+export const PremiumStyle: Story = {
   args: {
     isVerified: true,
     style: 'premium',
-    size: 'md',
-    showTooltip: true,
-    animated: true,
   },
 }
 
-export const CreatorVerified: Story = {
+export const CreatorStyle: Story = {
   args: {
     isVerified: true,
     style: 'creator',
-    size: 'md',
-    showTooltip: true,
-    animated: true,
   },
 }
 
-export const AdminVerified: Story = {
+export const AdminStyle: Story = {
   args: {
     isVerified: true,
     style: 'admin',
-    size: 'md',
-    showTooltip: true,
-    animated: true,
   },
 }
 
-export const SmallSize: Story = {
+export const WithTooltip: Story = {
   args: {
     isVerified: true,
-    style: 'default',
-    size: 'sm',
     showTooltip: true,
-    animated: true,
   },
 }
 
-export const LargeSize: Story = {
+export const WithCustomStyling: Story = {
   args: {
     isVerified: true,
-    style: 'default',
-    size: 'lg',
-    showTooltip: true,
-    animated: true,
-  },
-}
-
-export const WithoutTooltip: Story = {
-  args: {
-    isVerified: true,
-    style: 'default',
-    size: 'md',
-    showTooltip: false,
-    animated: true,
-  },
-}
-
-export const WithCustomTooltip: Story = {
-  args: {
-    isVerified: true,
-    style: 'default',
-    size: 'md',
-    showTooltip: true,
-    tooltipText: 'Custom verification message',
-    animated: true,
-  },
-}
-
-export const WithoutAnimation: Story = {
-  args: {
-    isVerified: true,
-    style: 'default',
-    size: 'md',
-    showTooltip: true,
-    animated: false,
-  },
-}
-
-export const NotVerified: Story = {
-  args: {
-    isVerified: false,
-    style: 'default',
-    size: 'md',
-    showTooltip: true,
-    animated: true,
-  },
-  parameters: {
-    docs: {
-      description: {
-        story: 'When isVerified is false, the badge renders nothing (returns null).',
-      },
-    },
+    className: 'bg-blue-500 text-white p-1 rounded-md',
   },
 } 

@@ -102,7 +102,9 @@ export const WithMossified: Story = {
 
 ### ProfilePicture
 - ✅ Displays hex-encoded profile pictures from DeSo
-- ✅ NFT profile picture support
+- ✅ **Fixed hex decoding** with proper UTF-8 support
+- ✅ NFT profile picture support (auto-detection + manual variant)
+- ✅ Hexagon shape for NFT variant
 - ✅ Fallback to default avatar
 - ✅ Multiple sizes (sm, md, lg)
 - ✅ Loading and error states
@@ -177,6 +179,14 @@ deso-ui/
 3. ✅ **MSW mocking works perfectly** (Storybook stories render correctly)
 4. ✅ **All component states tested** (loading, error, success)
 5. ✅ **Real data structure verified** (using actual DeSo API responses)
+6. ✅ **Hex decoding fixed** (profile pictures now render correctly)
+7. ✅ **NFT profile pictures** (both auto-detection and manual variants)
+
+### Debug Components
+- **ProfilePictureDebug**: Visual hex decoding inspector
+  - Shows raw hex data vs decoded data URL
+  - Tests both regular and NFT profile pictures
+  - Validates image loading in browser
 
 ### Benefits of MSW Approach
 - 🎯 **Deterministic stories** - No network dependencies

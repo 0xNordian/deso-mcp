@@ -20,15 +20,50 @@ export function buildProfilePictureUrl(profilePic?: string): string | undefined 
     try {
       // Remove the \x prefix and convert hex to string
       const hexString = profilePic.slice(2);
+      console.log('🔍 Decoding hex string:', { 
+        originalLength: profilePic.length, 
+        hexLength: hexString.length,
+        first50: hexString.substring(0, 50) 
+      });
+      
+      // Convert hex pairs to bytes
       const bytes = [];
       for (let i = 0; i < hexString.length; i += 2) {
-        bytes.push(parseInt(hexString.substr(i, 2), 16));
+        const hexPair = hexString.substr(i, 2);
+        const byte = parseInt(hexPair, 16);
+        if (!isNaN(byte)) {
+          bytes.push(byte);
+        }
       }
-      const dataUrl = String.fromCharCode.apply(null, bytes);
+      
+      console.log('🔍 Converted to bytes:', { 
+        byteCount: bytes.length,
+        first10: bytes.slice(0, 10) 
+      });
+      
+      // Convert bytes to string using proper decoding
+      let dataUrl = '';
+      try {
+        // Use TextDecoder for proper UTF-8 decoding
+        const uint8Array = new Uint8Array(bytes);
+        const decoder = new TextDecoder('utf-8');
+        dataUrl = decoder.decode(uint8Array);
+      } catch (e) {
+        // Fallback to String.fromCharCode
+        dataUrl = String.fromCharCode.apply(null, bytes);
+      }
+      
+      console.log('🔍 Decoded data URL:', { 
+        length: dataUrl.length,
+        prefix: dataUrl.substring(0, 50),
+        isValidDataUrl: dataUrl.startsWith('data:image/')
+      });
       
       // Verify it's a valid data URL
       if (dataUrl.startsWith('data:image/')) {
         return dataUrl;
+      } else {
+        console.warn('Decoded string is not a valid data URL:', dataUrl.substring(0, 100));
       }
     } catch (error) {
       console.warn('Failed to decode hex-encoded profile picture:', error);
@@ -109,4 +144,59 @@ export function processPostContent(body: string): {
     hashtags: extractHashtags(body),
     mentions: extractMentions(body),
   };
+}
+
+/**
+ * Truncates a string (like a public key) by keeping the start and end parts
+ * and replacing the middle with ellipsis
+ * 
+ * @param str String to truncate
+ * @param startChars Number of characters to keep at the start
+ * @param endChars Number of characters to keep at the end
+ * @returns Truncated string
+ */
+export function truncateMiddle(str: string, startChars = 6, endChars = 6): string {
+  if (!str) return '';
+  
+  // If the string is shorter than or equal to the sum of startChars and endChars,
+  // just return the original string
+  if (str.length <= startChars + endChars) {
+    return str;
+  }
+  
+  // Otherwise, truncate the middle
+  return `${str.substring(0, startChars)}...${str.substring(str.length - endChars)}`;
+}
+
+/**
+ * Copies text to clipboard and returns a promise that resolves when done
+ * 
+ * @param text Text to copy to clipboard
+ * @returns Promise that resolves when copying is done
+ */
+export async function copyToClipboard(text: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      // Use the Clipboard API if available and in secure context
+      await navigator.clipboard.writeText(text);
+      return true;
+    } else {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      textArea.style.top = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      
+      const success = document.execCommand('copy');
+      document.body.removeChild(textArea);
+      return success;
+    }
+  } catch (error) {
+    console.error('Failed to copy text: ', error);
+    return false;
+  }
 } 

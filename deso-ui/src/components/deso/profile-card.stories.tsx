@@ -1,10 +1,51 @@
-import type { Meta, StoryObj } from '@storybook/react-vite'
-import { graphql, HttpResponse, delay } from 'msw'
+import type { Meta, StoryObj } from '@storybook/react'
+import { http, HttpResponse } from 'msw'
 import { ProfilePicture } from './profile-picture'
 import { UsernameDisplay } from './username-display'
 import { VerificationBadge } from './verification-badge'
 import { ProfileCoverPhoto } from './profile-cover-photo'
-import { mockProfiles, GRAPHQL_OPERATIONS } from '../../lib/mocks/deso-data'
+import { mockProfiles, defaultProfile } from '../../lib/mocks/deso-data'
+import { DEFAULT_PUBLIC_KEY } from '../../lib/constants'
+
+/**
+ * The ProfileCard is a composite component that combines multiple DeSo UI components
+ * to create a complete user profile card.
+ * 
+ * ## GraphQL Queries
+ * 
+ * This component uses multiple GraphQL queries through its child components:
+ * 
+ * ```graphql
+ * # For profile picture
+ * query GetProfilePicture($publicKey: String!) {
+ *   accountByPublicKey(publicKey: $publicKey) {
+ *     profilePic
+ *     extraData {
+ *       NFTProfilePictureUrl
+ *     }
+ *   }
+ * }
+ * 
+ * # For username
+ * query GetUsernameInfo($publicKey: String!) {
+ *   accountByPublicKey(publicKey: $publicKey) {
+ *     username
+ *     extraData {
+ *       IsVerified
+ *     }
+ *   }
+ * }
+ * 
+ * # For cover photo
+ * query GetProfileData($publicKey: String!) {
+ *   accountByPublicKey(publicKey: $publicKey) {
+ *     extraData {
+ *       CoverPhotoUrl
+ *     }
+ *   }
+ * }
+ * ```
+ */
 
 // Composite Profile Card Component for demonstration
 function ProfileCard({ publicKey }: { publicKey: string }) {
@@ -46,109 +87,126 @@ function ProfileCard({ publicKey }: { publicKey: string }) {
   )
 }
 
-const meta = {
+const meta: Meta<typeof ProfileCard> = {
   title: 'DeSo/ProfileCard (Composite)',
   component: ProfileCard,
   parameters: {
     layout: 'centered',
     docs: {
       description: {
-        component: 'A composite component showcasing all DeSo UI components working together with MSW mocked data.',
+        component: `
+# Profile Card Component
+
+A composite component showcasing all DeSo UI components working together to create a complete user profile card.
+
+## GraphQL Queries
+
+This component uses multiple GraphQL queries through its child components:
+
+\`\`\`graphql
+# For profile picture
+query GetProfilePicture($publicKey: String!) {
+  accountByPublicKey(publicKey: $publicKey) {
+    profilePic
+    extraData {
+      NFTProfilePictureUrl
+    }
+  }
+}
+
+# For username
+query GetUsernameInfo($publicKey: String!) {
+  accountByPublicKey(publicKey: $publicKey) {
+    username
+    extraData {
+      IsVerified
+    }
+  }
+}
+
+# For cover photo
+query GetProfileData($publicKey: String!) {
+  accountByPublicKey(publicKey: $publicKey) {
+    extraData {
+      CoverPhotoUrl
+    }
+  }
+}
+\`\`\`
+
+## Features
+
+- Combines ProfilePicture, UsernameDisplay, VerificationBadge, and ProfileCoverPhoto components
+- Creates a complete user profile card with a single public key
+- Demonstrates how to compose DeSo UI components together
+`,
       },
     },
   },
+  tags: ['autodocs'],
   argTypes: {
     publicKey: {
       control: 'text',
       description: 'The public key of the DeSo user',
     },
   },
-} satisfies Meta<typeof ProfileCard>
+}
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 // Create handlers for all queries used by the composite component
 const createAllMockHandlers = (profileData: any) => [
-  graphql.query(GRAPHQL_OPERATIONS.GetProfilePicture, () => {
-    return HttpResponse.json({ data: profileData })
+  http.post('https://graphql-prod.deso.com/graphql', async ({ request }) => {
+    const body = await request.json() as any;
+    
+    if (body.operationName === 'GetProfilePicture' || 
+        body.operationName === 'GetUsernameInfo' || 
+        body.operationName === 'GetProfileData') {
+      return HttpResponse.json({ data: profileData });
+    }
+    
+    return HttpResponse.json({ data: null });
   }),
-  graphql.query(GRAPHQL_OPERATIONS.GetUsernameInfo, () => {
-    return HttpResponse.json({ data: profileData })
-  }),
-  graphql.query(GRAPHQL_OPERATIONS.GetProfileData, () => {
-    return HttpResponse.json({ data: profileData })
-  }),
-]
+];
 
 const createAllErrorHandlers = () => [
-  graphql.query(GRAPHQL_OPERATIONS.GetProfilePicture, async () => {
-    await delay(800)
-    return HttpResponse.json({
-      errors: [{ message: 'Failed to fetch profile picture' }]
-    })
-  }),
-  graphql.query(GRAPHQL_OPERATIONS.GetUsernameInfo, async () => {
-    await delay(800)
-    return HttpResponse.json({
-      errors: [{ message: 'Failed to fetch username' }]
-    })
-  }),
-  graphql.query(GRAPHQL_OPERATIONS.GetProfileData, async () => {
-    await delay(800)
+  http.post('https://graphql-prod.deso.com/graphql', async () => {
+    await new Promise(resolve => setTimeout(resolve, 800));
     return HttpResponse.json({
       errors: [{ message: 'Failed to fetch profile data' }]
-    })
+    });
   }),
-]
+];
 
 const createAllLoadingHandlers = (profileData: any) => [
-  graphql.query(GRAPHQL_OPERATIONS.GetProfilePicture, async () => {
-    await delay(3000)
-    return HttpResponse.json({ data: profileData })
+  http.post('https://graphql-prod.deso.com/graphql', async () => {
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    return HttpResponse.json({ data: profileData });
   }),
-  graphql.query(GRAPHQL_OPERATIONS.GetUsernameInfo, async () => {
-    await delay(3000)
-    return HttpResponse.json({ data: profileData })
-  }),
-  graphql.query(GRAPHQL_OPERATIONS.GetProfileData, async () => {
-    await delay(3000)
-    return HttpResponse.json({ data: profileData })
-  }),
-]
+];
 
-export const MossifiedProfile: Story = {
+export const DefaultProfile: Story = {
   args: {
-    publicKey: 'BC1YLgDnZU3JQ2dK6t2F9irkUr5gEg1sfb6BmsuF7ZDe6RRkAUn5iqy',
+    publicKey: DEFAULT_PUBLIC_KEY,
   },
   parameters: {
     msw: {
-      handlers: createAllMockHandlers(mockProfiles.mossified),
+      handlers: createAllMockHandlers(defaultProfile),
     },
   },
-}
-
-export const DiamondHandsProfile: Story = {
-  args: {
-    publicKey: 'BC1YLhDuD4E9vHWbNLWLYfFytN4M8aX9WdPW8NrLYjH7J1b5JQRKvnN',
-  },
-  parameters: {
-    msw: {
-      handlers: createAllMockHandlers(mockProfiles.diamondhands),
-    },
-  },
-}
+};
 
 export const LoadingProfile: Story = {
   args: {
-    publicKey: 'BC1YLgDnZU3JQ2dK6t2F9irkUr5gEg1sfb6BmsuF7ZDe6RRkAUn5iqy',
+    publicKey: DEFAULT_PUBLIC_KEY,
   },
   parameters: {
     msw: {
-      handlers: createAllLoadingHandlers(mockProfiles.mossified),
+      handlers: createAllLoadingHandlers(defaultProfile),
     },
   },
-}
+};
 
 export const ErrorProfile: Story = {
   args: {
@@ -159,23 +217,23 @@ export const ErrorProfile: Story = {
       handlers: createAllErrorHandlers(),
     },
   },
-}
+};
 
 export const ProfileWithoutCover: Story = {
   args: {
-    publicKey: 'BC1YLgDnZU3JQ2dK6t2F9irkUr5gEg1sfb6BmsuF7ZDe6RRkAUn5iqy',
+    publicKey: DEFAULT_PUBLIC_KEY,
   },
   parameters: {
     msw: {
       handlers: createAllMockHandlers({
         accountByPublicKey: {
-          ...mockProfiles.mossified.accountByPublicKey,
+          ...defaultProfile.accountByPublicKey,
           extraData: {
-            ...mockProfiles.mossified.accountByPublicKey.extraData,
+            ...defaultProfile.accountByPublicKey.extraData,
             CoverPhotoUrl: "" // Remove cover photo
           }
         }
       }),
     },
   },
-} 
+}; 
