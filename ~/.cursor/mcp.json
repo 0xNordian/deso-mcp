@@ -1,9 +1,0 @@
-{
-  "mcpServers": {
-    "deso-global-mcp": {
-      "command": "/opt/homebrew/bin/node",
-      "args": ["/Users/mossified/Sites/deso-mcp/mcp-server.js"],
-      "type": "stdio"
-    }
-  }
-} 
