@@ -215,7 +215,7 @@ export default function DemoPage() {
                 {/* Size Variants */}
                 <div>
                   <h3 className="text-lg font-semibold mb-4">Size Variants</h3>
-                  <div className="flex items-center gap-6">
+                  <div className="flex items-center gap-4">
                     <div className="text-center">
                       <ProfilePicture publicKey={currentPublicKey} size="xs" />
                       <p className="text-sm text-muted-foreground mt-2">xs</p>
@@ -242,10 +242,51 @@ export default function DemoPage() {
                 {/* With Verification Badge */}
                 <div>
                   <h3 className="text-lg font-semibold mb-4">With Verification Badge</h3>
-                  <div className="flex items-center gap-6">
-                                         <ProfilePicture publicKey={currentPublicKey} size="sm" showVerification />
-                     <ProfilePicture publicKey={currentPublicKey} size="md" showVerification />
-                     <ProfilePicture publicKey={currentPublicKey} size="lg" showVerification />
+                  <div className="flex items-center gap-4">
+                    <ProfilePicture publicKey={currentPublicKey} size="sm" showVerification={true} />
+                    <ProfilePicture publicKey={currentPublicKey} size="md" showVerification={true} />
+                    <ProfilePicture publicKey={currentPublicKey} size="lg" showVerification={true} />
+                  </div>
+                </div>
+
+                {/* NFT Profile Pictures */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">NFT Profile Pictures (Hexagon Shape)</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="text-md font-medium mb-2">NFT Size Variants</h4>
+                      <div className="flex items-center gap-4">
+                        <div className="text-center">
+                          <ProfilePicture publicKey={currentPublicKey} size="xs" variant="nft" />
+                          <p className="text-sm text-muted-foreground mt-2">xs</p>
+                        </div>
+                        <div className="text-center">
+                          <ProfilePicture publicKey={currentPublicKey} size="sm" variant="nft" />
+                          <p className="text-sm text-muted-foreground mt-2">sm</p>
+                        </div>
+                        <div className="text-center">
+                          <ProfilePicture publicKey={currentPublicKey} size="md" variant="nft" />
+                          <p className="text-sm text-muted-foreground mt-2">md</p>
+                        </div>
+                        <div className="text-center">
+                          <ProfilePicture publicKey={currentPublicKey} size="lg" variant="nft" />
+                          <p className="text-sm text-muted-foreground mt-2">lg</p>
+                        </div>
+                        <div className="text-center">
+                          <ProfilePicture publicKey={currentPublicKey} size="xl" variant="nft" />
+                          <p className="text-sm text-muted-foreground mt-2">xl</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="text-md font-medium mb-2">NFT with Verification Badge</h4>
+                      <div className="flex items-center gap-4">
+                        <ProfilePicture publicKey={currentPublicKey} size="sm" variant="nft" showVerification={true} />
+                        <ProfilePicture publicKey={currentPublicKey} size="md" variant="nft" showVerification={true} />
+                        <ProfilePicture publicKey={currentPublicKey} size="lg" variant="nft" showVerification={true} />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -386,7 +427,6 @@ export default function DemoPage() {
                 </div>
               </CardContent>
             </Card>
-            <QueryDisplay title="Profile Data" query={GRAPHQL_QUERIES.profileData} />
           </section>
 
           {/* Component Combination Example */}
@@ -407,9 +447,9 @@ export default function DemoPage() {
                       <ProfileCoverPhoto publicKey={currentPublicKey} aspectRatio="3:1" />
                       <CardContent className="pt-6">
                         <div className="flex items-center gap-3 mb-4">
-                                                     <ProfilePicture publicKey={currentPublicKey} size="lg" showVerification />
+                          <ProfilePicture publicKey={currentPublicKey} size="lg" showVerification={true} />
                           <div>
-                            <UsernameDisplay publicKey={currentPublicKey} linkToProfile />
+                            <UsernameDisplay publicKey={currentPublicKey} linkToProfile={true} />
                             <p className="text-sm text-muted-foreground">DeSo Creator</p>
                           </div>
                         </div>
@@ -420,7 +460,116 @@ export default function DemoPage() {
                       </CardContent>
                     </Card>
                   </div>
+
+                  {/* NFT Profile Card */}
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">NFT Profile Card</h3>
+                    <Card className="max-w-md">
+                      <ProfileCoverPhoto publicKey={currentPublicKey} aspectRatio="3:1" />
+                      <CardContent className="pt-6">
+                        <div className="flex items-center gap-3 mb-4">
+                          <ProfilePicture publicKey={currentPublicKey} size="lg" variant="nft" showVerification={true} />
+                          <div>
+                            <UsernameDisplay publicKey={currentPublicKey} linkToProfile={true} />
+                            <p className="text-sm text-muted-foreground">NFT Creator</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Badge variant="secondary">NFT</Badge>
+                          <Badge variant="outline">Verified</Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
                 </div>
+              </CardContent>
+            </Card>
+          </section>
+
+          {/* GraphQL Queries */}
+          <section>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-2xl">GraphQL Queries</CardTitle>
+                <CardDescription>
+                  Copy these queries to use in your own applications
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Username Resolution Query */}
+                <QueryDisplay
+                  title="Username Resolution"
+                  query={`query GetAccountByUsername($username: String!) {
+  accountByUsername(username: $username) {
+    publicKey
+    username
+    description
+    profilePic
+    extraData
+  }
+}`}
+                />
+
+                {/* Profile Picture Query */}
+                <QueryDisplay
+                  title="Profile Picture"
+                  query={`query GetProfilePicture($publicKey: String!) {
+  accountByPublicKey(publicKey: $publicKey) {
+    profilePic
+    username
+    extraData
+  }
+}`}
+                />
+
+                {/* NFT Profile Picture Query */}
+                <QueryDisplay
+                  title="NFT Profile Picture"
+                  query={`query GetNFTProfilePicture($publicKey: String!) {
+  accountByPublicKey(publicKey: $publicKey) {
+    username
+    extraData {
+      NFTProfilePictureUrl
+      isVerified
+    }
+  }
+}`}
+                />
+
+                {/* Username Display Query */}
+                <QueryDisplay
+                  title="Username Display"
+                  query={`query GetUsernameInfo($publicKey: String!) {
+  accountByPublicKey(publicKey: $publicKey) {
+    username
+    extraData {
+      DisplayName
+      isVerified
+    }
+  }
+}`}
+                />
+
+                {/* Profile Data Query */}
+                <QueryDisplay
+                  title="Complete Profile Data"
+                  query={`query GetProfileData($publicKey: String!) {
+  accountByPublicKey(publicKey: $publicKey) {
+    id
+    publicKey
+    username
+    description
+    profilePic
+    extraData {
+      DisplayName
+      CoverPhotoUrl
+      NFTProfilePictureUrl
+      isVerified
+    }
+    coinPriceDesoNanos
+  }
+}`}
+                />
               </CardContent>
             </Card>
           </section>

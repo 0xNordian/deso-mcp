@@ -38,6 +38,7 @@ export const ProfilePictureSchema = z.object({
   username: z.string().optional(),
   size: z.enum(['xs', 'sm', 'md', 'lg', 'xl']).default('md'),
   showVerification: z.boolean().default(false),
+  variant: z.enum(['default', 'nft']).default('default'),
   className: z.string().optional(),
 });
 

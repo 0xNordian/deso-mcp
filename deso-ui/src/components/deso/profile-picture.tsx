@@ -26,6 +26,7 @@ interface ProfilePictureComponentProps extends Partial<Omit<ProfilePictureProps,
   className?: string;
   onClick?: () => void;
   lazy?: boolean;
+  variant?: 'default' | 'nft';
 }
 
 export function ProfilePicture({
@@ -35,6 +36,7 @@ export function ProfilePicture({
   className,
   onClick,
   lazy = true,
+  variant = 'default',
   ...props
 }: ProfilePictureComponentProps) {
   // Validate props
@@ -52,7 +54,13 @@ export function ProfilePicture({
   const profile = data?.accountByPublicKey;
 
   const sizeClasses = sizeConfig[validatedProps.size];
-  const profilePicUrl = buildProfilePictureUrl(profile?.profilePic);
+  
+  // Choose between regular profile pic and NFT profile pic
+  const isNFT = variant === 'nft';
+  const profilePicUrl = isNFT 
+    ? profile?.extraData?.NFTProfilePictureUrl 
+    : buildProfilePictureUrl(profile?.profilePic);
+  
   const fallbackInitial = getUsernameInitial(profile?.username);
   const isVerified = profile?.extraData?.isVerified === 'true' || false;
 
@@ -60,7 +68,11 @@ export function ProfilePicture({
   if (loading) {
     return (
       <div className={cn('relative inline-block', className)}>
-        <Skeleton className={cn('rounded-full', sizeClasses.avatar)} />
+        <Skeleton className={cn(
+          'rounded-full',
+          isNFT && 'nft-hexagon',
+          sizeClasses.avatar
+        )} />
       </div>
     );
   }
@@ -69,18 +81,19 @@ export function ProfilePicture({
   if (error) {
     return (
       <div className={cn('relative inline-block', className)}>
-        <Avatar 
+        <div 
           className={cn(
+            'flex items-center justify-center transition-all duration-200 hover:scale-105 hover:shadow-md',
+            isNFT ? 'nft-avatar nft-hexagon bg-gradient-to-br from-blue-500 to-purple-600' : 'rounded-full bg-gradient-to-br from-blue-500 to-purple-600',
             sizeClasses.avatar,
-            'cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-md',
             onClick && 'cursor-pointer'
           )}
           onClick={onClick}
         >
-          <AvatarFallback className={cn('bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold', sizeClasses.text)}>
+          <span className={cn('text-white font-semibold', sizeClasses.text)}>
             ?
-          </AvatarFallback>
-        </Avatar>
+          </span>
+        </div>
         
         {/* Verification Badge */}
         {validatedProps.showVerification && isVerified && (
@@ -98,6 +111,69 @@ export function ProfilePicture({
     );
   }
 
+  // NFT variant with hexagon shape
+  if (isNFT) {
+    return (
+      <div className={cn('relative inline-block', className)}>
+        <div 
+          className={cn(
+            'nft-avatar relative cursor-pointer border-background bg-background border-0',
+            sizeClasses.avatar,
+            'transition-all duration-200 hover:scale-105 hover:shadow-md',
+            onClick && 'cursor-pointer'
+          )}
+          onClick={onClick}
+          style={{ marginTop: '-4px' }}
+        >
+          <div 
+            className="nft-hex-background absolute"
+            style={{
+              width: `calc(${sizeClasses.avatar.includes('h-6') ? '24px' : 
+                           sizeClasses.avatar.includes('h-8') ? '32px' :
+                           sizeClasses.avatar.includes('h-10') ? '40px' :
+                           sizeClasses.avatar.includes('h-12') ? '48px' : '64px'} - 8px)`,
+              height: `calc(${sizeClasses.avatar.includes('h-6') ? '24px' : 
+                            sizeClasses.avatar.includes('h-8') ? '32px' :
+                            sizeClasses.avatar.includes('h-10') ? '40px' :
+                            sizeClasses.avatar.includes('h-12') ? '48px' : '64px'} - 8px)`,
+              top: '4px',
+              left: '4px'
+            }}
+          >
+            {profilePicUrl ? (
+              <img
+                src={profilePicUrl}
+                alt={`${profile?.username || 'User'}'s NFT profile picture`}
+                loading={lazy ? 'lazy' : 'eager'}
+                className="absolute min-h-full min-w-full object-cover nft-hexagon"
+              />
+            ) : (
+              <div className="absolute min-h-full min-w-full bg-gradient-to-br from-blue-500 to-purple-600 nft-hexagon flex items-center justify-center">
+                <span className={cn('text-white font-semibold', sizeClasses.text)}>
+                  {fallbackInitial}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {/* Verification Badge */}
+        {validatedProps.showVerification && isVerified && (
+          <Badge 
+            variant="secondary" 
+            className={cn(
+              'absolute -bottom-1 -right-1 p-0 rounded-full bg-blue-500 hover:bg-blue-600 border-2 border-white transition-all duration-200',
+              sizeClasses.badge
+            )}
+          >
+            <CheckCircle className="h-full w-full text-white" />
+          </Badge>
+        )}
+      </div>
+    );
+  }
+
+  // Default circular variant
   return (
     <div className={cn('relative inline-block', className)}>
       <Avatar 
