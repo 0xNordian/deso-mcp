@@ -4,13 +4,14 @@ import React from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useProfile } from '@/hooks/useProfile';
 import { cn } from '@/lib/utils/deso';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 
-type AspectRatio = '16:9' | '3:1' | '2:1' | '4:3';
+type AspectRatioString = '16:9' | '3:1' | '2:1' | '4:3';
 type GradientColor = 'blue' | 'purple' | 'pink' | 'green' | 'orange' | 'random';
 
 interface ProfileCoverPhotoProps {
   publicKey: string;
-  aspectRatio?: AspectRatio;
+  aspectRatio?: AspectRatioString;
   fallbackGradient?: GradientColor;
   showOverlay?: boolean;
   overlayOpacity?: number;
@@ -37,6 +38,11 @@ const gradientConfig = {
   random: 'bg-gradient-to-br from-indigo-400 via-purple-400 to-pink-400',
 } as const;
 
+const getAspectRatioValue = (ratio: AspectRatioString): number => {
+  const [w, h] = ratio.split(':').map(Number);
+  return w / h;
+};
+
 export function ProfileCoverPhoto({
   publicKey,
   aspectRatio = '16:9',
@@ -55,78 +61,44 @@ export function ProfileCoverPhoto({
   const aspectClass = aspectRatioConfig[aspectRatio];
   const gradientClass = gradientConfig[fallbackGradient];
 
-  // Loading state
+  const aspectRatioValue = getAspectRatioValue(aspectRatio);
+
   if (loading) {
     return (
-      <div className={cn('relative w-full overflow-hidden rounded-lg', aspectClass, className)}>
-        <Skeleton className="absolute inset-0" />
-      </div>
+      <AspectRatio ratio={aspectRatioValue}>
+        <Skeleton className="w-full h-full" />
+      </AspectRatio>
     );
   }
 
-  // Error state or no cover photo - show gradient fallback
   if (error || !featuredImage) {
     return (
-      <div 
-        className={cn(
-          'relative w-full overflow-hidden rounded-lg',
-          aspectClass,
-          gradientClass,
-          className
-        )}
-      >
-        {/* Overlay */}
-        {showOverlay && (
-          <div 
-            className="absolute inset-0 bg-black"
-            style={{ opacity: overlayOpacity }}
-          />
-        )}
-        
-        {/* Content */}
-        {children && (
-          <div className="relative z-10 h-full">
-            {children}
-          </div>
-        )}
-      </div>
+      <AspectRatio ratio={aspectRatioValue}>
+        <div className="w-full h-full bg-slate-200" />
+      </AspectRatio>
     );
   }
 
   return (
-    <div 
+    <AspectRatio
+      ratio={aspectRatioValue}
       className={cn(
-        'relative w-full overflow-hidden rounded-lg',
-        aspectClass,
+        'relative w-full h-full overflow-hidden rounded-lg',
         className
       )}
     >
-      {/* Background Image */}
       <div
-        className={cn(
-          'absolute inset-0 bg-cover bg-center bg-no-repeat',
-          enableParallax && 'bg-fixed'
-        )}
-        style={{
-          backgroundImage: `url(${featuredImage})`,
-        }}
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url("${featuredImage}")` }}
       />
-      
-      {/* Overlay */}
       {showOverlay && (
         <div 
           className="absolute inset-0 bg-black"
           style={{ opacity: overlayOpacity }}
         />
       )}
-      
-      {/* Content */}
-      {children && (
-        <div className="relative z-10 h-full">
           {children}
-        </div>
-      )}
-    </div>
+    </AspectRatio>
   );
 }
 

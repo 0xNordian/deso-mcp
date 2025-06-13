@@ -1,9 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { UserPublicKey } from './user-public-key';
-import { http, HttpResponse } from 'msw';
-import { mockProfiles, defaultProfile } from '../../lib/mocks/deso-data';
 import { DEFAULT_PUBLIC_KEY } from '../../lib/constants';
-import { successHandlers, errorHandlers, loadingHandlers } from '../../lib/mocks/msw-handlers';
 
 const meta: Meta<typeof UserPublicKey> = {
   title: 'DeSo/UserPublicKey',
@@ -12,108 +9,39 @@ const meta: Meta<typeof UserPublicKey> = {
     layout: 'centered',
   },
   argTypes: {
-    showPicture: {
-      control: 'boolean',
-    },
-    showUsername: {
-      control: 'boolean',
-    },
-    showDisplayName: {
-      control: 'boolean',
-    },
-    showCopyButton: {
-      control: 'boolean',
-    },
-    pictureSize: {
-      control: 'select',
-      options: ['xs', 'sm', 'md', 'lg', 'xl'],
-    },
-    layout: {
-      control: 'radio',
-      options: ['row', 'column'],
-    },
-    startChars: {
-      control: 'number',
-    },
-    endChars: {
-      control: 'number',
-    },
+    truncate: { control: 'boolean' },
+    showCopyButton: { control: 'boolean' },
+    startChars: { control: 'number' },
+    endChars: { control: 'number' },
   },
 };
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-// Base story using mock data
 export const Default: Story = {
+  name: 'Default (Full Key)',
   args: {
     publicKey: DEFAULT_PUBLIC_KEY,
-  },
-  parameters: {
-    msw: {
-      handlers: successHandlers,
-    },
+    truncate: false,
+    showCopyButton: false,
   },
 };
 
-export const WithPicture: Story = {
+export const Truncated: Story = {
+  name: 'Truncated Key',
   args: {
-    ...Default.args,
-    showPicture: true,
-  },
-  parameters: {
-    msw: {
-      handlers: successHandlers,
-    },
+    publicKey: DEFAULT_PUBLIC_KEY,
+    truncate: true,
+    showCopyButton: false,
   },
 };
 
-export const WithUsername: Story = {
+export const WithCopyButton: Story = {
+  name: 'Truncated with Copy Button',
   args: {
-    ...Default.args,
-    showUsername: true,
-  },
-  parameters: {
-    msw: {
-      handlers: successHandlers,
-    },
-  },
-};
-
-export const WithDisplayName: Story = {
-  args: {
-    ...Default.args,
-    showDisplayName: true,
-  },
-  parameters: {
-    msw: {
-      handlers: successHandlers,
-    },
-  },
-};
-
-export const FullInfo: Story = {
-  args: {
-    ...Default.args,
-    showPicture: true,
-    showUsername: true,
-    showDisplayName: true,
+    publicKey: DEFAULT_PUBLIC_KEY,
+    truncate: true,
     showCopyButton: true,
-  },
-  parameters: {
-    msw: {
-      handlers: successHandlers,
-    },
-  },
-};
-
-export const Loading: Story = {
-  args: {
-    ...Default.args,
-  },
-  parameters: {
-    msw: {
-      handlers: loadingHandlers,
-    },
   },
 }; 

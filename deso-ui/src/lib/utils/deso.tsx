@@ -20,18 +20,18 @@ export function buildProfilePictureUrl(profilePic?: string, extraData?: Record<s
   };
 
   const largeProfilePic = getFirstValid(extraData || {}, [
-    'LargeProfilePicURL',
-    'LargeProfilePicUrl',
-    'largeProfilePicURL',
-    'largeProfilePicUrl',
-  ]);
+      'LargeProfilePicURL',
+      'LargeProfilePicUrl',
+      'largeProfilePicURL',
+      'largeProfilePicUrl',
+    ]);
 
   const nftProfilePic = extraData?.NFTProfilePictureUrl?.startsWith('http') ? extraData.NFTProfilePictureUrl : undefined;
 
   // Handle NFT variant
   if (variant === 'nft') {
     return nftProfilePic;
-  }
+    }
 
   // Handle High-Res variant
   if (variant === 'highres') {

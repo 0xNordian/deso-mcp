@@ -88,7 +88,7 @@ export const ProfileDescription = ({
       {shouldTruncate && (
         <Button
           variant="link"
-          className="p-0 h-auto text-sm underline"
+          className="p-0 h-auto text-sm underline mt-4"
           onClick={() => setIsExpanded(!isExpanded)}
         >
           {isExpanded ? showLessText : showMoreText}

@@ -1,8 +1,6 @@
-import { ProfilePicture } from './profile-picture';
 import { ProfileCoverPhoto } from './profile-cover-photo';
 import { ProfileDescription } from './profile-description';
-import { UsernameDisplay } from './username-display';
-import { VerificationBadge } from './verification-badge';
+import { UserInfo } from './user-info';
 
 export interface ProfileCardProps {
   publicKey: string;
@@ -12,28 +10,22 @@ export function ProfileCard({ publicKey }: ProfileCardProps) {
   return (
     <div className="w-full max-w-md mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
       {/* Cover Photo */}
-      <ProfileCoverPhoto 
-        publicKey={publicKey} 
+      <ProfileCoverPhoto
+        publicKey={publicKey}
         aspectRatio="16:9"
         showOverlay
         overlayOpacity={0.3}
-      >
-        {/* Profile Picture overlayed on cover */}
-        <div className="absolute bottom-4 left-4">
-          <ProfilePicture
-            publicKey={publicKey}
-            size="xl"
-            className="h-16 w-16 rounded-full border-4 border-white shadow-lg object-cover"
-          />
-        </div>
-      </ProfileCoverPhoto>
+        className="rounded-b-none"
+      />
       {/* Profile Info */}
-      <div className="p-6">
-        <div className="flex items-center gap-2 mb-2">
-          <UsernameDisplay 
+      <div className="p-6 flex flex-col gap-4">
+        <div className="flex items-center gap-2">
+          <UserInfo
             publicKey={publicKey}
+            pictureSize="md"
             showVerification
-            showCopyButton
+            showPublicKey
+            className="z-10"
           />
         </div>
         <ProfileDescription publicKey={publicKey} formatted lineClamp={4} />

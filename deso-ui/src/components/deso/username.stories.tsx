@@ -12,6 +12,11 @@ const meta: Meta<typeof UsernameDisplay> = {
     layout: 'centered',
   },
   argTypes: {
+    variant: {
+      control: 'select',
+      options: ['social', 'token', null],
+      description: 'Prepend a character to the username.',
+    },
     showVerification: {
       control: 'boolean',
     },
@@ -41,10 +46,38 @@ export const Default: Story = {
   },
 }
 
+export const Social: Story = {
+  name: 'Variant: Social (@)',
+  args: {
+    publicKey: DEFAULT_PUBLIC_KEY,
+    variant: 'social',
+  },
+  parameters: {
+    msw: {
+      handlers: successHandlers,
+    },
+  },
+}
+
+export const Token: Story = {
+  name: 'Variant: Token ($)',
+  args: {
+    publicKey: DEFAULT_PUBLIC_KEY,
+    variant: 'token',
+  },
+  parameters: {
+    msw: {
+      handlers: successHandlers,
+    },
+  },
+}
+
 export const WithVerification: Story = {
   args: {
-    ...Default.args,
+    publicKey: DEFAULT_PUBLIC_KEY,
     showVerification: true,
+    variant: 'social',
+    isVerified: true,
   },
   parameters: {
     msw: {
@@ -55,8 +88,9 @@ export const WithVerification: Story = {
 
 export const WithCopyButton: Story = {
   args: {
-    ...Default.args,
+    publicKey: DEFAULT_PUBLIC_KEY,
     showCopyButton: true,
+    variant: 'social',
   },
   parameters: {
     msw: {
@@ -67,9 +101,10 @@ export const WithCopyButton: Story = {
 
 export const Truncated: Story = {
   args: {
-    ...Default.args,
+    publicKey: DEFAULT_PUBLIC_KEY,
     truncate: true,
     maxLength: 8,
+    variant: 'social',
   },
   parameters: {
     msw: {
@@ -80,7 +115,7 @@ export const Truncated: Story = {
 
 export const Loading: Story = {
   args: {
-    ...Default.args,
+    publicKey: DEFAULT_PUBLIC_KEY,
   },
   parameters: {
     msw: {
