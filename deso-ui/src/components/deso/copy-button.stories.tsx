@@ -1,41 +1,19 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { CopyButton } from './copy-button';
 
-/**
- * The CopyButton component provides a reusable way to copy text to clipboard with visual feedback.
- */
-
 const meta: Meta<typeof CopyButton> = {
   title: 'DeSo/CopyButton',
   component: CopyButton,
   parameters: {
     layout: 'centered',
-    docs: {
-      description: {
-        component: `
-# CopyButton Component
-
-A reusable button component that copies text to clipboard with visual feedback.
-
-## Features
-
-- Copy any text to clipboard
-- Visual feedback when text is copied
-- Tooltip with copy status
-- Configurable size
-- Customizable styling
-`,
-      },
-    },
   },
-  tags: ['autodocs'],
   argTypes: {
+    textToCopy: {
+      control: 'text',
+    },
     size: {
       control: 'select',
-      options: ['sm', 'md', 'lg'],
-    },
-    className: {
-      control: 'text',
+      options: ['xs', 'sm', 'md', 'lg'],
     },
   },
 };

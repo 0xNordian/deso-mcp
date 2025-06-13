@@ -10,6 +10,7 @@ import { cn, getDisplayName, truncateText } from '@/lib/utils/deso';
 import { UsernameDisplaySchema } from '@/lib/schemas/deso';
 import type { UsernameDisplayProps } from '@/lib/schemas/deso';
 import { CopyButton } from './copy-button';
+import { VerificationBadge } from './verification-badge';
 
 interface UsernameDisplayComponentProps extends Partial<Omit<UsernameDisplayProps, 'username' | 'displayName'>> {
   publicKey: string;
@@ -69,7 +70,7 @@ export function UsernameDisplay({
   const extraData = profile?.extraData || {};
 
   const username = profile?.username;
-  const displayName = getDisplayName(username, extraData);
+  const displayName = extraData?.DisplayName;
   const verified = extraData?.IsVerified === 'true' || validatedProps.isVerified;
 
   console.log('👤 UsernameDisplay processed data:', {
@@ -77,7 +78,8 @@ export function UsernameDisplay({
     displayName,
     verified,
     hasDisplayName: !!displayName,
-    willShowError: !!error || !username
+    willShowError: !!error || !username,
+    extraData
   });
 
   // Handle click
@@ -104,16 +106,15 @@ export function UsernameDisplay({
   if (error || !username) {
     return (
       <div className={cn('flex items-center gap-2 text-muted-foreground', className)}>
-        <span className="text-sm">Anonymous</span>
+        <span className="text-sm">{username || ''}</span>
       </div>
     );
   }
 
   // Prepare display text
-  const primaryText = displayName !== username ? displayName : username;
-  const secondaryText = displayName !== username ? `@${username}` : null;
+  const displayText = displayName ?? username ?? '';
   const maxLen = validatedProps.maxLength || 20;
-  const displayText = validatedProps.truncate ? truncateText(primaryText, maxLen) : primaryText;
+  const secondaryText = displayText !== username ? `@${username}` : null;
   const secondaryDisplayText = secondaryText && validatedProps.truncate 
     ? truncateText(secondaryText, maxLen) 
     : secondaryText;
@@ -136,16 +137,7 @@ export function UsernameDisplay({
             
             {/* Verification Badge */}
             {validatedProps.showVerification && verified && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Badge variant="secondary" className="p-0 h-4 w-4 rounded-full bg-blue-500 hover:bg-blue-600">
-                    <CheckCircle className="h-3 w-3 text-white" />
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Verified account</p>
-                </TooltipContent>
-              </Tooltip>
+              <VerificationBadge isVerified={true} size="sm" />
             )}
           </div>
           

@@ -3,10 +3,11 @@ import { ProfilePicture } from './profile-picture'
 import { http, HttpResponse } from 'msw'
 import { mockProfiles, defaultProfile } from '../../lib/mocks/deso-data'
 import { DEFAULT_PUBLIC_KEY } from '../../lib/constants'
+import { successHandlers, errorHandlers, loadingHandlers } from '../../lib/mocks/msw-handlers'
 
 /**
  * The ProfilePicture component displays a user's profile picture from the DeSo blockchain,
- * with support for both regular and NFT profile pictures.
+ * with support for regular, NFT, and high-resolution profile pictures.
  * 
  * ## GraphQL Query
  * 
@@ -18,66 +19,19 @@ import { DEFAULT_PUBLIC_KEY } from '../../lib/constants'
  *     profilePic
  *     extraData {
  *       NFTProfilePictureUrl
+ *       LargeProfilePicURL
  *     }
  *   }
  * }
  * ```
  */
 
-const createMockHandler = (profile: any) => {
-  return http.post('https://graphql-prod.deso.com/graphql', async ({ request }) => {
-    const body = await request.json() as any;
-    
-    if (body.operationName === 'GetProfilePicture') {
-      return HttpResponse.json({
-        data: {
-          accountByPublicKey: profile.accountByPublicKey
-        }
-      });
-    }
-    
-    return HttpResponse.json({ data: null });
-  });
-};
-
 const meta: Meta<typeof ProfilePicture> = {
   title: 'DeSo/ProfilePicture',
   component: ProfilePicture,
   parameters: {
     layout: 'centered',
-    docs: {
-      description: {
-        component: `
-# Profile Picture Component
-
-Displays a user's profile picture from the DeSo blockchain, with support for both regular and NFT profile pictures.
-
-## GraphQL Query
-
-This component fetches profile picture data using the following GraphQL query:
-
-\`\`\`graphql
-query GetProfilePicture($publicKey: String!) {
-  accountByPublicKey(publicKey: $publicKey) {
-    profilePic
-    extraData {
-      NFTProfilePictureUrl
-    }
-  }
-}
-\`\`\`
-
-## Features
-
-- Supports multiple sizes (xs, sm, md, lg, xl)
-- Automatically detects and displays NFT profile pictures when available
-- Can be forced to display either regular or NFT variant
-- Handles loading and error states gracefully
-`,
-      },
-    },
   },
-  tags: ['autodocs'],
   argTypes: {
     size: {
       control: 'select',
@@ -85,7 +39,7 @@ query GetProfilePicture($publicKey: String!) {
     },
     variant: {
       control: 'select',
-      options: ['default', 'nft'],
+      options: ['default', 'nft', 'highres'],
     },
   },
 };
@@ -97,10 +51,11 @@ export const Default: Story = {
   args: {
     publicKey: DEFAULT_PUBLIC_KEY,
     size: 'md',
+    variant: 'default',
   },
   parameters: {
     msw: {
-      handlers: [createMockHandler(defaultProfile)],
+      handlers: successHandlers,
     },
   },
 };
@@ -109,10 +64,11 @@ export const Small: Story = {
   args: {
     publicKey: DEFAULT_PUBLIC_KEY,
     size: 'sm',
+    variant: 'default',
   },
   parameters: {
     msw: {
-      handlers: [createMockHandler(defaultProfile)],
+      handlers: successHandlers,
     },
   },
 };
@@ -121,10 +77,11 @@ export const Large: Story = {
   args: {
     publicKey: DEFAULT_PUBLIC_KEY,
     size: 'lg',
+    variant: 'default',
   },
   parameters: {
     msw: {
-      handlers: [createMockHandler(defaultProfile)],
+      handlers: successHandlers,
     },
   },
 };
@@ -137,7 +94,20 @@ export const NFTVariant: Story = {
   },
   parameters: {
     msw: {
-      handlers: [createMockHandler(defaultProfile)],
+      handlers: successHandlers,
+    },
+  },
+};
+
+export const HighResVariant: Story = {
+  args: {
+    publicKey: DEFAULT_PUBLIC_KEY,
+    size: 'md',
+    variant: 'highres',
+  },
+  parameters: {
+    msw: {
+      handlers: successHandlers,
     },
   },
 };
@@ -146,31 +116,11 @@ export const Loading: Story = {
   args: {
     publicKey: DEFAULT_PUBLIC_KEY,
     size: 'md',
+    variant: 'default',
   },
   parameters: {
     msw: {
-      handlers: [
-        http.post('https://graphql-prod.deso.com/graphql', async () => {
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          return HttpResponse.json({ data: null });
-        }),
-      ],
-    },
-  },
-};
-
-export const Error: Story = {
-  args: {
-    publicKey: 'invalid-key',
-    size: 'md',
-  },
-  parameters: {
-    msw: {
-      handlers: [
-        http.post('https://graphql-prod.deso.com/graphql', () => {
-          return HttpResponse.json({ errors: [{ message: 'Profile not found' }] });
-        }),
-      ],
+      handlers: loadingHandlers,
     },
   },
 }; 

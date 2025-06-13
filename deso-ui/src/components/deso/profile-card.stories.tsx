@@ -6,6 +6,8 @@ import { VerificationBadge } from './verification-badge'
 import { ProfileCoverPhoto } from './profile-cover-photo'
 import { mockProfiles, defaultProfile } from '../../lib/mocks/deso-data'
 import { DEFAULT_PUBLIC_KEY } from '../../lib/constants'
+import { getSingleProfilePictureUrl } from '@/lib/utils/deso'
+import { successHandlers, errorHandlers, loadingHandlers, noCoverHandlers } from '../../lib/mocks/msw-handlers';
 
 /**
  * The ProfileCard is a composite component that combines multiple DeSo UI components
@@ -40,7 +42,7 @@ import { DEFAULT_PUBLIC_KEY } from '../../lib/constants'
  * query GetProfileData($publicKey: String!) {
  *   accountByPublicKey(publicKey: $publicKey) {
  *     extraData {
- *       CoverPhotoUrl
+ *       FeaturedImageURL
  *     }
  *   }
  * }
@@ -60,10 +62,10 @@ function ProfileCard({ publicKey }: { publicKey: string }) {
       >
         {/* Profile Picture overlayed on cover */}
         <div className="absolute bottom-4 left-4">
-          <ProfilePicture 
-            publicKey={publicKey} 
-            size="lg"
-            className="border-4 border-white shadow-lg"
+          <img
+            src={getSingleProfilePictureUrl(publicKey, 'https://node.deso.org/assets/img/default_profile_pic.png')}
+            alt="Profile"
+            className="h-16 w-16 rounded-full border-4 border-white shadow-lg object-cover"
           />
         </div>
       </ProfileCoverPhoto>
@@ -92,58 +94,7 @@ const meta: Meta<typeof ProfileCard> = {
   component: ProfileCard,
   parameters: {
     layout: 'centered',
-    docs: {
-      description: {
-        component: `
-# Profile Card Component
-
-A composite component showcasing all DeSo UI components working together to create a complete user profile card.
-
-## GraphQL Queries
-
-This component uses multiple GraphQL queries through its child components:
-
-\`\`\`graphql
-# For profile picture
-query GetProfilePicture($publicKey: String!) {
-  accountByPublicKey(publicKey: $publicKey) {
-    profilePic
-    extraData {
-      NFTProfilePictureUrl
-    }
-  }
-}
-
-# For username
-query GetUsernameInfo($publicKey: String!) {
-  accountByPublicKey(publicKey: $publicKey) {
-    username
-    extraData {
-      IsVerified
-    }
-  }
-}
-
-# For cover photo
-query GetProfileData($publicKey: String!) {
-  accountByPublicKey(publicKey: $publicKey) {
-    extraData {
-      CoverPhotoUrl
-    }
-  }
-}
-\`\`\`
-
-## Features
-
-- Combines ProfilePicture, UsernameDisplay, VerificationBadge, and ProfileCoverPhoto components
-- Creates a complete user profile card with a single public key
-- Demonstrates how to compose DeSo UI components together
-`,
-      },
-    },
   },
-  tags: ['autodocs'],
   argTypes: {
     publicKey: {
       control: 'text',
@@ -155,44 +106,13 @@ query GetProfileData($publicKey: String!) {
 export default meta
 type Story = StoryObj<typeof meta>
 
-// Create handlers for all queries used by the composite component
-const createAllMockHandlers = (profileData: any) => [
-  http.post('https://graphql-prod.deso.com/graphql', async ({ request }) => {
-    const body = await request.json() as any;
-    
-    if (body.operationName === 'GetProfilePicture' || 
-        body.operationName === 'GetUsernameInfo' || 
-        body.operationName === 'GetProfileData') {
-      return HttpResponse.json({ data: profileData });
-    }
-    
-    return HttpResponse.json({ data: null });
-  }),
-];
-
-const createAllErrorHandlers = () => [
-  http.post('https://graphql-prod.deso.com/graphql', async () => {
-    await new Promise(resolve => setTimeout(resolve, 800));
-    return HttpResponse.json({
-      errors: [{ message: 'Failed to fetch profile data' }]
-    });
-  }),
-];
-
-const createAllLoadingHandlers = (profileData: any) => [
-  http.post('https://graphql-prod.deso.com/graphql', async () => {
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    return HttpResponse.json({ data: profileData });
-  }),
-];
-
 export const DefaultProfile: Story = {
   args: {
     publicKey: DEFAULT_PUBLIC_KEY,
   },
   parameters: {
     msw: {
-      handlers: createAllMockHandlers(defaultProfile),
+      handlers: successHandlers,
     },
   },
 };
@@ -203,18 +123,7 @@ export const LoadingProfile: Story = {
   },
   parameters: {
     msw: {
-      handlers: createAllLoadingHandlers(defaultProfile),
-    },
-  },
-};
-
-export const ErrorProfile: Story = {
-  args: {
-    publicKey: 'invalid-public-key',
-  },
-  parameters: {
-    msw: {
-      handlers: createAllErrorHandlers(),
+      handlers: loadingHandlers,
     },
   },
 };
@@ -225,15 +134,7 @@ export const ProfileWithoutCover: Story = {
   },
   parameters: {
     msw: {
-      handlers: createAllMockHandlers({
-        accountByPublicKey: {
-          ...defaultProfile.accountByPublicKey,
-          extraData: {
-            ...defaultProfile.accountByPublicKey.extraData,
-            CoverPhotoUrl: "" // Remove cover photo
-          }
-        }
-      }),
+      handlers: noCoverHandlers,
     },
   },
 }; 

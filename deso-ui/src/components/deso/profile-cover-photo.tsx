@@ -48,9 +48,10 @@ export function ProfileCoverPhoto({
   children,
 }: ProfileCoverPhotoProps) {
   // Fetch profile data using Apollo Client
-  const { profile, loading, error, coverPhoto } = useProfile(publicKey);
+  const { profile, loading, error } = useProfile(publicKey);
 
-  const coverPhotoUrl = coverPhoto;
+  // Use FeaturedImageURL from extraData for the cover photo
+  const featuredImage = profile?.extraData?.FeaturedImageURL;
   const aspectClass = aspectRatioConfig[aspectRatio];
   const gradientClass = gradientConfig[fallbackGradient];
 
@@ -64,7 +65,7 @@ export function ProfileCoverPhoto({
   }
 
   // Error state or no cover photo - show gradient fallback
-  if (error || !coverPhotoUrl) {
+  if (error || !featuredImage) {
     return (
       <div 
         className={cn(
@@ -107,7 +108,7 @@ export function ProfileCoverPhoto({
           enableParallax && 'bg-fixed'
         )}
         style={{
-          backgroundImage: `url(${coverPhotoUrl})`,
+          backgroundImage: `url(${featuredImage})`,
         }}
       />
       

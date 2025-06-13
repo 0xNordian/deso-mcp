@@ -6,7 +6,16 @@ import { initialize, mswLoader } from 'msw-storybook-addon'
 import '../src/app/globals.css'
 
 // Initialize MSW
-initialize()
+initialize({
+  onUnhandledRequest: (request) => {
+    // Silently bypass all non-GraphQL requests.
+    if (request.url.includes('/graphql')) {
+      // If it's a GraphQL request but we haven't handled it, print a warning.
+      console.warn(`[MSW] Unhandled GraphQL request: ${request.method} ${request.url}`);
+    }
+    // For all other requests, do nothing, effectively bypassing them.
+  },
+});
 
 const preview: Preview = {
   parameters: {
@@ -23,11 +32,11 @@ const preview: Preview = {
   loaders: [mswLoader], // Add MSW loader globally
   decorators: [
     (Story) => (
-      <ApolloProvider client={apolloClient}>
-        <div className="p-4">
-          <Story />
-        </div>
-      </ApolloProvider>
+        <ApolloProvider client={apolloClient}>
+          <div className="p-4">
+            <Story />
+          </div>
+        </ApolloProvider>
     ),
   ],
 };

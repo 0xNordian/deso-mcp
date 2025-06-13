@@ -3,6 +3,7 @@ import { ProfileCoverPhoto } from './profile-cover-photo'
 import { http, HttpResponse } from 'msw'
 import { mockProfiles, defaultProfile } from '../../lib/mocks/deso-data'
 import { DEFAULT_PUBLIC_KEY } from '../../lib/constants'
+import { successHandlers, errorHandlers, loadingHandlers } from '../../lib/mocks/msw-handlers'
 
 /**
  * The ProfileCoverPhoto component displays a user's cover photo from the DeSo blockchain,
@@ -16,7 +17,7 @@ import { DEFAULT_PUBLIC_KEY } from '../../lib/constants'
  * query GetProfileData($publicKey: String!) {
  *   accountByPublicKey(publicKey: $publicKey) {
  *     extraData {
- *       CoverPhotoUrl
+ *       FeaturedImageURL
  *     }
  *   }
  * }
@@ -44,39 +45,7 @@ const meta: Meta<typeof ProfileCoverPhoto> = {
   component: ProfileCoverPhoto,
   parameters: {
     layout: 'centered',
-    docs: {
-      description: {
-        component: `
-# Profile Cover Photo Component
-
-Displays a user's cover photo from the DeSo blockchain with support for different aspect ratios and overlay options.
-
-## GraphQL Query
-
-This component fetches cover photo data using the following GraphQL query:
-
-\`\`\`graphql
-query GetProfileData($publicKey: String!) {
-  accountByPublicKey(publicKey: $publicKey) {
-    extraData {
-      CoverPhotoUrl
-    }
-  }
-}
-\`\`\`
-
-## Features
-
-- Supports multiple aspect ratios (16:9, 3:1, 2:1, 4:3)
-- Optional overlay with adjustable opacity
-- Gradient fallback when cover photo is not available
-- Optional parallax scrolling effect
-- Handles loading and error states gracefully
-`,
-      },
-    },
   },
-  tags: ['autodocs'],
   argTypes: {
     aspectRatio: {
       control: 'select',
@@ -99,9 +68,19 @@ export const Default: Story = {
     publicKey: DEFAULT_PUBLIC_KEY,
     aspectRatio: '16:9',
   },
+  render: (args) => (
+    <div className="w-full max-w-md">
+      <h3 className="mb-2 text-lg font-semibold text-gray-700">Default (16:9)</h3>
+      <ProfileCoverPhoto {...args} />
+      <div className="mt-2 text-sm text-gray-500">
+        <span>Image source: </span>
+        <span className="break-all font-mono">{defaultProfile.accountByPublicKey.extraData.FeaturedImageURL}</span>
+      </div>
+    </div>
+  ),
   parameters: {
     msw: {
-      handlers: [createMockHandler(defaultProfile)],
+      handlers: successHandlers,
     },
   },
 };
@@ -113,9 +92,19 @@ export const WithOverlay: Story = {
     showOverlay: true,
     overlayOpacity: 0.5,
   },
+  render: (args) => (
+    <div className="w-full max-w-md">
+      <h3 className="mb-2 text-lg font-semibold text-gray-700">With Overlay</h3>
+      <ProfileCoverPhoto {...args} />
+      <div className="mt-2 text-sm text-gray-500">
+        <span>Image source: </span>
+        <span className="break-all font-mono">{defaultProfile.accountByPublicKey.extraData.FeaturedImageURL}</span>
+      </div>
+    </div>
+  ),
   parameters: {
     msw: {
-      handlers: [createMockHandler(defaultProfile)],
+      handlers: successHandlers,
     },
   },
 };
@@ -125,9 +114,19 @@ export const UltraWideAspect: Story = {
     publicKey: DEFAULT_PUBLIC_KEY,
     aspectRatio: '3:1',
   },
+  render: (args) => (
+    <div className="w-full max-w-md">
+      <h3 className="mb-2 text-lg font-semibold text-gray-700">Ultra-Wide (3:1)</h3>
+      <ProfileCoverPhoto {...args} />
+      <div className="mt-2 text-sm text-gray-500">
+        <span>Image source: </span>
+        <span className="break-all font-mono">{defaultProfile.accountByPublicKey.extraData.FeaturedImageURL}</span>
+      </div>
+    </div>
+  ),
   parameters: {
     msw: {
-      handlers: [createMockHandler(defaultProfile)],
+      handlers: successHandlers,
     },
   },
 };
@@ -137,9 +136,19 @@ export const StandardAspect: Story = {
     publicKey: DEFAULT_PUBLIC_KEY,
     aspectRatio: '4:3',
   },
+  render: (args) => (
+    <div className="w-full max-w-md">
+      <h3 className="mb-2 text-lg font-semibold text-gray-700">Standard (4:3)</h3>
+      <ProfileCoverPhoto {...args} />
+      <div className="mt-2 text-sm text-gray-500">
+        <span>Image source: </span>
+        <span className="break-all font-mono">{defaultProfile.accountByPublicKey.extraData.FeaturedImageURL}</span>
+      </div>
+    </div>
+  ),
   parameters: {
     msw: {
-      handlers: [createMockHandler(defaultProfile)],
+      handlers: successHandlers,
     },
   },
 };
@@ -149,30 +158,15 @@ export const Loading: Story = {
     publicKey: DEFAULT_PUBLIC_KEY,
     aspectRatio: '16:9',
   },
+  render: (args) => (
+    <div className="w-full max-w-md">
+      <h3 className="mb-2 text-lg font-semibold text-gray-700">Loading State</h3>
+      <ProfileCoverPhoto {...args} />
+    </div>
+  ),
   parameters: {
     msw: {
-      handlers: [
-        http.post('https://graphql-prod.deso.com/graphql', async () => {
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          return HttpResponse.json({ data: null });
-        }),
-      ],
-    },
-  },
-};
-
-export const Error: Story = {
-  args: {
-    publicKey: 'invalid-key',
-    aspectRatio: '16:9',
-  },
-  parameters: {
-    msw: {
-      handlers: [
-        http.post('https://graphql-prod.deso.com/graphql', () => {
-          return HttpResponse.json({ errors: [{ message: 'Profile not found' }] });
-        }),
-      ],
+      handlers: loadingHandlers,
     },
   },
 }; 

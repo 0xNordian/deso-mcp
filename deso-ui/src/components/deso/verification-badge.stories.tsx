@@ -12,60 +12,20 @@ const meta: Meta<typeof VerificationBadge> = {
   component: VerificationBadge,
   parameters: {
     layout: 'centered',
-    docs: {
-      description: {
-        component: `
-# Verification Badge Component
-
-A simple presentational component that displays a verification badge for DeSo users.
-
-## Usage
-
-This component doesn't make GraphQL queries directly but is used by other components like UsernameDisplay.
-The verification status is typically determined by checking the \`IsVerified\` field in a user's profile data:
-
-\`\`\`graphql
-query GetUsernameInfo($publicKey: String!) {
-  accountByPublicKey(publicKey: $publicKey) {
-    extraData {
-      IsVerified
-    }
-  }
-}
-\`\`\`
-
-## Features
-
-- Simple boolean prop to control verification state
-- Multiple size options
-- Multiple style variants
-`,
-      },
-    },
   },
-  tags: ['autodocs'],
   argTypes: {
     isVerified: {
       control: 'boolean',
-      description: 'Whether the user is verified',
     },
     size: {
       control: 'select',
-      options: ['sm', 'md', 'lg'],
-      description: 'Size of the badge',
-    },
-    style: {
-      control: 'select',
-      options: ['default', 'premium', 'creator', 'admin'],
-      description: 'Style variant of the badge',
+      options: ['xs', 'sm', 'md', 'lg', 'xl'],
     },
     showTooltip: {
       control: 'boolean',
-      description: 'Whether to show tooltip on hover',
     },
-    className: {
+    tooltipText: {
       control: 'text',
-      description: 'Additional CSS classes',
     },
   },
 }

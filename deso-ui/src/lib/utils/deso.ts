@@ -7,71 +7,62 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // DeSo-specific utility functions
-export function buildProfilePictureUrl(profilePic?: string): string | undefined {
-  if (!profilePic) return undefined;
-  
-  // If it's already a full URL, return as is
-  if (profilePic.startsWith('http')) {
-    return profilePic;
-  }
-  
-  // Handle hex-encoded base64 data URLs from DeSo GraphQL
-  if (profilePic.startsWith('\\x')) {
-    try {
-      // Remove the \x prefix and convert hex to string
-      const hexString = profilePic.slice(2);
-      console.log('🔍 Decoding hex string:', { 
-        originalLength: profilePic.length, 
-        hexLength: hexString.length,
-        first50: hexString.substring(0, 50) 
-      });
-      
-      // Convert hex pairs to bytes
-      const bytes = [];
-      for (let i = 0; i < hexString.length; i += 2) {
-        const hexPair = hexString.substr(i, 2);
-        const byte = parseInt(hexPair, 16);
-        if (!isNaN(byte)) {
-          bytes.push(byte);
-        }
-      }
-      
-      console.log('🔍 Converted to bytes:', { 
-        byteCount: bytes.length,
-        first10: bytes.slice(0, 10) 
-      });
-      
-      // Convert bytes to string using proper decoding
-      let dataUrl = '';
-      try {
-        // Use TextDecoder for proper UTF-8 decoding
-        const uint8Array = new Uint8Array(bytes);
-        const decoder = new TextDecoder('utf-8');
-        dataUrl = decoder.decode(uint8Array);
-      } catch (e) {
-        // Fallback to String.fromCharCode
-        dataUrl = String.fromCharCode.apply(null, bytes);
-      }
-      
-      console.log('🔍 Decoded data URL:', { 
-        length: dataUrl.length,
-        prefix: dataUrl.substring(0, 50),
-        isValidDataUrl: dataUrl.startsWith('data:image/')
-      });
-      
-      // Verify it's a valid data URL
-      if (dataUrl.startsWith('data:image/')) {
-        return dataUrl;
-      } else {
-        console.warn('Decoded string is not a valid data URL:', dataUrl.substring(0, 100));
-      }
-    } catch (error) {
-      console.warn('Failed to decode hex-encoded profile picture:', error);
+export function buildProfilePictureUrl(profilePic?: string, extraData?: Record<string, any>, variant: 'default' | 'nft' | 'highres' = 'default'): string | undefined {
+  if (variant === 'highres') {
+    if (extraData?.LargeProfilePicURL && extraData.LargeProfilePicURL.startsWith('http')) {
+      return extraData.LargeProfilePicURL;
     }
+    return undefined;
   }
-  
-  // If it's a relative path, build the full URL
-  return `https://node.deso.org/api/v0/get-single-profile-picture/${profilePic}`;
+  if (variant === 'nft') {
+    if (extraData?.NFTProfilePictureUrl && extraData.NFTProfilePictureUrl.startsWith('http')) {
+      return extraData.NFTProfilePictureUrl;
+    }
+    return undefined;
+  }
+  if (variant === 'default') {
+    if (!profilePic) return undefined;
+    // If it's already a full URL, return as is
+    if (profilePic.startsWith('http')) {
+      return profilePic;
+    }
+    // Handle hex-encoded base64 data URLs from DeSo GraphQL
+    if (profilePic.startsWith('\\x')) {
+      try {
+        // Remove the \x prefix and convert hex to string
+        const hexString = profilePic.slice(2);
+        // Convert hex pairs to bytes
+        const bytes = [];
+        for (let i = 0; i < hexString.length; i += 2) {
+          const hexPair = hexString.substr(i, 2);
+          const byte = parseInt(hexPair, 16);
+          if (!isNaN(byte)) {
+            bytes.push(byte);
+          }
+        }
+        // Convert bytes to string using proper decoding
+        let dataUrl = '';
+        try {
+          // Use TextDecoder for proper UTF-8 decoding
+          const uint8Array = new Uint8Array(bytes);
+          const decoder = new TextDecoder('utf-8');
+          dataUrl = decoder.decode(uint8Array);
+        } catch (e) {
+          // Fallback to String.fromCharCode
+          dataUrl = String.fromCharCode.apply(null, bytes);
+        }
+        // Verify it's a valid data URL
+        if (dataUrl.startsWith('data:image/')) {
+          return dataUrl;
+        }
+      } catch (error) {
+        // Failed to decode
+      }
+    }
+    // If it's a relative path, build the full URL
+    return undefined;
+  }
+  return undefined;
 }
 
 export function getDisplayName(username?: string, extraData?: Record<string, string>): string {
@@ -199,4 +190,24 @@ export async function copyToClipboard(text: string): Promise<boolean> {
     console.error('Failed to copy text: ', error);
     return false;
   }
+}
+
+/**
+ * Returns the public DeSo endpoint for fetching a user's profile picture by public key.
+ * This endpoint is recommended for all DeSo apps and supports a fallback image URL.
+ *
+ * @param publicKey The user's public key (Base58Check)
+ * @param fallbackUrl Optional fallback image URL if the user has no profile picture
+ * @returns The full URL to fetch the profile picture
+ *
+ * Example:
+ *   getSingleProfilePictureUrl('BC1YL...', 'https://node.deso.org/assets/img/default_profile_pic.png')
+ *   // => 'https://node.deso.org/api/v0/get-single-profile-picture/BC1YL...?fallback=https://node.deso.org/assets/img/default_profile_pic.png'
+ */
+export function getSingleProfilePictureUrl(publicKey: string, fallbackUrl?: string): string {
+  const base = 'https://node.deso.org/api/v0/get-single-profile-picture/' + publicKey;
+  if (fallbackUrl) {
+    return `${base}?fallback=${encodeURIComponent(fallbackUrl)}`;
+  }
+  return base;
 } 

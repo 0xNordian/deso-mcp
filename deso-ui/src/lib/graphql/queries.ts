@@ -51,6 +51,7 @@ export const GET_FEED_POSTS = gql`
             publicKey
             username
             profilePic
+            extraData
           }
           likes(first: 1) {
             totalCount
@@ -110,6 +111,7 @@ export const GET_POST_BY_HASH = gql`
         publicKey
         username
         profilePic
+        extraData
       }
       likes(first: 1) {
         totalCount

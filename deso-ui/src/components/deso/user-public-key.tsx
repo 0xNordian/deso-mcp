@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { UsernameDisplay } from './username-display';
 import { useProfile } from '@/hooks/useProfile';
 import { cn, truncateMiddle } from '@/lib/utils/deso';
@@ -43,13 +43,21 @@ export function UserPublicKey({
   layout = 'row',
   gap = 'md',
 }: UserPublicKeyProps) {
-  const { profile, loading, error } = useProfile(publicKey);
-  
-  const displayName = profile?.accountByPublicKey?.extraData?.DisplayName;
-  const username = profile?.accountByPublicKey?.username;
+  const { profile, loading, error, username, displayName } = useProfile(publicKey);
   
   // Use username as fallback for displayName when displayName is not available
   const nameToDisplay = displayName || username;
+  
+  useEffect(() => {
+    console.log('UserPublicKey data:', {
+      publicKey,
+      profile,
+      displayName,
+      username,
+      extraData: profile?.extraData,
+      showDisplayName
+    });
+  }, [publicKey, profile, displayName, username, showDisplayName]);
   
   const truncatedPublicKey = truncateMiddle(publicKey, startChars, endChars);
   
@@ -98,8 +106,8 @@ export function UserPublicKey({
           </div>
         )}
         <div className={textContainerClasses}>
-          {showDisplayName && <div className="text-sm text-gray-500">Unknown</div>}
-          {showUsername && <div className="text-xs text-gray-400">@unknown</div>}
+          {showDisplayName && <div className="text-sm text-gray-500">{username || ''}</div>}
+          {showUsername && <div className="text-xs text-gray-400">@{username || ''}</div>}
           <div className="text-xs text-gray-400">{truncatedPublicKey}</div>
         </div>
       </div>
@@ -110,9 +118,9 @@ export function UserPublicKey({
     <div className={containerClasses}>
       {showPicture && <ProfilePicture publicKey={publicKey} size={pictureSize} />}
       <div className={textContainerClasses}>
-        {showDisplayName && nameToDisplay && (
+        {showDisplayName && (
           <div className={cn("font-medium text-gray-900", displayNameClassName)}>
-            {nameToDisplay}
+            {displayName ?? username ?? ''}
           </div>
         )}
         {showUsername && (

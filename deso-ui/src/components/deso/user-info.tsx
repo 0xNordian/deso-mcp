@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ProfilePicture } from './profile-picture';
 import { UsernameDisplay } from './username-display';
 import { useProfile } from '@/hooks/useProfile';
@@ -36,13 +36,21 @@ export function UserInfo({
   layout = 'row',
   gap = 'md',
 }: UserInfoProps) {
-  const { profile, loading, error } = useProfile(publicKey);
-  
-  const displayName = profile?.accountByPublicKey?.extraData?.DisplayName;
-  const username = profile?.accountByPublicKey?.username;
+  const { profile, loading, error, username, displayName } = useProfile(publicKey);
   
   // Use username as fallback for displayName when displayName is not available
   const nameToDisplay = displayName || username;
+  
+  useEffect(() => {
+    console.log('UserInfo data:', {
+      publicKey,
+      profile,
+      displayName,
+      username,
+      extraData: profile?.extraData,
+      showDisplayName
+    });
+  }, [publicKey, profile, displayName, username, showDisplayName]);
   
   const gapClasses = {
     'none': '',
@@ -84,8 +92,8 @@ export function UserInfo({
           <span className="text-gray-400">?</span>
         </div>
         <div className={textContainerClasses}>
-          {showDisplayName && <div className="text-sm text-gray-500">Unknown</div>}
-          <div className="text-xs text-gray-400">@unknown</div>
+          {showDisplayName && <div className="text-sm text-gray-500">{username || ''}</div>}
+          <div className="text-xs text-gray-400">@{username || ''}</div>
         </div>
       </div>
     );
@@ -95,9 +103,9 @@ export function UserInfo({
     <div className={containerClasses}>
       <ProfilePicture publicKey={publicKey} size={pictureSize} />
       <div className={textContainerClasses}>
-        {showDisplayName && nameToDisplay && (
+        {showDisplayName && (
           <div className={cn("font-medium text-gray-900", displayNameClassName)}>
-            {nameToDisplay}
+            {displayName ?? username ?? ''}
           </div>
         )}
         <UsernameDisplay 

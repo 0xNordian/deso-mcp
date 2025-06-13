@@ -1,20 +1,66 @@
 import { useQuery } from '@apollo/client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { GET_PROFILE_DATA, GET_PROFILE_PICTURE, GET_USERNAME_INFO } from '@/lib/graphql/queries';
 import { gql } from '@apollo/client';
 
 // Hook to detect if we're on the client side
-export function useIsClient() {
+function useIsClient() {
   const [isClient, setIsClient] = useState(false);
-  
   useEffect(() => {
-    console.log('🌐 useIsClient: Setting isClient to true');
     setIsClient(true);
   }, []);
-  
-  console.log('🌐 useIsClient current state:', isClient);
-  
   return isClient;
+}
+
+/**
+ * A centralized hook to handle the common logic of fetching a DeSo profile
+ * and parsing its extraData field.
+ * @param query The GraphQL query to execute.
+ * @param publicKey The public key of the user to fetch.
+ * @returns The result of the useQuery hook with extraData parsed.
+ */
+function useParsedProfileQuery(query: any, publicKey: string) {
+  const isClient = useIsClient();
+  const { data, loading, error } = useQuery(query, {
+    variables: { publicKey },
+    skip: !publicKey || !isClient,
+    errorPolicy: 'all',
+  });
+
+  // Use useMemo to parse extraData only when data changes.
+  const parsedData = useMemo(() => {
+    const extraData = data?.accountByPublicKey?.extraData;
+
+    if (!extraData) {
+      return data;
+    }
+
+    // The real API returns extraData as a JSON string, but our mocks may
+    // provide it as an object. This logic handles both cases.
+    let parsedExtraData;
+    if (typeof extraData === 'string') {
+      try {
+        parsedExtraData = JSON.parse(extraData);
+      } catch (e) {
+        console.error("Failed to parse profile extraData JSON string:", e);
+        // If parsing fails, return the original data to avoid crashing.
+        return data;
+      }
+    } else {
+      // If it's not a string, assume it's already a valid object (from MSW).
+      parsedExtraData = extraData;
+    }
+
+    return {
+      ...data,
+      accountByPublicKey: {
+        ...data.accountByPublicKey,
+        extraData: parsedExtraData,
+      },
+    };
+  }, [data]);
+
+  return { data: parsedData, loading, error };
 }
 
 // Updated query that matches the actual DeSo GraphQL schema
@@ -23,95 +69,28 @@ const GET_PROFILE = gql`
     accountByPublicKey(publicKey: $publicKey) {
       username
       profilePic
-      extraData
+      extraData {
+        DisplayName
+        IsVerified
+        NFTProfilePictureUrl
+        FeaturedImageURL
+      }
     }
   }
 `;
 
 // Hook for fetching complete profile data
 export function useProfile(publicKey: string) {
-  const isClient = useIsClient();
-  
-  console.log('🔍 useProfile called:', { publicKey, isClient });
-  
-  const { data, loading, error } = useQuery(GET_PROFILE, {
-    variables: { publicKey },
-    skip: !publicKey || !isClient,
-    errorPolicy: 'all',
-  });
-
-  console.log('🔍 useProfile query result:', {
-    loading,
-    error: error?.message,
-    hasData: !!data,
-    data: data,
-    accountExists: !!data?.accountByPublicKey
-  });
-
-  // Parse extraData to get additional fields
-  const extraData = data?.accountByPublicKey?.extraData || {};
-
-  const result = {
-    profile: data?.accountByPublicKey,
-    loading,
-    error,
-    username: data?.accountByPublicKey?.username,
-    profilePic: data?.accountByPublicKey?.profilePic,
-    isVerified: extraData?.IsVerified === 'true', // Parse from extraData
-    coverPhoto: extraData?.FeaturedImageURL,
-    nftProfilePic: extraData?.NFTProfilePictureUrl,
-    extraData,
-  };
-
-  console.log('🔍 useProfile returning:', result);
-  
-  return result;
+  const { data, loading, error } = useParsedProfileQuery(GET_PROFILE_DATA, publicKey);
+  return { profile: data?.accountByPublicKey, loading, error };
 }
 
 // Hook for fetching just profile picture data
 export function useProfilePicture(publicKey: string) {
-  const isClient = useIsClient();
-  
-  console.log('🔍 useProfilePicture called:', { publicKey, isClient });
-  
-  const result = useQuery(GET_PROFILE_PICTURE, {
-    variables: { publicKey },
-    skip: !publicKey || !isClient,
-    errorPolicy: 'all',
-  });
-
-  console.log('🔍 useProfilePicture query result:', {
-    loading: result.loading,
-    error: result.error?.message,
-    fullError: result.error,
-    hasData: !!result.data,
-    data: result.data,
-    accountExists: !!result.data?.accountByPublicKey
-  });
-  
-  return result;
+  return useParsedProfileQuery(GET_PROFILE_PICTURE, publicKey);
 }
 
 // Hook for fetching just username data
 export function useUsername(publicKey: string) {
-  const isClient = useIsClient();
-  
-  console.log('🔍 useUsername called:', { publicKey, isClient });
-  
-  const result = useQuery(GET_USERNAME_INFO, {
-    variables: { publicKey },
-    skip: !publicKey || !isClient,
-    errorPolicy: 'all',
-  });
-
-  console.log('🔍 useUsername query result:', {
-    loading: result.loading,
-    error: result.error?.message,
-    fullError: result.error,
-    hasData: !!result.data,
-    data: result.data,
-    accountExists: !!result.data?.accountByPublicKey
-  });
-  
-  return result;
+  return useParsedProfileQuery(GET_USERNAME_INFO, publicKey);
 } 
