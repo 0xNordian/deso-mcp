@@ -22,6 +22,8 @@ interface ProfilePictureComponentProps {
   onClick?: () => void;
   lazy?: boolean;
   variant?: 'default' | 'nft' | 'highres';
+  shape?: 'circle' | 'rounded' | 'square';
+  border?: 'none' | 'gradient' | 'solid';
 }
 
 export function ProfilePicture({
@@ -31,104 +33,95 @@ export function ProfilePicture({
   onClick,
   lazy = true,
   variant = 'default',
+  shape = 'circle',
+  border = 'none',
 }: ProfilePictureComponentProps) {
   const { data, loading, error } = useProfilePicture(publicKey);
   const profile = data?.accountByPublicKey;
   const extraData = profile?.extraData || {};
   const sizeClasses = sizeConfig[size];
 
-  // Robust logic: use buildProfilePictureUrl utility for all variants
+  const shapeStyle =
+    variant === 'nft'
+      ? 'nft-hexagon'
+      : shape === 'square'
+      ? 'rounded-none'
+      : shape === 'rounded'
+      ? 'rounded-xl'
+      : 'rounded-full';
+
   const initialProfilePicUrl = buildProfilePictureUrl(profile?.profilePic, extraData, variant) || getSingleProfilePictureUrl(publicKey);
   const [imgSrc, setImgSrc] = useState<string | undefined>(initialProfilePicUrl);
   const [triedFallback, setTriedFallback] = useState(false);
 
-  // If the profile or extraData changes, reset the image source and fallback state
   useEffect(() => {
     setImgSrc(initialProfilePicUrl);
     setTriedFallback(false);
   }, [initialProfilePicUrl]);
 
-  // Debug logging for live data troubleshooting
-  console.log('[ProfilePicture] profile:', profile);
-  console.log('[ProfilePicture] extraData:', extraData);
-  console.log('[ProfilePicture] imgSrc:', imgSrc);
-
-  // Fallback initial: use username, else first letter of publicKey, else '?'
   const fallbackInitial = profile?.username
     ? getUsernameInitial(profile.username)
     : publicKey
       ? publicKey[0].toUpperCase()
       : '?';
 
-  const isNftClass = variant === 'nft' ? 'nft-hexagon' : 'rounded-full';
-
-  // Loading State
-  if (loading) {
-    return (
-      <Skeleton
-        className={cn(
-          'relative inline-block',
-          isNftClass,
-          sizeClasses.avatar,
-          className
-        )}
-      />
-    );
-  }
-
-  // Error or No-URL Fallback State
-  if (error || !imgSrc) {
-    return (
-      <div
-        className={cn(
-          'flex items-center justify-center bg-gradient-to-br from-gray-400 to-gray-600',
-          isNftClass,
-          sizeClasses.avatar,
-          className
-        )}
-        onClick={onClick}
-      >
-        <span className={cn('text-white font-semibold', sizeClasses.text)}>
-          {error ? '?' : fallbackInitial}
-        </span>
-      </div>
-    );
-  }
-
-  // Fallback logic for image load error
   const handleImgError = () => {
     if (!triedFallback) {
       setImgSrc(getSingleProfilePictureUrl(publicKey));
       setTriedFallback(true);
     } else {
-      setImgSrc(undefined); // This will show the fallback avatar
+      setImgSrc(undefined);
     }
   };
-
-  // Success State
-  return (
-    <Avatar
-      className={cn(sizeClasses.avatar, isNftClass, className)}
-      onClick={onClick}
-    >
-      <AvatarImage
-        src={imgSrc}
-        alt={`${profile?.username || 'User'}'s profile picture`}
-        loading={lazy ? 'lazy' : 'eager'}
-        className={cn('object-cover', isNftClass)}
-        onError={handleImgError}
-      />
-      <AvatarFallback
+  
+  const innerContent = (
+    loading ? (
+      <Skeleton className={cn('w-full h-full', shapeStyle)} />
+    ) : (error || !imgSrc) ? (
+      <div
         className={cn(
-          'bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold',
-          isNftClass
+          'flex items-center justify-center w-full h-full bg-gradient-to-br from-gray-400 to-gray-600',
+          shapeStyle
         )}
       >
-        {fallbackInitial}
-      </AvatarFallback>
-    </Avatar>
+        <span className={cn('text-white font-semibold', sizeClasses.text)}>
+          {error ? '?' : fallbackInitial}
+        </span>
+      </div>
+    ) : (
+      <Avatar className={cn('w-full h-full', shapeStyle)}>
+        <AvatarImage
+          src={imgSrc}
+          alt={`${profile?.username || 'User'}'s profile picture`}
+          loading={lazy ? 'lazy' : 'eager'}
+          className={cn('object-cover', shapeStyle)}
+          onError={handleImgError}
+        />
+        <AvatarFallback className={cn('bg-gradient-to-br from-blue-500 to-purple-600', shapeStyle)}>
+          <span className={cn('text-white font-semibold', sizeClasses.text)}>
+            {fallbackInitial}
+          </span>
+        </AvatarFallback>
+      </Avatar>
+    )
+  );
+  
+  const borderGradientClass = 'bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-500';
+  const borderSolidClass = 'bg-neutral-200';
+
+  let containerClasses = cn(sizeClasses.avatar, className);
+
+  if (border === 'gradient') {
+    containerClasses = cn('p-0.5', borderGradientClass, shapeStyle, sizeClasses.avatar, className);
+  } else if (border === 'solid') {
+    containerClasses = cn('p-px', borderSolidClass, shapeStyle, sizeClasses.avatar, className);
+  }
+
+  return (
+    <div className={containerClasses} onClick={onClick}>
+      {innerContent}
+    </div>
   );
 }
 
-// Export with display name for debugging
 ProfilePicture.displayName = 'ProfilePicture'; 

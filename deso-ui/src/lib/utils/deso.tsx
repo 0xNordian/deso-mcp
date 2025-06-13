@@ -108,10 +108,30 @@ export function formatDesoAmount(nanos: number): string {
   return `${(deso / 1000).toFixed(1)}K DESO`;
 }
 
-export function formatCount(count: number): string {
-  if (count < 1000) return count.toString();
-  if (count < 1000000) return `${(count / 1000).toFixed(1)}K`;
-  return `${(count / 1000000).toFixed(1)}M`;
+export function formatCount(
+  count: number,
+  abbreviated: boolean = true,
+  decimals: number = 2
+): string {
+  if (!abbreviated) {
+    return count.toLocaleString();
+  }
+
+  if (count < 1000) {
+    return count.toString();
+  }
+
+  const k = count / 1000;
+  if (count < 1000000) {
+    const precision = k < 100 ? decimals : k < 1000 ? 1 : 0;
+    const num = k.toFixed(precision);
+    return `${parseFloat(num)}K`;
+  }
+  
+  const m = count / 1000000;
+  const precision = m < 100 ? decimals : m < 1000 ? 1 : 0;
+  const num = m.toFixed(precision);
+  return `${parseFloat(num)}M`;
 }
 
 export function formatTimestamp(timestamp: string): string {
@@ -160,6 +180,20 @@ export function processPostContent(body: string): {
     hashtags: extractHashtags(body),
     mentions: extractMentions(body),
   };
+}
+
+/**
+ * Simple pluralization helper.
+ * @param count The number to check against.
+ * @param singular The singular form of the word.
+ * @param plural The plural form of the word. If not provided, it will add an 's'.
+ * @returns The singular or plural form of the word.
+ */
+export function pluralize(count: number, singular: string, plural?: string): string {
+  if (count === 1) {
+    return singular;
+  }
+  return plural || `${singular}s`;
 }
 
 /**

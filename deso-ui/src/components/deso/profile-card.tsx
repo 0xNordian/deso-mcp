@@ -3,6 +3,14 @@ import { ProfileDescription } from './profile-description';
 import { UserInfo } from './user-info';
 import { FollowButton } from './follow-button';
 import { MessageButton } from './message-button';
+import { ProfileStat } from './profile-stat';
+import {
+  ActionMenu,
+  ActionMenuItem,
+  ActionMenuSeparator,
+} from './action-menu';
+import { Button } from '../ui/button';
+import { MoreHorizontal, Share2, Flag, Ban } from 'lucide-react';
 
 export interface ProfileCardProps {
   publicKey: string;
@@ -32,7 +40,25 @@ export function ProfileCard({ publicKey }: ProfileCardProps) {
           <div className="flex items-center gap-2">
             <MessageButton variant="icon-only" showTooltip />
             <FollowButton />
+            <ActionMenu
+              trigger={
+                <Button variant="outline" size="icon">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              }
+            >
+              <ActionMenuItem icon={Share2}>Share profile</ActionMenuItem>
+              <ActionMenuSeparator />
+              <ActionMenuItem icon={Flag}>Report user</ActionMenuItem>
+              <ActionMenuItem icon={Ban} variant="destructive">
+                Block user
+              </ActionMenuItem>
+            </ActionMenu>
           </div>
+        </div>
+        <div className="flex items-center gap-4">
+          <ProfileStat variant="followers" count={32430} />
+          <ProfileStat variant="following" count={2540} />
         </div>
         <ProfileDescription publicKey={publicKey} formatted lineClamp={4} />
       </div>

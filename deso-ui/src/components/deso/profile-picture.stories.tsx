@@ -41,55 +41,84 @@ const meta: Meta<typeof ProfilePicture> = {
       control: 'select',
       options: ['default', 'nft', 'highres'],
     },
+    shape: {
+      control: 'select',
+      options: ['circle', 'rounded', 'square'],
+    },
+    border: {
+      control: 'select',
+      options: ['none', 'gradient', 'solid'],
+    },
   },
 };
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {
+const LIVE_PUBLIC_KEY = DEFAULT_PUBLIC_KEY;
+
+export const Circle: Story = {
+  name: 'Shape: Circle',
   args: {
-    publicKey: DEFAULT_PUBLIC_KEY,
-    size: 'md',
-    variant: 'default',
+    publicKey: LIVE_PUBLIC_KEY,
+    shape: 'circle',
   },
 };
 
-export const Small: Story = {
+export const Rounded: Story = {
+  name: 'Shape: Rounded',
   args: {
-    publicKey: DEFAULT_PUBLIC_KEY,
-    size: 'sm',
-    variant: 'default',
+    publicKey: LIVE_PUBLIC_KEY,
+    shape: 'rounded',
   },
 };
 
-export const Large: Story = {
+export const Square: Story = {
+  name: 'Shape: Square',
   args: {
-    publicKey: DEFAULT_PUBLIC_KEY,
-    size: 'lg',
-    variant: 'default',
+    publicKey: LIVE_PUBLIC_KEY,
+    shape: 'square',
   },
 };
 
-export const NFTVariant: Story = {
+export const NFT: Story = {
+  name: 'Variant: NFT (Hexagon)',
   args: {
-    publicKey: DEFAULT_PUBLIC_KEY,
-    size: 'md',
+    publicKey: LIVE_PUBLIC_KEY,
     variant: 'nft',
   },
 };
 
-export const HighResVariant: Story = {
+export const GradientBorder: Story = {
+  name: 'Gradient Border',
   args: {
-    publicKey: DEFAULT_PUBLIC_KEY,
-    size: 'md',
-    variant: 'highres',
+    publicKey: LIVE_PUBLIC_KEY,
+    shape: 'circle',
+    border: 'gradient',
+  },
+};
+
+export const GradientBorderRounded: Story = {
+  name: 'Gradient Border (Rounded)',
+  args: {
+    publicKey: LIVE_PUBLIC_KEY,
+    shape: 'rounded',
+    border: 'gradient',
+  },
+};
+
+export const SolidBorder: Story = {
+  name: 'Solid Border',
+  args: {
+    publicKey: LIVE_PUBLIC_KEY,
+    shape: 'circle',
+    border: 'solid',
   },
 };
 
 export const Loading: Story = {
   args: {
-    publicKey: DEFAULT_PUBLIC_KEY,
+    publicKey: 'loading...',
     size: 'md',
     variant: 'default',
   },

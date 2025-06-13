@@ -13,27 +13,33 @@ Our Storybook setup relies on a few key principles:
 
 ---
 
-## Step-by-Step Guide to Creating a New Story
+## Step-by-Step Guide to Creating Stories
 
-Let's say you've created a new component called `MyComponent` that fetches a user's profile data.
+The process for creating a story depends on the type of component.
 
-### 1. Create the Story File
+### Part 1: Stories for Data-Fetching Components
 
-Create a new file named `MyComponent.stories.tsx` inside the same directory as your component (`deso-ui/src/components/deso/MyComponent.stories.tsx`).
+These components, like `ProfilePicture` or `ProfileCard`, interact with the DeSo GraphQL API. Their stories must account for loading, error, and success states, which we manage with MSW.
 
-### 2. Basic Story Boilerplate
+**Example: Creating a story for `ProfilePicture`**
 
-Add the basic boilerplate for a Storybook file. This includes the `meta` object for configuration and the base `Story` type.
+#### 1. Create the Story File
+
+Create a new file named `ProfilePicture.stories.tsx` inside the same directory as your component (`deso-ui/src/components/deso/ProfilePicture.stories.tsx`).
+
+#### 2. Add Story Boilerplate
+
+Add the basic boilerplate. We import our centralized MSW handlers and constants for public keys.
 
 ```tsx
 import type { Meta, StoryObj } from '@storybook/react';
-import { MyComponent } from './MyComponent';
-import { DEFAULT_PUBLIC_KEY } from '../../lib/constants';
-import { successHandlers, errorHandlers, loadingHandlers } from '../../lib/mocks/msw-handlers';
+import { ProfilePicture } from './profile-picture';
+import { DEFAULT_PUBLIC_KEY, LIVE_PUBLIC_KEY } from '@/lib/constants';
+import { successHandlers, errorHandlers, loadingHandlers } from '@/lib/mocks/msw-handlers';
 
-const meta: Meta<typeof MyComponent> = {
-  title: 'DeSo/MyComponent',
-  component: MyComponent,
+const meta: Meta<typeof ProfilePicture> = {
+  title: 'DeSo/ProfilePicture',
+  component: ProfilePicture,
   tags: ['autodocs'],
   argTypes: {
     // Define arg types for your component's props here
@@ -44,21 +50,17 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 ```
 
-### 3. Add Centralized Mock Handlers
+#### 3. Add Stories for Different States
 
 Instead of creating local mock handlers in every story, we use a set of shared handlers defined in `deso-ui/src/lib/mocks/msw-handlers.ts`. These handlers use a regular expression (`/GetProfile/`) to automatically respond to any GraphQL query whose name starts with "GetProfile".
 
-To use them, import them and add them to the `parameters.msw.handlers` array in your story.
-
-#### Default (Success) Story
-
-This story represents the component when the data is fetched successfully.
+**Success Story (Default State):**
+This story represents the component when data is fetched successfully. We use `DEFAULT_PUBLIC_KEY` which is linked to our mock data.
 
 ```tsx
 export const Default: Story = {
   args: {
     publicKey: DEFAULT_PUBLIC_KEY,
-    // other props...
   },
   parameters: {
     msw: {
@@ -68,9 +70,8 @@ export const Default: Story = {
 };
 ```
 
-#### Loading State Story
-
-This story shows the component in its loading state. The `loadingHandlers` introduce an artificial delay before responding, allowing you to test your loading UI.
+**Loading State Story:**
+The `loadingHandlers` introduce an artificial delay, allowing you to test your loading UI.
 
 ```tsx
 export const Loading: Story = {
@@ -85,9 +86,8 @@ export const Loading: Story = {
 };
 ```
 
-#### Error State Story
-
-This story simulates an API error. The `errorHandlers` return a GraphQL error response, allowing you to test your component's error handling and fallback UI.
+**Error State Story:**
+The `errorHandlers` simulate a GraphQL error, allowing you to test your component's fallback UI.
 
 ```tsx
 export const Error: Story = {
@@ -102,28 +102,67 @@ export const Error: Story = {
 };
 ```
 
-### 4. Handling Special Cases (Optional)
-
-If your story needs a specific mock response that isn't covered by the default handlers (e.g., a profile with no cover photo), you can use or create a specific handler in `msw-handlers.ts`.
-
-For example, the `ProfileCard` story uses `noCoverHandlers` to test its fallback UI.
+**Live Data Story:**
+To hit the actual DeSo API, provide a real public key (like `LIVE_PUBLIC_KEY`) and simply omit the `parameters.msw` object. This relies on the MSW bypass behavior configured in `.storybook/preview.tsx`.
 
 ```tsx
-import { noCoverHandlers } from '../../lib/mocks/msw-handlers';
-
-export const ProfileWithoutCover: Story = {
+export const Live: Story = {
+  name: 'Live Data',
   args: {
-    publicKey: DEFAULT_PUBLIC_KEY,
+    publicKey: LIVE_PUBLIC_KEY,
   },
-  parameters: {
-    msw: {
-      handlers: noCoverHandlers, // <-- Use a specific handler for this case
-    },
-  },
+  // No MSW handlers means the request will not be mocked
 };
 ```
 
-By following this structure, we keep our stories clean, consistent, and focused on the component's behavior, while the complexities of data mocking are abstracted away into a centralized, reusable system.
+This same pattern applies to more **composite components** like `ProfileCard`. Because `ProfileCard` is composed of smaller data-fetching components, the same MSW handlers will be caught by its children, allowing you to test the entire composite component in its different states.
+
+### Part 2: Stories for Presentational Components
+
+These components, like `Button` or our `ActionMenu`, do not fetch data. They only receive props and render UI. Their stories are simpler and do not require MSW.
+
+**Example: Creating a story for `ActionMenu`**
+
+#### 1. Create the Story File
+
+Create a file named `ActionMenu.stories.tsx`.
+
+#### 2. Add Story Boilerplate and Define Stories
+
+For these components, you just need to demonstrate their different visual states by passing different props.
+
+```tsx
+import type { Meta, StoryObj } from '@storybook/react';
+import { ActionMenu, ActionMenuItem } from './action-menu';
+import { Button } from '@/components/ui/button';
+import { MoreHorizontal, Share2, Ban } from 'lucide-react';
+
+const meta: Meta<typeof ActionMenu> = {
+  title: 'DeSo/ActionMenu',
+  component: ActionMenu,
+  tags: ['autodocs'],
+};
+
+export default meta;
+type Story = StoryObj<typeof ActionMenu>;
+
+export const IconOnly: Story = {
+  args: {
+    trigger: (
+      <Button variant="ghost" size="icon">
+        <MoreHorizontal className="h-4 w-4" />
+      </Button>
+    ),
+    children: (
+      <>
+        <ActionMenuItem icon={Share2}>Share</ActionMenuItem>
+        <ActionMenuItem icon={Ban} variant="destructive">Block</ActionMenuItem>
+      </>
+    ),
+  },
+};
+```
+In this example, we show how `ActionMenu` looks with an icon-only button as a trigger and how to compose `ActionMenuItem` components as children. No mocking is needed.
 
 ---
 
@@ -131,46 +170,29 @@ By following this structure, we keep our stories clean, consistent, and focused 
 
 ### 1. Apollo Client Cache and Mock Data
 
-**Problem:** You might see console errors from Apollo Client about being unable to write to the cache, or your component might not render data even though MSW returns a 200 OK status.
+**Problem:** You see Apollo Client cache errors in the console, or your component doesn't render data even though MSW returns a 200 OK status.
 
-**Cause:** Apollo Client uses data normalization to maintain a consistent cache. To do this, it needs a unique identifier for each data object. By default, it looks for an `id` or `_id` field. For our DeSo data, it's crucial that any object type that can be queried (like `accountByPublicKey`) includes a unique identifier in the query and the corresponding mock data.
+**Cause:** Apollo Client requires a unique identifier to normalize and cache data. By default, it looks for an `id` or `_id` field. For our DeSo data, the `accountByPublicKey` object type needs a unique identifier.
 
 **Solution:**
-
-*   **In your GraphQL Query:** Always include `id` and `publicKey` when querying for an object like `accountByPublicKey`.
-*   **In your Mock Data (`deso-data.ts`):** Ensure that the mock objects you create have `id` and `publicKey` fields that match what the query expects.
+*   **In your GraphQL Query:** Always include `id` and `publicKey`.
+*   **In your Mock Data (`deso-data.ts`):** Ensure the mock objects have `id` and `publicKey` fields.
 
 ```ts
-// Example of a well-formed mock object in deso-data.ts
+// Example of a well-formed mock object in deso-ui/src/lib/mocks/deso-data.ts
 const baseProfile = {
   id: '1', // <-- Crucial for Apollo cache
   publicKey: DEFAULT_PUBLIC_KEY, // <-- Crucial for Apollo cache
   username: DEFAULT_USERNAME,
-  description: 'A mock description.',
   // ... other fields
 };
 ```
 
-### 2. Fetching Live Data in a Story
+### 2. Bypassing MSW for Live Data
 
-There are times when you want a story to hit the actual DeSo API instead of using mocks. This is useful for verifying real-world data shapes and component behavior.
-
-**Steps to Enable Live Data:**
-
-1.  **Remove MSW Handlers from the Story:** In your `.stories.tsx` file, simply remove the `parameters` object that contains the `msw` handlers from the story you want to be live.
-
-    ```tsx
-    // This story will now make a real API call
-    export const Live: Story = {
-      name: 'Live Data',
-      args: {
-        publicKey: 'BC1YLjSGY3DETtVTsiDVkobtvfDDtMuTjFoG1rmSagtWPzHyEZ3BKuB',
-      },
-      // No parameters.msw object here!
-    };
-    ```
-
-2.  **Configure MSW to Bypass Unhandled Requests:** In `.storybook/preview.tsx`, make sure MSW is initialized to let unhandled requests pass through to the network.
+As shown in the data-fetching example, you can render a component with live data. This is enabled by two things:
+1.  **Omitting `parameters.msw`** from the story definition.
+2.  **Configuring MSW to bypass unhandled requests.** This is set globally in `.storybook/preview.tsx`.
 
     ```tsx
     // .storybook/preview.tsx
@@ -183,12 +205,11 @@ There are times when you want a story to hit the actual DeSo API instead of usin
 
 ### 3. Data Structure Mismatches
 
-**Problem:** Your component is blank, but the network request shows a 200 OK and contains the data you expect.
+**Problem:** Your component is blank, but the network tab shows a 200 OK with the correct data.
 
-**Cause:** The component is likely trying to access data using an incorrect path. For example, the live API might return a user's bio in a top-level `description` field, while the mock data (or your component's code) might expect it at `extraData.MarkdownDescription`.
+**Cause:** There's a mismatch between the data structure returned by the API and the structure your component expects. For example, the live API might return `extraData` as a JSON string, while mocks provide it as a pre-parsed object.
 
 **Solution:**
-
-*   **Always check the live API response:** Use your browser's network tools to inspect the JSON response from a real API call.
-*   **Ensure consistency:** Make sure your component's data access logic (`profile.description`), your GraphQL queries, and your mock data structures all align perfectly with the live API.
-*   **Use higher-level hooks:** Whenever possible, use abstracted hooks like `useProfile` instead of lower-level ones like `useParsedProfileQuery`. The higher-level hooks are designed to return data in a consistent and easy-to-use shape. 
+*   **Check the live API response:** Use your browser's network tools to inspect the real JSON response.
+*   **Use higher-level hooks:** Our custom hooks like `useProfile` are designed to handle these inconsistencies (e.g., parsing `extraData` strings). Prefer using these hooks over lower-level GraphQL queries to ensure data consistency.
+*   **Keep mocks aligned:** Ensure your mock data in `deso-data.ts` mirrors the structure returned by the higher-level hooks. 
