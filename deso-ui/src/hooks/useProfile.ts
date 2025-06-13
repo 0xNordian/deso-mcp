@@ -19,7 +19,7 @@ function useIsClient() {
  * @param publicKey The public key of the user to fetch.
  * @returns The result of the useQuery hook with extraData parsed.
  */
-function useParsedProfileQuery(query: any, publicKey: string) {
+export function useParsedProfileQuery(query: any, publicKey: string) {
   const isClient = useIsClient();
   const { data, loading, error } = useQuery(query, {
     variables: { publicKey },

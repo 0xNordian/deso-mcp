@@ -123,4 +123,72 @@ export const ProfileWithoutCover: Story = {
 };
 ```
 
-By following this structure, we keep our stories clean, consistent, and focused on the component's behavior, while the complexities of data mocking are abstracted away into a centralized, reusable system. 
+By following this structure, we keep our stories clean, consistent, and focused on the component's behavior, while the complexities of data mocking are abstracted away into a centralized, reusable system.
+
+---
+
+## Important Gotchas and Best Practices
+
+### 1. Apollo Client Cache and Mock Data
+
+**Problem:** You might see console errors from Apollo Client about being unable to write to the cache, or your component might not render data even though MSW returns a 200 OK status.
+
+**Cause:** Apollo Client uses data normalization to maintain a consistent cache. To do this, it needs a unique identifier for each data object. By default, it looks for an `id` or `_id` field. For our DeSo data, it's crucial that any object type that can be queried (like `accountByPublicKey`) includes a unique identifier in the query and the corresponding mock data.
+
+**Solution:**
+
+*   **In your GraphQL Query:** Always include `id` and `publicKey` when querying for an object like `accountByPublicKey`.
+*   **In your Mock Data (`deso-data.ts`):** Ensure that the mock objects you create have `id` and `publicKey` fields that match what the query expects.
+
+```ts
+// Example of a well-formed mock object in deso-data.ts
+const baseProfile = {
+  id: '1', // <-- Crucial for Apollo cache
+  publicKey: DEFAULT_PUBLIC_KEY, // <-- Crucial for Apollo cache
+  username: DEFAULT_USERNAME,
+  description: 'A mock description.',
+  // ... other fields
+};
+```
+
+### 2. Fetching Live Data in a Story
+
+There are times when you want a story to hit the actual DeSo API instead of using mocks. This is useful for verifying real-world data shapes and component behavior.
+
+**Steps to Enable Live Data:**
+
+1.  **Remove MSW Handlers from the Story:** In your `.stories.tsx` file, simply remove the `parameters` object that contains the `msw` handlers from the story you want to be live.
+
+    ```tsx
+    // This story will now make a real API call
+    export const Live: Story = {
+      name: 'Live Data',
+      args: {
+        publicKey: 'BC1YLjSGY3DETtVTsiDVkobtvfDDtMuTjFoG1rmSagtWPzHyEZ3BKuB',
+      },
+      // No parameters.msw object here!
+    };
+    ```
+
+2.  **Configure MSW to Bypass Unhandled Requests:** In `.storybook/preview.tsx`, make sure MSW is initialized to let unhandled requests pass through to the network.
+
+    ```tsx
+    // .storybook/preview.tsx
+    import { initialize } from 'msw-storybook-addon';
+
+    initialize({
+      onUnhandledRequest: 'bypass', // <-- This is the key!
+    });
+    ```
+
+### 3. Data Structure Mismatches
+
+**Problem:** Your component is blank, but the network request shows a 200 OK and contains the data you expect.
+
+**Cause:** The component is likely trying to access data using an incorrect path. For example, the live API might return a user's bio in a top-level `description` field, while the mock data (or your component's code) might expect it at `extraData.MarkdownDescription`.
+
+**Solution:**
+
+*   **Always check the live API response:** Use your browser's network tools to inspect the JSON response from a real API call.
+*   **Ensure consistency:** Make sure your component's data access logic (`profile.description`), your GraphQL queries, and your mock data structures all align perfectly with the live API.
+*   **Use higher-level hooks:** Whenever possible, use abstracted hooks like `useProfile` instead of lower-level ones like `useParsedProfileQuery`. The higher-level hooks are designed to return data in a consistent and easy-to-use shape. 

@@ -37,6 +37,7 @@ const config: StorybookConfig = {
       config.resolve.alias = {
         ...config.resolve.alias,
         '@': path.resolve(__dirname, '../src'),
+        buffer: 'buffer/',
       };
     }
     return config;

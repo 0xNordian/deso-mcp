@@ -4,14 +4,29 @@ import React, { useState } from 'react';
 import { Check, Copy } from 'lucide-react';
 import { copyToClipboard } from '@/lib/utils/deso';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 
 export interface CopyButtonProps {
   textToCopy: string;
   size?: 'sm' | 'md' | 'lg';
+  label?: string;
   className?: string;
+  showTooltip?: boolean;
+  tooltipText?: string;
+  successTooltipText?: string;
+  successLabel?: string;
 }
 
-export function CopyButton({ textToCopy, size = 'md', className }: CopyButtonProps) {
+export function CopyButton({ 
+  textToCopy, 
+  size = 'md', 
+  label, 
+  className,
+  showTooltip = true,
+  tooltipText = 'Copy to clipboard',
+  successTooltipText = 'Copied!',
+  successLabel,
+}: CopyButtonProps) {
   const [copied, setCopied] = useState(false);
   
   const handleCopy = async () => {
@@ -27,25 +42,38 @@ export function CopyButton({ textToCopy, size = 'md', className }: CopyButtonPro
     md: 'h-4 w-4',
     lg: 'h-5 w-5',
   };
+
+  const buttonContent = (
+    <button
+      onClick={handleCopy}
+      className={cn(
+        'flex items-center gap-1 p-1 text-gray-400 hover:text-gray-600 focus:outline-none',
+        className
+      )}
+      aria-label={tooltipText}
+    >
+      {copied ? (
+        <Check className={cn('text-green-500', iconSizes[size])} />
+      ) : (
+        <Copy className={iconSizes[size]} />
+      )}
+      {copied && successLabel && <span className="text-sm">{successLabel}</span>}
+      {!copied && label && <span className="text-sm">{label}</span>}
+    </button>
+  );
+
+  if (!showTooltip) {
+    return buttonContent;
+  }
   
   return (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <button
-            onClick={handleCopy}
-            className={`p-1 text-gray-400 hover:text-gray-600 focus:outline-none ${className}`}
-            aria-label="Copy to clipboard"
-          >
-            {copied ? (
-              <Check className={`${iconSizes[size]} text-green-500`} />
-            ) : (
-              <Copy className={iconSizes[size]} />
-            )}
-          </button>
+          {buttonContent}
         </TooltipTrigger>
         <TooltipContent>
-          {copied ? 'Copied!' : 'Copy to clipboard'}
+          {copied ? successTooltipText : tooltipText}
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

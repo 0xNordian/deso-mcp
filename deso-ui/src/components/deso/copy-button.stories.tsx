@@ -15,6 +15,21 @@ const meta: Meta<typeof CopyButton> = {
       control: 'select',
       options: ['xs', 'sm', 'md', 'lg'],
     },
+    label: {
+      control: 'text',
+    },
+    showTooltip: {
+      control: 'boolean',
+    },
+    tooltipText: {
+      control: 'text',
+    },
+    successTooltipText: {
+      control: 'text',
+    },
+    successLabel: {
+      control: 'text',
+    },
   },
 };
 
@@ -47,5 +62,37 @@ export const CustomStyling: Story = {
     textToCopy: 'This text will be copied to clipboard',
     size: 'md',
     className: 'bg-blue-100 rounded-md p-2',
+  },
+};
+
+export const WithLabel: Story = {
+  args: {
+    textToCopy: 'This text will be copied to clipboard',
+    size: 'md',
+    label: 'Copy',
+  },
+};
+
+export const NoTooltip: Story = {
+  args: {
+    ...Default.args,
+    showTooltip: false,
+    label: 'No Tooltip',
+  },
+};
+
+export const CustomTooltipText: Story = {
+  args: {
+    ...Default.args,
+    tooltipText: 'Click me to copy!',
+    successTooltipText: 'Awesome! You copied it!',
+  },
+};
+
+export const WithSuccessLabel: Story = {
+  args: {
+    ...Default.args,
+    label: 'Copy',
+    successLabel: 'Copied!',
   },
 }; 
