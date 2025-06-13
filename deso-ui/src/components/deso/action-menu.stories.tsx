@@ -68,4 +68,55 @@ export const NoIcons: Story = {
     trigger: <Button variant="outline">Actions</Button>,
     children: menuItemsWithoutIcons,
   },
+};
+
+const menuItemsWithConfirmation = (
+  <>
+    <ActionMenuItem icon={Share2}>Share</ActionMenuItem>
+    <ActionMenuItem
+      icon={Flag}
+      confirmation={{
+        title: 'Report this action?',
+        description: 'This will submit a report. Are you sure?',
+        onConfirm: () => alert('Reported'),
+        confirmText: 'Report',
+      }}
+    >
+      Report
+    </ActionMenuItem>
+    <ActionMenuItem
+      icon={Ban}
+      confirmation={{
+        title: 'Block this user?',
+        description: "You won't see their content. They won't see yours.",
+        variant: 'destructive',
+        onConfirm: () => alert('Blocked'),
+        confirmText: 'Block',
+      }}
+    >
+      Block
+    </ActionMenuItem>
+    <ActionMenuSeparator />
+    <ActionMenuItem
+      icon={Trash2}
+      variant="destructive"
+      confirmation={{
+        title: 'Are you sure you want to delete?',
+        description: 'This action cannot be undone.',
+        variant: 'destructive',
+        confirmText: 'Yes, delete',
+        onConfirm: () => alert('Deleted'),
+      }}
+    >
+      Delete
+    </ActionMenuItem>
+  </>
+);
+
+export const WithConfirmation: Story = {
+  name: 'With Confirmation',
+  args: {
+    trigger: <Button variant="outline">Actions</Button>,
+    children: menuItemsWithConfirmation,
+  },
 }; 

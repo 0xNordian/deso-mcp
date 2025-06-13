@@ -49,8 +49,30 @@ export function ProfileCard({ publicKey }: ProfileCardProps) {
             >
               <ActionMenuItem icon={Share2}>Share profile</ActionMenuItem>
               <ActionMenuSeparator />
-              <ActionMenuItem icon={Flag}>Report user</ActionMenuItem>
-              <ActionMenuItem icon={Ban} variant="destructive">
+              <ActionMenuItem
+                icon={Flag}
+                confirmation={{
+                  title: 'Report User?',
+                  description:
+                    'This will report the user for review. Please confirm.',
+                  confirmText: 'Report',
+                  onConfirm: () => console.log('User reported'),
+                }}
+              >
+                Report user
+              </ActionMenuItem>
+              <ActionMenuItem
+                icon={Ban}
+                variant="destructive"
+                confirmation={{
+                  title: 'Block User?',
+                  description:
+                    "This will block the user. You won't see their posts or notifications. They won't be able to follow you or message you.",
+                  variant: 'destructive',
+                  confirmText: 'Block',
+                  onConfirm: () => console.log('User blocked'),
+                }}
+              >
                 Block user
               </ActionMenuItem>
             </ActionMenu>

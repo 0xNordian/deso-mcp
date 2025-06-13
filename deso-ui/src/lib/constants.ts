@@ -9,6 +9,9 @@
 export const DEFAULT_PUBLIC_KEY = 'BC1YLjSGY3DETtVTsiDVkobtvfDDtMuTjFoG1rmSagtWPzHyEZ3BKuB';
 export const DEFAULT_USERNAME = 'DeSocialWorld';
 
+// A known public key for fetching live data in stories
+export const LIVE_PUBLIC_KEY = 'BC1YLjSGY3DETtVTsiDVkobtvfDDtMuTjFoG1rmSagtWPzHyEZ3BKuB';
+
 // Common public keys for testing (can be expanded later)
 export const TEST_PUBLIC_KEYS = {
   mossified: DEFAULT_PUBLIC_KEY,

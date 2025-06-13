@@ -8,14 +8,21 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  ConfirmationDialog,
+  ConfirmationDialogProps,
+} from './confirmation-dialog';
+
+type ConfirmationProps = Omit<ConfirmationDialogProps, 'trigger' | 'children'>;
 
 interface ActionMenuItemProps {
   children: React.ReactNode;
   icon?: LucideIcon;
-  onClick?: () => void;
+  onClick?: (e: Event) => void;
   variant?: 'default' | 'destructive';
   className?: string;
   disabled?: boolean;
+  confirmation?: ConfirmationProps;
 }
 
 export function ActionMenuItem({
@@ -25,10 +32,22 @@ export function ActionMenuItem({
   variant,
   className,
   disabled,
+  confirmation,
 }: ActionMenuItemProps) {
-  return (
+  const [dialogOpen, setDialogOpen] = React.useState(false);
+
+  const handleSelect = (e: Event) => {
+    if (confirmation) {
+      e.preventDefault();
+      setDialogOpen(true);
+    } else if (onClick) {
+      onClick(e);
+    }
+  };
+
+  const item = (
     <DropdownMenuItem
-      onClick={onClick}
+      onSelect={handleSelect}
       variant={variant}
       disabled={disabled}
       className={cn('flex cursor-pointer items-center gap-2', className)}
@@ -37,6 +56,27 @@ export function ActionMenuItem({
       {children}
     </DropdownMenuItem>
   );
+
+  if (confirmation) {
+    return (
+      <ConfirmationDialog
+        {...confirmation}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        trigger={<>{item}</>}
+        onConfirm={() => {
+          if (onClick) {
+            onClick(new Event('click'));
+          }
+          if (confirmation.onConfirm) {
+            confirmation.onConfirm();
+          }
+        }}
+      />
+    );
+  }
+
+  return item;
 }
 
 interface ActionMenuProps {

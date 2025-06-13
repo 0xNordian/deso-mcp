@@ -134,20 +134,47 @@ export function formatCount(
   return `${parseFloat(num)}M`;
 }
 
-export function formatTimestamp(timestamp: string): string {
+export function formatTimestamp(timestamp: string | Date): {
+  relative: string;
+  fullDate: string;
+  fullDateTime: string;
+} {
   const date = new Date(timestamp);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
+  const diffSeconds = Math.round(diffMs / 1000);
+  const diffMins = Math.floor(diffSeconds / 60);
   const diffHours = Math.floor(diffMins / 60);
   const diffDays = Math.floor(diffHours / 24);
 
-  if (diffMins < 1) return 'now';
-  if (diffMins < 60) return `${diffMins}m`;
-  if (diffHours < 24) return `${diffHours}h`;
-  if (diffDays < 7) return `${diffDays}d`;
-  
-  return date.toLocaleDateString();
+  const fullDateTime = date.toLocaleString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+
+  const fullDate = date.toLocaleDateString('en-US');
+
+  if (diffSeconds < 5) {
+    return { relative: 'Just now', fullDate, fullDateTime };
+  }
+  if (diffSeconds < 60) {
+    return { relative: `${diffSeconds}s ago`, fullDate, fullDateTime };
+  }
+  if (diffMins < 60) {
+    return { relative: `${diffMins}m ago`, fullDate, fullDateTime };
+  }
+  if (diffHours < 24) {
+    return { relative: `${diffHours}h ago`, fullDate, fullDateTime };
+  }
+  if (diffDays < 30) {
+    return { relative: `${diffDays}d ago`, fullDate, fullDateTime };
+  }
+
+  return { relative: fullDate, fullDate, fullDateTime };
 }
 
 export function truncateText(text: string, maxLength: number): string {
