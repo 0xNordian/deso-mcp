@@ -89,6 +89,17 @@ export function PostCard({
     });
   };
 
+  const modalActions = {
+    likes: like,
+    reposts: repost,
+    diamonds: diamond,
+    comments: { count: actions.comments },
+    onLike: toggleLike,
+    onRepost: toggleRepost,
+    onDiamond: giveDiamond,
+    onComment: () => alert('Comment!'),
+  };
+
   return (
     <div
       className={cn(
@@ -144,7 +155,9 @@ export function PostCard({
         <div className="mt-2 text-foreground">
           <p className="whitespace-pre-wrap">{postContent}</p>
         </div>
-        {images && images.length > 0 && <PostImage images={images} />}
+        {images && images.length > 0 && (
+          <PostImage images={images} withModal withModalActions={modalActions} />
+        )}
         <div className="mt-4 flex w-full items-center gap-x-4 text-muted-foreground">
           <PostAction
             variant="comment"

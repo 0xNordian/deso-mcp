@@ -118,7 +118,7 @@ const StatefulPostImageWithModal = (
     onComment: () => alert('Comment clicked!'),
   };
 
-  return <PostImage {...props} withModal actions={actions} />;
+  return <PostImage {...props} withModal withModalActions={actions} />;
 };
 
 export const WithModal: Story = {

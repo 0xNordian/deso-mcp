@@ -32,7 +32,7 @@ export interface PostImageProps {
   className?: string;
   onImageClick?: (index: number) => void;
   withModal?: boolean;
-  actions?: PostImageActions;
+  withModalActions?: PostImageActions;
 }
 
 export function PostImage({
@@ -40,8 +40,8 @@ export function PostImage({
   variant,
   className,
   onImageClick,
-  withModal = false,
-  actions,
+  withModal = true,
+  withModalActions,
 }: PostImageProps) {
   const [modalOpen, setModalOpen] = React.useState(false);
   const [selectedIndex, setSelectedIndex] = React.useState(0);
@@ -117,11 +117,15 @@ export function PostImage({
           <CarouselContent className="h-full">
             {images.map((src, index) => (
               <CarouselItem key={index} className="h-full">
-                <div className="w-full h-full flex items-center justify-center p-8">
+                <div
+                  className="w-full h-full flex items-center justify-center p-8"
+                  onClick={() => setModalOpen(false)}
+                >
                   <img
                     src={src}
                     alt={`Post image ${index + 1}`}
                     className="max-w-full max-h-full object-contain border border-black"
+                    onClick={(e) => e.stopPropagation()}
                   />
                 </div>
               </CarouselItem>
@@ -130,34 +134,34 @@ export function PostImage({
           <CarouselPrevious className="left-4" />
           <CarouselNext className="right-4" />
         </Carousel>
-        {actions && (
+        {withModalActions && (
           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-x-6 bg-black/50 text-white p-2 px-4 rounded-full border border-white/20">
             <PostAction
               variant="comment"
-              count={actions.comments.count}
-              onClick={actions.onComment}
+              count={withModalActions.comments.count}
+              onClick={withModalActions.onComment}
               className="hover:text-white"
             />
             <PostAction
               variant="repost"
-              count={actions.reposts.count}
-              active={actions.reposts.active}
-              onClick={actions.onRepost}
+              count={withModalActions.reposts.count}
+              active={withModalActions.reposts.active}
+              onClick={withModalActions.onRepost}
               className="hover:text-white"
             />
             <PostAction
               variant="like"
-              count={actions.likes.count}
-              active={actions.likes.active}
-              onClick={actions.onLike}
+              count={withModalActions.likes.count}
+              active={withModalActions.likes.active}
+              onClick={withModalActions.onLike}
               className="hover:text-white"
             />
             <PostAction
               variant="diamond"
-              count={actions.diamonds.count}
-              value={actions.diamonds.value}
-              active={actions.diamonds.active}
-              onClick={actions.onDiamond}
+              count={withModalActions.diamonds.count}
+              value={withModalActions.diamonds.value}
+              active={withModalActions.diamonds.active}
+              onClick={withModalActions.onDiamond}
               className="hover:text-white"
             />
           </div>
