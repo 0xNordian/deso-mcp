@@ -1,10 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useProfilePicture } from '@/hooks/useProfile';
-import { cn, getUsernameInitial, getSingleProfilePictureUrl } from '@/lib/utils/deso';
+import { cn, getUsernameInitial, getSingleProfilePictureUrl, buildProfilePictureUrl } from '@/lib/utils/deso';
 
 // Size configurations
 const sizeConfig = {
@@ -37,18 +37,29 @@ export function ProfilePicture({
   const extraData = profile?.extraData || {};
   const sizeClasses = sizeConfig[size];
 
-  let profilePicUrl: string | undefined;
+  // Robust logic: use buildProfilePictureUrl utility for all variants
+  const initialProfilePicUrl = buildProfilePictureUrl(profile?.profilePic, extraData, variant) || getSingleProfilePictureUrl(publicKey);
+  const [imgSrc, setImgSrc] = useState<string | undefined>(initialProfilePicUrl);
+  const [triedFallback, setTriedFallback] = useState(false);
 
-  // Select the correct URL based on the variant
-  if (variant === 'nft') {
-    profilePicUrl = extraData.NFTProfilePictureUrl;
-  } else if (variant === 'highres') {
-    profilePicUrl = extraData.LargeProfilePicURL;
-  } else {
-    profilePicUrl = getSingleProfilePictureUrl(publicKey);
-  }
+  // If the profile or extraData changes, reset the image source and fallback state
+  useEffect(() => {
+    setImgSrc(initialProfilePicUrl);
+    setTriedFallback(false);
+  }, [initialProfilePicUrl]);
 
-  const fallbackInitial = getUsernameInitial(profile?.username);
+  // Debug logging for live data troubleshooting
+  console.log('[ProfilePicture] profile:', profile);
+  console.log('[ProfilePicture] extraData:', extraData);
+  console.log('[ProfilePicture] imgSrc:', imgSrc);
+
+  // Fallback initial: use username, else first letter of publicKey, else '?'
+  const fallbackInitial = profile?.username
+    ? getUsernameInitial(profile.username)
+    : publicKey
+      ? publicKey[0].toUpperCase()
+      : '?';
+
   const isNftClass = variant === 'nft' ? 'nft-hexagon' : 'rounded-full';
 
   // Loading State
@@ -66,7 +77,7 @@ export function ProfilePicture({
   }
 
   // Error or No-URL Fallback State
-  if (error || !profilePicUrl) {
+  if (error || !imgSrc) {
     return (
       <div
         className={cn(
@@ -84,6 +95,16 @@ export function ProfilePicture({
     );
   }
 
+  // Fallback logic for image load error
+  const handleImgError = () => {
+    if (!triedFallback) {
+      setImgSrc(getSingleProfilePictureUrl(publicKey));
+      setTriedFallback(true);
+    } else {
+      setImgSrc(undefined); // This will show the fallback avatar
+    }
+  };
+
   // Success State
   return (
     <Avatar
@@ -91,10 +112,11 @@ export function ProfilePicture({
       onClick={onClick}
     >
       <AvatarImage
-        src={profilePicUrl}
+        src={imgSrc}
         alt={`${profile?.username || 'User'}'s profile picture`}
         loading={lazy ? 'lazy' : 'eager'}
         className={cn('object-cover', isNftClass)}
+        onError={handleImgError}
       />
       <AvatarFallback
         className={cn(

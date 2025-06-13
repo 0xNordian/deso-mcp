@@ -1,6 +1,8 @@
 import { graphql, HttpResponse, delay } from 'msw';
 import { defaultProfile } from './deso-data';
 
+// STRONGLY RECOMMENDED: Use live data for all default stories. Only use these mock handlers for explicit loading, error, or fallback stories. See HOW_TO_ADD_STORIES.md for best practices.
+
 /**
  * A utility to create a GraphQL handler for a specific profile-related query.
  * This can be used if a story needs to override a specific query.

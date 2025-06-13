@@ -25,11 +25,15 @@ export function useParsedProfileQuery(query: any, publicKey: string) {
     variables: { publicKey },
     skip: !publicKey || !isClient,
     errorPolicy: 'all',
+    fetchPolicy: 'network-only',
   });
 
   // Use useMemo to parse extraData only when data changes.
   const parsedData = useMemo(() => {
     const extraData = data?.accountByPublicKey?.extraData;
+
+    // Debug: log the type and value of extraData before parsing
+    console.log('[useParsedProfileQuery] typeof extraData:', typeof extraData, extraData);
 
     if (!extraData) {
       return data;
@@ -50,6 +54,9 @@ export function useParsedProfileQuery(query: any, publicKey: string) {
       // If it's not a string, assume it's already a valid object (from MSW).
       parsedExtraData = extraData;
     }
+
+    // Debug: log the parsed extraData
+    console.log('[useParsedProfileQuery] parsedExtraData:', parsedExtraData);
 
     return {
       ...data,

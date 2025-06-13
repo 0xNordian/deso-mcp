@@ -4,6 +4,8 @@ import { gql } from '@apollo/client';
 export const GET_PROFILE_PICTURE = gql`
   query GetProfilePicture($publicKey: String!) {
     accountByPublicKey(publicKey: $publicKey) {
+      id
+      publicKey
       profilePic
       username
       extraData
@@ -15,6 +17,8 @@ export const GET_PROFILE_PICTURE = gql`
 export const GET_USERNAME_INFO = gql`
   query GetUsernameInfo($publicKey: String!) {
     accountByPublicKey(publicKey: $publicKey) {
+      id
+      publicKey
       username
       extraData
     }

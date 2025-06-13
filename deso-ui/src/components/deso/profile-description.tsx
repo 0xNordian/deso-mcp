@@ -11,6 +11,26 @@ export interface ProfileDescriptionProps {
   lineClamp?: number;
   showMoreText?: string;
   showLessText?: string;
+  formatted?: boolean;
+}
+
+/**
+ * Formats a description string by converting URLs and @mentions to links and preserving line breaks.
+ */
+function formatDescription(text: string): React.ReactNode[] {
+  // Convert URLs to links
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  // Convert @mentions to links (assume /u/username route)
+  const mentionRegex = /(^|\s)(@[a-zA-Z0-9_]+)/g;
+
+  // Split by newlines to preserve line breaks
+  return text.split(/\n/).map((line, i) => {
+    // URLs
+    let formatted = line.replace(urlRegex, (url) => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
+    // Mentions
+    formatted = formatted.replace(mentionRegex, (match, space, handle) => `${space}<a href="/u/${handle.slice(1)}" class="text-blue-600 underline">${handle}</a>`);
+    return <span key={i} dangerouslySetInnerHTML={{ __html: formatted }} />;
+  });
 }
 
 export const ProfileDescription = ({
@@ -19,6 +39,7 @@ export const ProfileDescription = ({
   lineClamp,
   showMoreText = 'Show more',
   showLessText = 'Show less',
+  formatted = false,
 }: ProfileDescriptionProps) => {
   const { profile, loading, error } = useProfile(publicKey);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -54,7 +75,16 @@ export const ProfileDescription = ({
 
   return (
     <div className={cn('relative', className)}>
-      <div style={style}>{description}</div>
+      <div style={style}>
+        {formatted
+          ? (isCurrentlyClamped
+              ? formatDescription(description)
+                  .slice(0, lineClamp ? lineClamp : undefined)
+                  .map((el, i, arr) => [el, i < arr.length - 1 ? <br key={`br-${i}`} /> : null])
+              : formatDescription(description).map((el, i, arr) => [el, i < arr.length - 1 ? <br key={`br-${i}`} /> : null])
+            )
+          : description}
+      </div>
       {shouldTruncate && (
         <Button
           variant="link"

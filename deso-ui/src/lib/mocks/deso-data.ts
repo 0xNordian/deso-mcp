@@ -10,7 +10,6 @@ const baseProfile = {
   extraData: {
     DisplayName: "mossified",
     FeaturedImageURL: "https://images.deso.org/7ed40194dba6ce264e505afa8f2f308825fa82309d3bfe3d71cb32af3d9a48fa.webp",
-    LargeProfilePicURL: "https://images.deso.org/aabd15bdbe42b4495ce136a93d395513ab03578a39e875154334f59c7f9984db.webp",
     NFTProfilePictureUrl: "https://nftz.mypinata.cloud/ipfs/bafybeif5mf54prcg4mr4p4v4o4s2w7bhfagord7y267u5sy344sjpk5lsm",
     IsVerified: "true",
     DiscordURL: "",

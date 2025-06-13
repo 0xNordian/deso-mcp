@@ -8,6 +8,7 @@ import { mockProfiles, defaultProfile } from '../../lib/mocks/deso-data'
 import { DEFAULT_PUBLIC_KEY } from '../../lib/constants'
 import { getSingleProfilePictureUrl } from '@/lib/utils/deso'
 import { successHandlers, errorHandlers, loadingHandlers, noCoverHandlers } from '../../lib/mocks/msw-handlers';
+import { ProfileCard } from './profile-card';
 
 /**
  * The ProfileCard is a composite component that combines multiple DeSo UI components
@@ -49,48 +50,8 @@ import { successHandlers, errorHandlers, loadingHandlers, noCoverHandlers } from
  * ```
  */
 
-// Composite Profile Card Component for demonstration
-function ProfileCard({ publicKey }: { publicKey: string }) {
-  return (
-    <div className="w-full max-w-md mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
-      {/* Cover Photo */}
-      <ProfileCoverPhoto 
-        publicKey={publicKey} 
-        aspectRatio="16:9"
-        showOverlay
-        overlayOpacity={0.3}
-      >
-        {/* Profile Picture overlayed on cover */}
-        <div className="absolute bottom-4 left-4">
-          <img
-            src={getSingleProfilePictureUrl(publicKey, 'https://node.deso.org/assets/img/default_profile_pic.png')}
-            alt="Profile"
-            className="h-16 w-16 rounded-full border-4 border-white shadow-lg object-cover"
-          />
-        </div>
-      </ProfileCoverPhoto>
-      
-      {/* Profile Info */}
-      <div className="p-6">
-        <div className="flex items-center gap-2 mb-2">
-          <UsernameDisplay 
-            publicKey={publicKey}
-            showVerification
-            showCopyButton
-          />
-          <VerificationBadge isVerified />
-        </div>
-        
-        <p className="text-gray-600 text-sm">
-          This is a composite component showcasing all DeSo UI components working together with MSW mocked data.
-        </p>
-      </div>
-    </div>
-  )
-}
-
 const meta: Meta<typeof ProfileCard> = {
-  title: 'DeSo/ProfileCard (Composite)',
+  title: 'DeSo/ProfileCard',
   component: ProfileCard,
   parameters: {
     layout: 'centered',
@@ -110,31 +71,4 @@ export const DefaultProfile: Story = {
   args: {
     publicKey: DEFAULT_PUBLIC_KEY,
   },
-  parameters: {
-    msw: {
-      handlers: successHandlers,
-    },
-  },
 };
-
-export const LoadingProfile: Story = {
-  args: {
-    publicKey: DEFAULT_PUBLIC_KEY,
-  },
-  parameters: {
-    msw: {
-      handlers: loadingHandlers,
-    },
-  },
-};
-
-export const ProfileWithoutCover: Story = {
-  args: {
-    publicKey: DEFAULT_PUBLIC_KEY,
-  },
-  parameters: {
-    msw: {
-      handlers: noCoverHandlers,
-    },
-  },
-}; 

@@ -19,6 +19,9 @@ const meta: Meta<typeof ProfileDescription> = {
     showLessText: {
       control: 'text',
     },
+    formatted: {
+      control: 'boolean',
+    },
   },
 };
 
@@ -57,5 +60,22 @@ export const Loading: Story = {
     msw: {
       handlers: loadingHandlers,
     },
+  },
+};
+
+export const Formatted: Story = {
+  name: 'Formatted',
+  args: {
+    publicKey: DEFAULT_PUBLIC_KEY,
+    formatted: true,
+  },
+};
+
+export const FormattedTruncated: Story = {
+  name: 'Formatted (Truncated)',
+  args: {
+    publicKey: DEFAULT_PUBLIC_KEY,
+    formatted: true,
+    lineClamp: 4,
   },
 };

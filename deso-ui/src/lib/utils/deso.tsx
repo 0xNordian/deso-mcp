@@ -1,3 +1,4 @@
+import React from 'react';
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -8,26 +9,50 @@ export function cn(...inputs: ClassValue[]) {
 
 // DeSo-specific utility functions
 export function buildProfilePictureUrl(profilePic?: string, extraData?: Record<string, any>, variant: 'default' | 'nft' | 'highres' = 'default'): string | undefined {
-  if (variant === 'highres') {
-    if (extraData?.LargeProfilePicURL && extraData.LargeProfilePicURL.startsWith('http')) {
-      return extraData.LargeProfilePicURL;
+  // Helper to get the first valid value from possible keys
+  const getFirstValid = (obj: Record<string, any>, keys: string[]): string | undefined => {
+    for (const key of keys) {
+      if (obj && obj[key] && typeof obj[key] === 'string' && obj[key].startsWith('http')) {
+        return obj[key];
+      }
     }
     return undefined;
-  }
+  };
+
+  const largeProfilePic = getFirstValid(extraData || {}, [
+    'LargeProfilePicURL',
+    'LargeProfilePicUrl',
+    'largeProfilePicURL',
+    'largeProfilePicUrl',
+  ]);
+
+  const nftProfilePic = extraData?.NFTProfilePictureUrl?.startsWith('http') ? extraData.NFTProfilePictureUrl : undefined;
+
+  // Handle NFT variant
   if (variant === 'nft') {
-    if (extraData?.NFTProfilePictureUrl && extraData.NFTProfilePictureUrl.startsWith('http')) {
-      return extraData.NFTProfilePictureUrl;
-    }
-    return undefined;
+    return nftProfilePic;
   }
+
+  // Handle High-Res variant
+  if (variant === 'highres') {
+    return largeProfilePic;
+  }
+
+  // Handle Default variant logic
   if (variant === 'default') {
-    if (!profilePic) return undefined;
-    // If it's already a full URL, return as is
-    if (profilePic.startsWith('http')) {
+    // 1. Prefer LargeProfilePicURL
+    if (largeProfilePic) {
+      return largeProfilePic;
+    }
+
+    // 2. Fallback to profilePic (which can be a URL or hex-encoded data)
+    // 2a. If it's a full URL, return as is
+    if (profilePic && profilePic.startsWith('http')) {
       return profilePic;
     }
-    // Handle hex-encoded base64 data URLs from DeSo GraphQL
-    if (profilePic.startsWith('\\x')) {
+
+    // 2b. Handle hex-encoded base64 data URLs from DeSo GraphQL
+    if (profilePic && profilePic.startsWith('\\x')) {
       try {
         // Remove the \x prefix and convert hex to string
         const hexString = profilePic.slice(2);
@@ -56,12 +81,12 @@ export function buildProfilePictureUrl(profilePic?: string, extraData?: Record<s
           return dataUrl;
         }
       } catch (error) {
-        // Failed to decode
+        console.error("Failed to decode hex profile picture:", error);
       }
     }
-    // If it's a relative path, build the full URL
-    return undefined;
   }
+
+  // If no suitable URL is found for any variant, return undefined.
   return undefined;
 }
 

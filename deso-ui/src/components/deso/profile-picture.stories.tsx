@@ -53,11 +53,6 @@ export const Default: Story = {
     size: 'md',
     variant: 'default',
   },
-  parameters: {
-    msw: {
-      handlers: successHandlers,
-    },
-  },
 };
 
 export const Small: Story = {
@@ -65,11 +60,6 @@ export const Small: Story = {
     publicKey: DEFAULT_PUBLIC_KEY,
     size: 'sm',
     variant: 'default',
-  },
-  parameters: {
-    msw: {
-      handlers: successHandlers,
-    },
   },
 };
 
@@ -79,11 +69,6 @@ export const Large: Story = {
     size: 'lg',
     variant: 'default',
   },
-  parameters: {
-    msw: {
-      handlers: successHandlers,
-    },
-  },
 };
 
 export const NFTVariant: Story = {
@@ -92,11 +77,6 @@ export const NFTVariant: Story = {
     size: 'md',
     variant: 'nft',
   },
-  parameters: {
-    msw: {
-      handlers: successHandlers,
-    },
-  },
 };
 
 export const HighResVariant: Story = {
@@ -104,11 +84,6 @@ export const HighResVariant: Story = {
     publicKey: DEFAULT_PUBLIC_KEY,
     size: 'md',
     variant: 'highres',
-  },
-  parameters: {
-    msw: {
-      handlers: successHandlers,
-    },
   },
 };
 
