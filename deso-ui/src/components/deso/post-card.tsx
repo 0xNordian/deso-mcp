@@ -17,6 +17,7 @@ import { PostImage, PostImageActions } from './post-image';
 import { PostEmbed } from './post-embed';
 import { PostVideo } from './post-video';
 import { PostAudio } from './post-audio';
+import { PostReactions, Reaction } from './post-reactions';
 
 export interface PostActionProps {
   comments: number;
@@ -27,6 +28,9 @@ export interface PostActionProps {
   quotes: number;
   views: number;
   audioUrl?: string;
+  status?: PostStatusProps;
+  videoUrl?: string;
+  reactions?: Reaction[];
 }
 
 export interface PostStatusProps {
@@ -44,6 +48,7 @@ export interface PostQuoteProps {
   status?: PostStatusProps;
   videoUrl?: string;
   audioUrl?: string;
+  reactions?: Reaction[];
 }
 
 export interface PostCardProps {
@@ -58,6 +63,7 @@ export interface PostCardProps {
   status?: PostStatusProps;
   videoUrl?: string;
   audioUrl?: string;
+  reactions?: Reaction[];
 }
 
 const RepostedBy = ({ publicKey }: { publicKey: string }) => {
@@ -153,6 +159,7 @@ const PostCardBody = ({
   quotedPost,
   videoUrl,
   audioUrl,
+  reactions,
 }: {
   postContent: string;
   embedUrl?: string;
@@ -161,6 +168,7 @@ const PostCardBody = ({
   quotedPost?: PostQuoteProps;
   videoUrl?: string;
   audioUrl?: string;
+  reactions?: Reaction[];
 }) => (
   <>
     <div className="mt-2 text-foreground">
@@ -173,6 +181,14 @@ const PostCardBody = ({
       <PostImage images={images} withModal withModalActions={modalActions} />
     )}
     {quotedPost && <PostQuote {...quotedPost} />}
+    {reactions && reactions.length > 0 && (
+      <PostReactions
+        reactions={reactions}
+        onReactionClick={(emoji) => {
+          // Handle reaction click
+        }}
+      />
+    )}
   </>
 );
 
@@ -224,7 +240,7 @@ const PostCardFooter = ({
 );
 
 const PostQuote = (props: PostQuoteProps) => {
-  const { publicKey, postContent, timestamp, images, embedUrl } = props;
+  const { publicKey, postContent, timestamp, images, embedUrl, reactions } = props;
   const { data: userData } = useUsername(publicKey);
   const username = userData?.accountByPublicKey?.username;
 
@@ -291,6 +307,7 @@ export function PostCard({
   status,
   videoUrl,
   audioUrl,
+  reactions: initialReactions,
 }: PostCardProps) {
   const { data: userData } = useUsername(publicKey);
   const username = userData?.accountByPublicKey?.username;
@@ -305,6 +322,7 @@ export function PostCard({
     count: actions.diamonds,
     value: actions.diamondValue,
   });
+  const [reactions, setReactions] = useState(initialReactions || []);
 
   const toggleLike = () => {
     setLike((prev) => ({
@@ -330,6 +348,30 @@ export function PostCard({
         count: newActive ? prev.count + 1 : prev.count - 1,
         value: `($${newValue.toFixed(2)})`,
       };
+    });
+  };
+
+  const handleReactionClick = (emoji: string) => {
+    setReactions((prevReactions) => {
+      const reactionIndex = prevReactions.findIndex((r) => r.emoji === emoji);
+
+      if (reactionIndex > -1) {
+        // Reaction exists, update it
+        const newReactions = [...prevReactions];
+        const reaction = newReactions[reactionIndex];
+        const userHasReacted = !reaction.userHasReacted;
+        const count = userHasReacted ? reaction.count + 1 : reaction.count - 1;
+
+        if (count > 0) {
+          newReactions[reactionIndex] = { ...reaction, count, userHasReacted };
+        } else {
+          newReactions.splice(reactionIndex, 1);
+        }
+        return newReactions;
+      } else {
+        // Reaction does not exist, add it
+        return [...prevReactions, { emoji, count: 1, userHasReacted: true }];
+      }
     });
   };
 
@@ -375,6 +417,10 @@ export function PostCard({
               quotedPost={quotedPost}
               videoUrl={videoUrl}
               audioUrl={audioUrl}
+            />
+            <PostReactions
+              reactions={reactions}
+              onReactionClick={handleReactionClick}
             />
             <PostCardFooter
               actions={actions}

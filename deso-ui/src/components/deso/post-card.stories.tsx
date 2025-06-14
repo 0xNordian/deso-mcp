@@ -308,6 +308,22 @@ export const Pinned: Story = {
   },
 };
 
+export const WithReactions: Story = {
+  name: 'With Reactions',
+  args: {
+    ...Default.args,
+    reactions: [
+      { emoji: '👍', count: 12, userHasReacted: true },
+      { emoji: '🔥', count: 5, userHasReacted: false },
+    ],
+  },
+  parameters: {
+    msw: {
+      handlers: successHandlers,
+    },
+  },
+};
+
 export const WithAudio: Story = {
   name: 'With Audio',
   args: {
