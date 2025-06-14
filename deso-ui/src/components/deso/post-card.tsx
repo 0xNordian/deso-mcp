@@ -7,11 +7,11 @@ import {
   ActionMenuSeparator,
 } from './action-menu';
 import { Button } from '../ui/button';
-import { MoreHorizontal, UserPlus, Ban, Flag, Repeat, Pin } from 'lucide-react';
+import { MoreHorizontal, UserPlus, Ban, Flag, Repeat, Pin, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUsername } from '@/hooks/useProfile';
 import { PostAction } from './post-action';
-import { useState, useLayoutEffect, useRef } from 'react';
+import { useState } from 'react';
 import { Timestamp } from './timestamp';
 import { PostImage, PostImageActions } from './post-image';
 import { PostEmbed } from './post-embed';
@@ -38,6 +38,12 @@ export interface PostActionProps {
 export interface PostStatusProps {
   type: 'repost' | 'pinned';
   reposterPublicKey?: string;
+}
+
+export interface NFTCardProps {
+  publicKey: string;
+  price: string;
+  lastSale: string;
 }
 
 export interface PostQuoteProps {
@@ -76,6 +82,8 @@ export interface PostCardProps {
   comments?: PostCardProps[];
   postUrl?: string;
   poll?: PostPollInfo;
+  layout?: 'default' | 'featured-media';
+  nft?: NFTCardProps;
 }
 
 const RepostedBy = ({ publicKey }: { publicKey: string }) => {
@@ -109,20 +117,37 @@ const PostStatus = ({ type, reposterPublicKey }: PostStatusProps) => {
   return null;
 };
 
+const NFTActions = ({ publicKey, price, lastSale, className }: NFTCardProps & { className?: string }) => {
+  return (
+    <div className={cn("flex items-center gap-2 justify-between w-full bg-accent p-2 rounded-lg", className)}>
+      <div className="flex flex-col">
+        <h3 className="text-sm font-medium">{price}</h3>
+        <p className="text-xs text-muted-foreground">
+          <span className="font-medium">Last Sale: {lastSale}</span>
+        </p>
+      </div>
+      <div className="flex items-center gap-2">
+        <Button variant="outline" size="sm" className="flex items-center gap-2"> 
+          <ExternalLink className="h-4 w-4" />
+          View NFT
+        </Button>
+        <Button variant="default" size="sm">
+          Place Offer
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+
 const PostCardHeader = ({
   publicKey,
   username,
   timestamp,
-  quotedPost,
-  videoUrl,
-  audioUrl,
 }: {
   publicKey: string;
   username?: string;
   timestamp: string | Date;
-  quotedPost?: PostQuoteProps;
-  videoUrl?: string;
-  audioUrl?: string;
 }) => (
   <div className="flex justify-between items-start">
     <div className="flex flex-col">
@@ -174,6 +199,7 @@ const PostCardBody = ({
   reactions,
   poll,
   onPollVote,
+  hideMedia,
 }: {
   postContent: string;
   embedUrl?: string;
@@ -185,15 +211,16 @@ const PostCardBody = ({
   reactions?: Reaction[];
   poll?: PostPollInfo;
   onPollVote: (index: number) => void;
+  hideMedia?: boolean;
 }) => (
   <>
     <div className="mt-2 text-foreground">
       <p className="whitespace-pre-wrap">{postContent}</p>
     </div>
-    {audioUrl && <PostAudio url={audioUrl} />}
-    {videoUrl && <PostVideo url={videoUrl} />}
+    {!hideMedia && audioUrl && <PostAudio url={audioUrl} />}
+    {!hideMedia && videoUrl && <PostVideo url={videoUrl} />}
     {embedUrl && <PostEmbed url={embedUrl} />}
-    {images && images.length > 0 && (
+    {!hideMedia && images && images.length > 0 && (
       <PostImage images={images} withModal withModalActions={modalActions} />
     )}
     {poll && (
@@ -270,13 +297,11 @@ const PostCardFooter = ({
 );
 
 const PostQuote = (props: PostQuoteProps) => {
-  const { publicKey, postContent, timestamp, images, embedUrl, reactions } = props;
+  const { publicKey, postContent, timestamp, images, embedUrl, reactions } =
+    props;
   const { data: userData } = useUsername(publicKey);
   const username = userData?.accountByPublicKey?.username;
 
-  // Quoted posts don't have actions on their face, but the image modal might.
-  // We provide dummy actions here to prevent crashes, as the UI for these
-  // actions on a quoted post's image modal is not defined.
   const dummyModalActions: PostImageActions = {
     likes: { count: 0, active: false },
     reposts: { count: 0, active: false },
@@ -317,7 +342,11 @@ const PostQuote = (props: PostQuoteProps) => {
   );
 };
 
-const PostCardCore = (props: PostCardProps) => {
+interface PostCardContentProps extends PostCardProps {
+  hideMedia?: boolean;
+}
+
+const PostCardContent = (props: PostCardContentProps) => {
   const {
     publicKey,
     postContent,
@@ -339,6 +368,7 @@ const PostCardCore = (props: PostCardProps) => {
     reactions: initialReactions,
     postUrl,
     poll: initialPoll,
+    hideMedia,
   } = props;
   const { data: userData } = useUsername(publicKey);
   const username = userData?.accountByPublicKey?.username;
@@ -446,6 +476,7 @@ const PostCardCore = (props: PostCardProps) => {
         audioUrl={audioUrl}
         poll={poll}
         onPollVote={handlePollVote}
+        hideMedia={hideMedia}
       />
       <PostReactions
         reactions={reactions}
@@ -467,7 +498,16 @@ const PostCardCore = (props: PostCardProps) => {
 };
 
 export function PostCard(props: PostCardProps) {
-  const { className, status, comments } = props;
+  const {
+    className,
+    status,
+    comments,
+    layout = 'default',
+    videoUrl,
+    audioUrl,
+    images,
+    nft,
+  } = props;
 
   // Threaded View
   if (comments && comments.length > 0) {
@@ -490,10 +530,12 @@ export function PostCard(props: PostCardProps) {
               >
                 <div className="flex flex-col items-center flex-shrink-0">
                   <ProfilePicture publicKey={post.publicKey} size="md" />
-                  {!isLast && <div className="w-0.5 grow relative bg-gray-200 mt-2 before:content-[''] before:w-0.5 before:h-5 before:bg-gray-200 before:absolute before:-bottom-[10px]" />}
+                  {!isLast && (
+                    <div className="w-0.5 grow relative bg-gray-200 mt-2 before:content-[''] before:w-0.5 before:h-5 before:bg-gray-200 before:absolute before:-bottom-[10px]" />
+                  )}
                 </div>
                 <div className="flex-1">
-                  <PostCardCore {...post} />
+                  <PostCardContent {...post} />
                 </div>
               </div>
             );
@@ -503,9 +545,45 @@ export function PostCard(props: PostCardProps) {
     );
   }
 
-  
+  // Featured Media Layout
+  if (layout === 'featured-media') {
+    return (
+      <div className="w-full max-w-2xl mx-auto">
+        <div
+          className={cn(
+            'w-full bg-white rounded-xl shadow-sm border overflow-hidden',
+            className
+          )}
+        >
+          {videoUrl && <PostVideo url={videoUrl} className="mt-0 border-none rounded-b-none" />}
+          {audioUrl && !videoUrl && <PostAudio url={audioUrl} className="mt-0 border-none rounded-b-none" />}
+          {images && images.length > 0 && !videoUrl && !audioUrl && (
+            <PostImage images={images} withModal className="mt-0 border-none rounded-b-none" />
+          )}
+          <div className="p-4">
+            {status && (
+              <div className="mb-4">
+                <PostStatus {...status} />
+              </div>
+            )}
+            <div className="flex-grow flex gap-4">
+              <div className="flex-shrink-0">
+                <ProfilePicture publicKey={props.publicKey} size="md" />
+              </div>
+              <PostCardContent {...props} hideMedia />
+            </div>
+          </div>
+          {nft && (
+            <div>
+              <NFTActions publicKey={props.publicKey} price={nft.price} lastSale={nft.lastSale} className="rounded-t-none" />
+            </div>
+          )}
+        </div>       
+      </div>
+    );
+  }
 
-  // Single Post View
+  // Default Single Post View
   return (
     <div className="w-full max-w-2xl mx-auto">
       <div
@@ -515,14 +593,23 @@ export function PostCard(props: PostCardProps) {
           status && 'flex-col'
         )}
       >
-        {status && <div className="flex-1 mb-4"><PostStatus {...status} /></div>}
+        {status && (
+          <div className="flex-1 mb-4">
+            <PostStatus {...status} />
+          </div>
+        )}
         <div className="flex-grow flex gap-4">
           <div className="flex-shrink-0">
             <ProfilePicture publicKey={props.publicKey} size="md" />
           </div>
-          <PostCardCore {...props} />
+          <PostCardContent {...props} />
         </div>
-      </div>
+        {nft && (
+          <div className="mt-4">
+            <NFTActions publicKey={props.publicKey} price={nft.price} lastSale={nft.lastSale} />
+          </div>
+        )}
+      </div>      
     </div>
   );
 } 

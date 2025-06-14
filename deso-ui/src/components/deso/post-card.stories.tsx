@@ -416,10 +416,32 @@ export const WithVideo: Story = {
   args: {
     ...Default.args,
     postContent: 'Check out this cool video!',
-    videoUrl: '/public/video-sample.mp4',
+    videoUrl: '/video-sample.mp4',
     className: containerWidth,
     images: [],
     postUrl: 'https://www.deso.org',
+  },
+  parameters: {
+    msw: {
+      handlers: successHandlers,
+    },
+  },
+};
+
+
+export const WithNFT: Story = {
+  name: 'With NFT',
+  args: {
+    ...Default.args,
+    postContent: 'Check out this cool NFT!',
+    className: containerWidth,
+    images: ['https://placehold.co/1200x800/dbd8e3/352f44'],
+    postUrl: 'https://www.deso.org',
+    nft: {
+      publicKey: DEFAULT_PUBLIC_KEY,
+      price: '4.403 DESO',
+      lastSale: '0.203 DESO',
+    },
   },
   parameters: {
     msw: {
@@ -471,6 +493,80 @@ export const WithPollVoted: Story = {
       votes: [120, 350, 210, 80],
       totalVotes: 760,
       userVotedIndex: 1,
+    },
+  },
+  parameters: {
+    msw: {
+      handlers: successHandlers,
+    },
+  },
+};
+
+export const FeaturedVideo: Story = {
+  name: 'With Featured Video',
+  args: {
+    ...Default.args,
+    postContent: 'Check out this amazing featured video!',
+    videoUrl: '/video-sample.mp4',
+    className: containerWidth,
+    images: [],
+    layout: 'featured-media',
+  },
+  parameters: {
+    msw: {
+      handlers: successHandlers,
+    },
+  },
+}; 
+
+
+export const FeaturedImage: Story = {
+  name: 'With Featured Image',
+  args: {
+    ...Default.args,
+    postContent: 'Check out this amazing featured image!',
+    className: containerWidth,
+    images: ['https://placehold.co/1200x800/dbd8e3/352f44'],
+    layout: 'featured-media',
+  },
+  parameters: {
+    msw: {
+      handlers: successHandlers,
+    },
+  },
+}; 
+
+
+
+export const FeaturedAudio: Story = {
+  name: 'With Featured Audio',
+  args: {
+    ...Default.args,
+    postContent: 'Check out this amazing featured audio!',
+    className: containerWidth,
+    audioUrl: '/audio-sample.mp3',
+    layout: 'featured-media',
+  },
+  parameters: {
+    msw: {
+      handlers: successHandlers,
+    },
+  },
+}; 
+
+
+export const FeaturedNFTCard: Story = {
+  name: 'With Featured NFT',
+  args: {
+    ...Default.args,
+    postContent: 'Check out this amazing NFT!',
+    className: containerWidth,
+    images: ['https://placehold.co/1200x800/dbd8e3/352f44'],
+    layout: 'featured-media',
+    nft: {
+      publicKey: DEFAULT_PUBLIC_KEY,
+      price: '4.403 DESO',
+      lastSale: '0.203 DESO',
     },
   },
   parameters: {
