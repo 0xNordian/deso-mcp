@@ -8,6 +8,7 @@ import { cn, getUsernameInitial, getSingleProfilePictureUrl, buildProfilePicture
 
 // Size configurations
 const sizeConfig = {
+  xxs: { avatar: 'h-4 w-4', text: 'text-xs' },
   xs: { avatar: 'h-6 w-6', text: 'text-xs' },
   sm: { avatar: 'h-8 w-8', text: 'text-sm' },
   md: { avatar: 'h-10 w-10', text: 'text-base' },
@@ -17,7 +18,7 @@ const sizeConfig = {
 
 interface ProfilePictureComponentProps {
   publicKey: string;
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'xxs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
   onClick?: () => void;
   lazy?: boolean;

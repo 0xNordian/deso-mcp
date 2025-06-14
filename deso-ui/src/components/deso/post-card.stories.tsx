@@ -581,3 +581,21 @@ export const FeaturedNFTCard: Story = {
     },
   },
 }; 
+
+export const WithNotification: Story = {
+  name: 'With Notification',
+  args: {
+    ...Default.args,
+    notification: {
+      type: 'mention',
+      publicKey: DEFAULT_PUBLIC_KEY,
+      username: 'John Doe',
+      timestamp: new Date(),
+    },
+  },
+  parameters: {
+    msw: {
+      handlers: successHandlers,
+    },
+  },
+}; 

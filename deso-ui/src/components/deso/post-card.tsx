@@ -8,6 +8,7 @@ import {
 } from './action-menu';
 import { Button } from '../ui/button';
 import { MoreHorizontal, UserPlus, Ban, Flag, Repeat, Pin, ExternalLink, ChevronUp, ChevronDown } from 'lucide-react';
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useUsername } from '@/hooks/useProfile';
 import { PostAction } from './post-action';
@@ -31,6 +32,7 @@ export interface PostActionProps {
   views: number;
   audioUrl?: string;
   status?: PostStatusProps;
+  notification?: PostNotificationProps;
   videoUrl?: string;
   reactions?: Reaction[];
 }
@@ -47,6 +49,13 @@ export interface NFTCardProps {
   lastUpdated: string | Date;
   royaltyFee: string;
   ownerPublicKey: string;
+}
+
+export interface PostNotificationProps {
+  type: string;
+  publicKey: string;
+  username: string;
+  timestamp: string | Date;
 }
 
 export interface PostQuoteProps {
@@ -87,6 +96,7 @@ export interface PostCardProps {
   poll?: PostPollInfo;
   layout?: 'default' | 'featured-media';
   nft?: NFTCardProps;
+  notification?: PostNotificationProps;
 }
 
 const RepostedBy = ({ publicKey }: { publicKey: string }) => {
@@ -97,6 +107,51 @@ const RepostedBy = ({ publicKey }: { publicKey: string }) => {
     </div>
   );
 };
+
+
+const PostNotification = ({ type, publicKey, username, timestamp }: PostNotificationProps) => {
+  const notificationText = {
+    mention: `mentioned you on a post`,
+    repost: `reposted your post`,
+    comment: `commented on your post`,
+    diamond: `gave you a diamond`,
+    follow: `followed you`,
+  };
+  const notificationClass = "flex items-center gap-1 text-sm text-muted-foreground border-b pb-2 -mx-4 px-4 -mt-2"
+  const notificationViewLink = <Link href={`/post/${publicKey}`} className="text-sm text-muted-foreground ml-auto relative -top- self-end">View Post</Link>;
+  switch (type) {
+    case 'mention':
+      return (  
+        <div className={notificationClass}>
+          <ProfilePicture publicKey={publicKey} size="xxs" />
+          <UsernameDisplay publicKey={publicKey} linkToProfile />
+          {notificationText[type]}
+          {notificationViewLink}
+        </div>
+      );  
+    case 'repost':
+      return (
+        <div className={notificationClass}>
+          <ProfilePicture publicKey={publicKey} size="xxs" />
+          <RepostedBy publicKey={publicKey} />
+          {notificationText[type]}
+          {notificationViewLink}
+        </div>
+      );
+    case 'comment':
+      return (
+        <div className={notificationClass}>
+          <ProfilePicture publicKey={publicKey} size="xxs" />
+          <UsernameDisplay publicKey={publicKey} linkToProfile />
+          {notificationText[type]}
+          {notificationViewLink}
+        </div>
+      );
+    default:
+      return null;
+  }
+};
+
 
 const PostStatus = ({ type, reposterPublicKey }: PostStatusProps) => {
   if (type === 'pinned') {
@@ -549,6 +604,7 @@ export function PostCard(props: PostCardProps) {
     audioUrl,
     images,
     nft,
+    notification,
   } = props;
 
   // Threaded View
@@ -635,6 +691,11 @@ export function PostCard(props: PostCardProps) {
           status && 'flex-col'
         )}
       >
+        {notification && (
+          <div className="flex-1 mb-4">
+            <PostNotification {...notification} />
+          </div>
+        )}
         {status && (
           <div className="flex-1 mb-4">
             <PostStatus {...status} />
