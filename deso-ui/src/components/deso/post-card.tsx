@@ -15,6 +15,8 @@ import { useState } from 'react';
 import { Timestamp } from './timestamp';
 import { PostImage, PostImageActions } from './post-image';
 import { PostEmbed } from './post-embed';
+import { PostVideo } from './post-video';
+import { PostAudio } from './post-audio';
 
 export interface PostActionProps {
   comments: number;
@@ -24,6 +26,7 @@ export interface PostActionProps {
   diamondValue: string;
   quotes: number;
   views: number;
+  audioUrl?: string;
 }
 
 export interface PostStatusProps {
@@ -39,6 +42,8 @@ export interface PostQuoteProps {
   embedUrl?: string;
   quotedPost?: PostQuoteProps;
   status?: PostStatusProps;
+  videoUrl?: string;
+  audioUrl?: string;
 }
 
 export interface PostCardProps {
@@ -51,6 +56,8 @@ export interface PostCardProps {
   embedUrl?: string;
   quotedPost?: PostQuoteProps;
   status?: PostStatusProps;
+  videoUrl?: string;
+  audioUrl?: string;
 }
 
 const RepostedBy = ({ publicKey }: { publicKey: string }) => {
@@ -88,10 +95,16 @@ const PostCardHeader = ({
   publicKey,
   username,
   timestamp,
+  quotedPost,
+  videoUrl,
+  audioUrl,
 }: {
   publicKey: string;
   username?: string;
   timestamp: string | Date;
+  quotedPost?: PostQuoteProps;
+  videoUrl?: string;
+  audioUrl?: string;
 }) => (
   <div className="flex justify-between items-start">
     <div className="flex flex-col">
@@ -138,17 +151,23 @@ const PostCardBody = ({
   images,
   modalActions,
   quotedPost,
+  videoUrl,
+  audioUrl,
 }: {
   postContent: string;
   embedUrl?: string;
   images?: string[];
   modalActions: PostImageActions;
   quotedPost?: PostQuoteProps;
+  videoUrl?: string;
+  audioUrl?: string;
 }) => (
   <>
     <div className="mt-2 text-foreground">
       <p className="whitespace-pre-wrap">{postContent}</p>
     </div>
+    {audioUrl && <PostAudio url={audioUrl} />}
+    {videoUrl && <PostVideo url={videoUrl} />}
     {embedUrl && <PostEmbed url={embedUrl} />}
     {images && images.length > 0 && (
       <PostImage images={images} withModal withModalActions={modalActions} />
@@ -270,6 +289,8 @@ export function PostCard({
   embedUrl,
   quotedPost,
   status,
+  videoUrl,
+  audioUrl,
 }: PostCardProps) {
   const { data: userData } = useUsername(publicKey);
   const username = userData?.accountByPublicKey?.username;
@@ -342,6 +363,9 @@ export function PostCard({
               publicKey={publicKey}
               username={username}
               timestamp={timestamp}
+              quotedPost={quotedPost}
+              videoUrl={videoUrl}
+              audioUrl={audioUrl}
             />
             <PostCardBody
               postContent={postContent}
@@ -349,6 +373,8 @@ export function PostCard({
               images={images}
               modalActions={modalActions}
               quotedPost={quotedPost}
+              videoUrl={videoUrl}
+              audioUrl={audioUrl}
             />
             <PostCardFooter
               actions={actions}

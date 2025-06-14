@@ -43,6 +43,8 @@ const sampleActions = {
   views: 135000,
 };
 
+const containerWidth = 'max-w-full w-[700px]';
+
 const oneImage = ['https://placehold.co/1200x800/dbd8e3/352f44'];
 const twoImages = [
   ...oneImage,
@@ -106,21 +108,6 @@ export const Loading: Story = {
   parameters: {
     msw: {
       handlers: loadingHandlers,
-    },
-  },
-};
-
-export const Error: Story = {
-  name: 'Error State',
-  args: {
-    publicKey: 'invalid-key',
-    postContent: samplePost,
-    actions: sampleActions,
-    timestamp: new Date(),
-  },
-  parameters: {
-    msw: {
-      handlers: errorHandlers,
     },
   },
 };
@@ -214,7 +201,7 @@ export const WithYouTubeEmbed: Story = {
   args: {
     ...Default.args,
     postContent: 'Check out this cool video!',
-    className: 'max-w-full w-[600px]',
+    className: containerWidth,
     embedUrl: 'https://www.youtube.com/watch?v=JGwWNGJdvx8',
     images: [],
   },
@@ -230,7 +217,7 @@ export const WithSpotifyEmbed: Story = {
   args: {
     ...Default.args,
     postContent: 'Listening to this banger!',
-    className: 'max-w-full w-[600px]',
+    className: containerWidth,
     embedUrl: 'https://open.spotify.com/track/3n3Ppam7vgaVa1iaRUc9Lp',
     images: [],
   },
@@ -246,7 +233,7 @@ export const WithSoundCloudEmbed: Story = {
   args: {
     ...Default.args,
     postContent: 'New track on SoundCloud!',
-    className: 'max-w-full w-[600px]',
+    className: containerWidth,
     embedUrl:
       'https://soundcloud.com/yungkaai/blue?in=trending-music-us/sets/folk',
     images: [],
@@ -263,7 +250,7 @@ export const WithTwitterEmbed: Story = {
   args: {
     ...Default.args,
     postContent: 'Interesting tweet!',
-    className: 'max-w-full w-[600px]',
+    className: containerWidth,
     embedUrl: 'https://x.com/desoprotocol/status/1933587613434458243',
     images: [],
   },
@@ -279,7 +266,7 @@ export const WithWebsiteEmbed: Story = {
   args: {
     ...Default.args,
     postContent: 'Check out the DeSo website.',
-    className: 'max-w-full w-[600px]',
+    className: containerWidth,
     embedUrl: 'https://www.deso.org/',
     images: [],
   },
@@ -313,6 +300,38 @@ export const Pinned: Story = {
     status: {
       type: 'pinned',
     },
+  },
+  parameters: {
+    msw: {
+      handlers: successHandlers,
+    },
+  },
+};
+
+export const WithAudio: Story = {
+  name: 'With Audio',
+  args: {
+    ...Default.args,
+    postContent: 'Check out this cool audio!',
+    audioUrl: '/audio-sample.mp3',
+    className: containerWidth,
+    images: [],
+  },
+  parameters: {
+    msw: {
+      handlers: successHandlers,
+    },
+  },
+};
+
+export const WithVideo: Story = {
+  name: 'With Video',
+  args: {
+    ...Default.args,
+    postContent: 'Check out this cool video!',
+    videoUrl: '/public/video-sample.mp4',
+    className: containerWidth,
+    images: [],
   },
   parameters: {
     msw: {
