@@ -11,7 +11,7 @@ import { MoreHorizontal, UserPlus, Ban, Flag, Repeat, Pin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUsername } from '@/hooks/useProfile';
 import { PostAction } from './post-action';
-import { useState } from 'react';
+import { useState, useLayoutEffect, useRef } from 'react';
 import { Timestamp } from './timestamp';
 import { PostImage, PostImageActions } from './post-image';
 import { PostEmbed } from './post-embed';
@@ -64,6 +64,7 @@ export interface PostCardProps {
   videoUrl?: string;
   audioUrl?: string;
   reactions?: Reaction[];
+  comments?: PostCardProps[];
 }
 
 const RepostedBy = ({ publicKey }: { publicKey: string }) => {
@@ -78,7 +79,7 @@ const RepostedBy = ({ publicKey }: { publicKey: string }) => {
 const PostStatus = ({ type, reposterPublicKey }: PostStatusProps) => {
   if (type === 'pinned') {
     return (
-      <div className="mb-3 ml-8 flex items-center gap-2 text-sm text-muted-foreground">
+      <div className="ml-8 flex items-center gap-2 text-sm text-muted-foreground">
         <Pin className="h-4 w-4" />
         <span>Pinned Post</span>
       </div>
@@ -87,7 +88,7 @@ const PostStatus = ({ type, reposterPublicKey }: PostStatusProps) => {
 
   if (type === 'repost' && reposterPublicKey) {
     return (
-      <div className="mb-3 ml-8 flex items-center gap-2 text-sm text-muted-foreground">
+      <div className="ml-8 flex items-center gap-2 text-sm text-muted-foreground">
         <Repeat className="h-4 w-4" />
         <RepostedBy publicKey={reposterPublicKey} />
       </div>
@@ -287,28 +288,27 @@ const PostQuote = (props: PostQuoteProps) => {
   );
 };
 
-export function PostCard({
-  publicKey,
-  postContent,
-  className,
-  actions = {
-    comments: 0,
-    likes: 0,
-    reposts: 0,
-    diamonds: 0,
-    diamondValue: '($0.00)',
-    quotes: 0,
-    views: 0,
-  },
-  timestamp,
-  images,
-  embedUrl,
-  quotedPost,
-  status,
-  videoUrl,
-  audioUrl,
-  reactions: initialReactions,
-}: PostCardProps) {
+const PostCardCore = (props: PostCardProps) => {
+  const {
+    publicKey,
+    postContent,
+    actions = {
+      comments: 0,
+      likes: 0,
+      reposts: 0,
+      diamonds: 0,
+      diamondValue: '($0.00)',
+      quotes: 0,
+      views: 0,
+    },
+    timestamp,
+    images,
+    embedUrl,
+    quotedPost,
+    videoUrl,
+    audioUrl,
+    reactions: initialReactions,
+  } = props;
   const { data: userData } = useUsername(publicKey);
   const username = userData?.accountByPublicKey?.username;
 
@@ -356,7 +356,6 @@ export function PostCard({
       const reactionIndex = prevReactions.findIndex((r) => r.emoji === emoji);
 
       if (reactionIndex > -1) {
-        // Reaction exists, update it
         const newReactions = [...prevReactions];
         const reaction = newReactions[reactionIndex];
         const userHasReacted = !reaction.userHasReacted;
@@ -369,7 +368,6 @@ export function PostCard({
         }
         return newReactions;
       } else {
-        // Reaction does not exist, add it
         return [...prevReactions, { emoji, count: 1, userHasReacted: true }];
       }
     });
@@ -387,6 +385,79 @@ export function PostCard({
   };
 
   return (
+    <div className="flex-grow flex flex-col">
+      <PostCardHeader
+        publicKey={publicKey}
+        username={username}
+        timestamp={timestamp}
+      />
+      <PostCardBody
+        postContent={postContent}
+        embedUrl={embedUrl}
+        images={images}
+        modalActions={modalActions}
+        quotedPost={quotedPost}
+        videoUrl={videoUrl}
+        audioUrl={audioUrl}
+      />
+      <PostReactions
+        reactions={reactions}
+        onReactionClick={handleReactionClick}
+      />
+      <PostCardFooter
+        actions={actions}
+        like={like}
+        repost={repost}
+        diamond={diamond}
+        toggleLike={toggleLike}
+        toggleRepost={toggleRepost}
+        giveDiamond={giveDiamond}
+      />
+    </div>
+  );
+};
+
+export function PostCard(props: PostCardProps) {
+  const { className, status, comments } = props;
+
+  // Threaded View
+  if (comments && comments.length > 0) {
+    const allPosts = [props, ...comments];
+    return (
+      <div className="w-full max-w-2xl mx-auto">
+        {status && <PostStatus {...status} />}
+        <div
+          className={cn(
+            'w-full bg-white rounded-xl shadow-sm p-4 border',
+            className
+          )}
+        >
+          {allPosts.map((post, index) => {
+            const isLast = index === allPosts.length - 1;
+            return (
+              <div
+                key={`${post.publicKey}-${index}`}
+                className={cn('flex gap-4', index > 0 && 'pt-4')}
+              >
+                <div className="flex flex-col items-center flex-shrink-0">
+                  <ProfilePicture publicKey={post.publicKey} size="md" />
+                  {!isLast && <div className="w-0.5 grow relative bg-gray-200 mt-2 before:content-[''] before:w-0.5 before:h-5 before:bg-gray-200 before:absolute before:-bottom-[10px]" />}
+                </div>
+                <div className="flex-1">
+                  <PostCardCore {...post} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  
+
+  // Single Post View
+  return (
     <div className="w-full max-w-2xl mx-auto">
       <div
         className={cn(
@@ -395,43 +466,12 @@ export function PostCard({
           status && 'flex-col'
         )}
       >
-        {status && <div className="flex-1"><PostStatus {...status} /></div>}
-        <div className="flex-1 flex gap-4">
-          <div>
-            <ProfilePicture publicKey={publicKey} size="md" />
+        {status && <div className="flex-1 mb-4"><PostStatus {...status} /></div>}
+        <div className="flex-grow flex gap-4">
+          <div className="flex-shrink-0">
+            <ProfilePicture publicKey={props.publicKey} size="md" />
           </div>
-          <div className="flex-grow flex flex-col">
-            <PostCardHeader
-              publicKey={publicKey}
-              username={username}
-              timestamp={timestamp}
-              quotedPost={quotedPost}
-              videoUrl={videoUrl}
-              audioUrl={audioUrl}
-            />
-            <PostCardBody
-              postContent={postContent}
-              embedUrl={embedUrl}
-              images={images}
-              modalActions={modalActions}
-              quotedPost={quotedPost}
-              videoUrl={videoUrl}
-              audioUrl={audioUrl}
-            />
-            <PostReactions
-              reactions={reactions}
-              onReactionClick={handleReactionClick}
-            />
-            <PostCardFooter
-              actions={actions}
-              like={like}
-              repost={repost}
-              diamond={diamond}
-              toggleLike={toggleLike}
-              toggleRepost={toggleRepost}
-              giveDiamond={giveDiamond}
-            />
-          </div>
+          <PostCardCore {...props} />
         </div>
       </div>
     </div>

@@ -308,6 +308,58 @@ export const Pinned: Story = {
   },
 };
 
+export const SingleComment: Story = {
+  name: 'With Single Comment',
+  args: {
+    ...Default.args,
+    publicKey: DEFAULT_PUBLIC_KEY,
+    postContent:
+      'Fully censorship-resistant & decentralized social media platforms will become more important than ever.',
+    comments: [
+      {
+        ...Default.args,
+        publicKey: 'BC1YLgi66tdjAaVfYpmM447cxsve3TpvfXD9h8X6JMak7gbKABoEVaT',
+        postContent: 'Keep up posting every day🔥🔥🔥',
+        timestamp: new Date(),
+      },
+    ],
+  },
+  parameters: {
+    msw: {
+      handlers: successHandlers,
+    },
+  },
+};
+
+export const MultipleComments: Story = {
+  name: 'With Multiple Comments',
+  args: {
+    ...Default.args,
+    publicKey: DEFAULT_PUBLIC_KEY,
+    postContent:
+      'Fully censorship-resistant & decentralized social media platforms will become more important than ever.',
+    comments: [
+      {
+        ...Default.args,
+        publicKey: 'BC1YLgi66tdjAaVfYpmM447cxsve3TpvfXD9h8X6JMak7gbKABoEVaT',
+        postContent: 'Keep up posting every day🔥🔥🔥',
+        timestamp: new Date(),
+      },
+      {
+        ...Default.args,
+        publicKey: DEFAULT_PUBLIC_KEY,
+        postContent: 'This is another great point!',
+        timestamp: new Date(),
+      },
+    ],
+  },
+  parameters: {
+    msw: {
+      handlers: successHandlers,
+    },
+  },
+};
+
 export const WithReactions: Story = {
   name: 'With Reactions',
   args: {
