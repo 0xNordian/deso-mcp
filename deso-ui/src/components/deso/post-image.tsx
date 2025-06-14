@@ -108,13 +108,13 @@ export function PostImage({
           Image modal with carousel and actions
         </DialogDescription>
       </DialogHeader>
-      <div className="relative w-full h-full">
+      <div className="relative w-full h-full">       
         <Carousel
           setApi={setApi}
           opts={{ startIndex: selectedIndex, loop: true }}
-          className="w-full h-full"
+          className="w-full h-full relative"
         >
-          <CarouselContent className="h-full">
+          <CarouselContent className="h-full relative">           
             {images.map((src, index) => (
               <CarouselItem key={index} className="h-full">
                 <div
@@ -237,8 +237,13 @@ export function PostImage({
         <div className={cn('mt-2 relative', className)}>
           <Carousel
             setApi={setApi}
-            className="w-full"
+            className="w-full relative"
           >
+            {imageCount > 1 && (
+              <div className="absolute top-4 right-4 z-10 rounded-full bg-black/20 px-2 py-1 text-xs text-white">
+                {current + 1} / {imageCount}
+              </div>
+            )}
             <CarouselContent>
               {images.map((src, index) => (
                 <CarouselItem key={index}>

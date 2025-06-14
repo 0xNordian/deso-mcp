@@ -20,6 +20,9 @@ const meta: Meta<typeof PostCard> = {
     publicKey: {
       control: 'text',
     },
+    className: {
+      control: 'text',
+    },
   },
 };
 
@@ -57,6 +60,14 @@ const fiveImages = [
   ...fourImages,
   'https://placehold.co/1200x800/b9b7bd/352f44',
 ];
+
+const quotedPostSample = {
+  publicKey: LIVE_PUBLIC_KEY,
+  postContent:
+    'This is the post that is being quoted. It can also have images and stuff.',
+  timestamp: new Date('2023-05-20T10:00:00Z'),
+  images: oneImage,
+};
 
 export const Default: Story = {
   name: 'Default (No Image)',
@@ -175,6 +186,133 @@ export const WithCarousel: Story = {
   args: {
     ...Default.args,
     images: fiveImages,
+  },
+  parameters: {
+    msw: {
+      handlers: successHandlers,
+    },
+  },
+};
+
+export const WithQuotePost: Story = {
+  name: 'With Quote Post',
+  args: {
+    ...Default.args,
+    postContent: "I'm quoting this post, what do you all think?",
+    quotedPost: quotedPostSample,
+    images: [],
+  },
+  parameters: {
+    msw: {
+      handlers: successHandlers,
+    },
+  },
+};
+
+export const WithYouTubeEmbed: Story = {
+  name: 'With YouTube Embed',
+  args: {
+    ...Default.args,
+    postContent: 'Check out this cool video!',
+    className: 'max-w-full w-[600px]',
+    embedUrl: 'https://www.youtube.com/watch?v=JGwWNGJdvx8',
+    images: [],
+  },
+  parameters: {
+    msw: {
+      handlers: successHandlers,
+    },
+  },
+};
+
+export const WithSpotifyEmbed: Story = {
+  name: 'With Spotify Embed',
+  args: {
+    ...Default.args,
+    postContent: 'Listening to this banger!',
+    className: 'max-w-full w-[600px]',
+    embedUrl: 'https://open.spotify.com/track/3n3Ppam7vgaVa1iaRUc9Lp',
+    images: [],
+  },
+  parameters: {
+    msw: {
+      handlers: successHandlers,
+    },
+  },
+};
+
+export const WithSoundCloudEmbed: Story = {
+  name: 'With SoundCloud Embed',
+  args: {
+    ...Default.args,
+    postContent: 'New track on SoundCloud!',
+    className: 'max-w-full w-[600px]',
+    embedUrl:
+      'https://soundcloud.com/yungkaai/blue?in=trending-music-us/sets/folk',
+    images: [],
+  },
+  parameters: {
+    msw: {
+      handlers: successHandlers,
+    },
+  },
+};
+
+export const WithTwitterEmbed: Story = {
+  name: 'With Twitter Embed',
+  args: {
+    ...Default.args,
+    postContent: 'Interesting tweet!',
+    className: 'max-w-full w-[600px]',
+    embedUrl: 'https://x.com/desoprotocol/status/1933587613434458243',
+    images: [],
+  },
+  parameters: {
+    msw: {
+      handlers: successHandlers,
+    },
+  },
+};
+
+export const WithWebsiteEmbed: Story = {
+  name: 'With Website Embed',
+  args: {
+    ...Default.args,
+    postContent: 'Check out the DeSo website.',
+    className: 'max-w-full w-[600px]',
+    embedUrl: 'https://www.deso.org/',
+    images: [],
+  },
+  parameters: {
+    msw: {
+      handlers: successHandlers,
+    },
+  },
+};
+
+export const Reposted: Story = {
+  name: 'Reposted',
+  args: {
+    ...Default.args,
+    status: {
+      type: 'repost',
+      reposterPublicKey: LIVE_PUBLIC_KEY,
+    },
+  },
+  parameters: {
+    msw: {
+      handlers: successHandlers,
+    },
+  },
+};
+
+export const Pinned: Story = {
+  name: 'Pinned Post',
+  args: {
+    ...Default.args,
+    status: {
+      type: 'pinned',
+    },
   },
   parameters: {
     msw: {
