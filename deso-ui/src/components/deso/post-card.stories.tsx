@@ -441,6 +441,9 @@ export const WithNFT: Story = {
       publicKey: DEFAULT_PUBLIC_KEY,
       price: '4.403 DESO',
       lastSale: '0.203 DESO',
+      royaltyFee: '10%',
+      lastUpdated: '2023-01-01T12:00:00Z',
+      ownerPublicKey: DEFAULT_PUBLIC_KEY,
     },
   },
   parameters: {
@@ -567,6 +570,9 @@ export const FeaturedNFTCard: Story = {
       publicKey: DEFAULT_PUBLIC_KEY,
       price: '4.403 DESO',
       lastSale: '0.203 DESO',
+      royaltyFee: '10%',
+      lastUpdated: '2023-01-01T12:00:00Z',
+      ownerPublicKey: DEFAULT_PUBLIC_KEY,
     },
   },
   parameters: {

@@ -31,7 +31,7 @@ export function Timestamp({
         <TooltipTrigger asChild>
           <span
             className={cn(
-              'text-sm text-muted-foreground cursor-default',
+              'cursor-default',
               className
             )}
           >

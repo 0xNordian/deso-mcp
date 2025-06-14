@@ -7,7 +7,7 @@ import {
   ActionMenuSeparator,
 } from './action-menu';
 import { Button } from '../ui/button';
-import { MoreHorizontal, UserPlus, Ban, Flag, Repeat, Pin, ExternalLink } from 'lucide-react';
+import { MoreHorizontal, UserPlus, Ban, Flag, Repeat, Pin, ExternalLink, ChevronUp, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUsername } from '@/hooks/useProfile';
 import { PostAction } from './post-action';
@@ -44,6 +44,9 @@ export interface NFTCardProps {
   publicKey: string;
   price: string;
   lastSale: string;
+  lastUpdated: string | Date;
+  royaltyFee: string;
+  ownerPublicKey: string;
 }
 
 export interface PostQuoteProps {
@@ -116,25 +119,64 @@ const PostStatus = ({ type, reposterPublicKey }: PostStatusProps) => {
 
   return null;
 };
+const NFTActions = ({ price, royaltyFee, lastSale, className, showDetails, lastUpdated, ownerPublicKey }: NFTCardProps & { className?: string, showDetails?: boolean, lastUpdated?: string, ownerPublicKey?: string }) => {
+  const [isDetailsVisible, setIsDetailsVisible] = useState(showDetails || false);
 
-const NFTActions = ({ publicKey, price, lastSale, className }: NFTCardProps & { className?: string }) => {
   return (
-    <div className={cn("flex items-center gap-2 justify-between w-full bg-accent p-2 rounded-lg", className)}>
-      <div className="flex flex-col">
-        <h3 className="text-sm font-medium">{price}</h3>
-        <p className="text-xs text-muted-foreground">
-          <span className="font-medium">Last Sale: {lastSale}</span>
-        </p>
+    <div className={cn("w-full bg-accent p-2 rounded-lg", className)}>
+      <div className="flex items-center gap-2 justify-between w-full">
+        <div className="flex flex-col">
+          <h3 className="text-sm font-medium">{price}</h3>
+          <p className="text-xs text-muted-foreground">
+            <span className="font-medium">Last Sale: {lastSale}</span>
+          </p>
+        </div>
+        <div className="flex items-center gap-2">                    
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setIsDetailsVisible(!isDetailsVisible)}
+            className="flex items-center gap-2"
+          >
+            {isDetailsVisible ? (
+              <>
+                <ChevronUp className="h-4 w-4" />
+                Hide Details
+              </>
+            ) : (
+              <>
+                <ChevronDown className="h-4 w-4" />
+                Show Details
+              </>
+            )}
+          </Button>
+          <Button variant="outline" size="sm" className="flex items-center gap-2"> 
+            <ExternalLink className="h-4 w-4" />
+            View NFT
+          </Button>
+          <Button variant="default" size="sm">
+            Place Offer
+          </Button>
+        </div>
       </div>
-      <div className="flex items-center gap-2">
-        <Button variant="outline" size="sm" className="flex items-center gap-2"> 
-          <ExternalLink className="h-4 w-4" />
-          View NFT
-        </Button>
-        <Button variant="default" size="sm">
-          Place Offer
-        </Button>
-      </div>
+      {isDetailsVisible && (
+        <div className="flex flex-col divide-y justify-between w-full mt-2 border p-sm rounded-md bg-background">
+          <NFTDetails type="Owner" value={<UsernameDisplay variant="social" publicKey={ownerPublicKey} linkToProfile />}/>
+          <NFTDetails type="Last Updated" value={<Timestamp timestamp={lastUpdated} />}/>
+          <NFTDetails type="Last Sale" value={lastSale} />
+          <NFTDetails type="Royalty Fee" value={royaltyFee} />
+          <NFTDetails type="Price" value={price} />
+        </div>
+      )}
+    </div>
+  );
+};
+
+const NFTDetails = ({ type, value, className }: { type: string, value: React.ReactNode, className?: string }) => {
+  return (
+    <div className={cn("text-xs text-muted-foreground w-full flex justify-between p-2", className)}>
+      <span>{type}</span>
+      <span>{value}</span>
     </div>
   );
 };
@@ -155,7 +197,7 @@ const PostCardHeader = ({
       <div className="flex items-center gap-2 text-muted-foreground">
         <UserPublicKey publicKey={publicKey} truncate />
         <span className="text-xs">·</span>
-        <Timestamp timestamp={timestamp} />
+        <Timestamp timestamp={timestamp} className="text-sm text-muted-foreground" />
       </div>
     </div>
     <ActionMenu
@@ -575,7 +617,7 @@ export function PostCard(props: PostCardProps) {
           </div>
           {nft && (
             <div>
-              <NFTActions publicKey={props.publicKey} price={nft.price} lastSale={nft.lastSale} className="rounded-t-none" />
+              <NFTActions publicKey={props.publicKey} price={nft.price} lastSale={nft.lastSale} royaltyFee={nft.royaltyFee} lastUpdated={nft.lastUpdated.toString()} className="rounded-t-none" ownerPublicKey={nft.ownerPublicKey} />
             </div>
           )}
         </div>       
@@ -606,7 +648,7 @@ export function PostCard(props: PostCardProps) {
         </div>
         {nft && (
           <div className="mt-4">
-            <NFTActions publicKey={props.publicKey} price={nft.price} lastSale={nft.lastSale} />
+            <NFTActions publicKey={props.publicKey} price={nft.price} lastSale={nft.lastSale} royaltyFee={nft.royaltyFee} lastUpdated={nft.lastUpdated.toString()} ownerPublicKey={nft.ownerPublicKey} />
           </div>
         )}
       </div>      
