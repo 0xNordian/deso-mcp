@@ -18,6 +18,8 @@ import { PostEmbed } from './post-embed';
 import { PostVideo } from './post-video';
 import { PostAudio } from './post-audio';
 import { PostReactions, Reaction } from './post-reactions';
+import { PostShare } from './post-share';
+import { PostPoll, PollOption } from './post-poll';
 
 export interface PostActionProps {
   comments: number;
@@ -51,6 +53,13 @@ export interface PostQuoteProps {
   reactions?: Reaction[];
 }
 
+export interface PostPollInfo {
+  options: PollOption[];
+  votes: number[];
+  totalVotes: number;
+  userVotedIndex: number | null;
+}
+
 export interface PostCardProps {
   publicKey: string;
   postContent: string;
@@ -65,6 +74,8 @@ export interface PostCardProps {
   audioUrl?: string;
   reactions?: Reaction[];
   comments?: PostCardProps[];
+  postUrl?: string;
+  poll?: PostPollInfo;
 }
 
 const RepostedBy = ({ publicKey }: { publicKey: string }) => {
@@ -161,6 +172,8 @@ const PostCardBody = ({
   videoUrl,
   audioUrl,
   reactions,
+  poll,
+  onPollVote,
 }: {
   postContent: string;
   embedUrl?: string;
@@ -170,6 +183,8 @@ const PostCardBody = ({
   videoUrl?: string;
   audioUrl?: string;
   reactions?: Reaction[];
+  poll?: PostPollInfo;
+  onPollVote: (index: number) => void;
 }) => (
   <>
     <div className="mt-2 text-foreground">
@@ -180,6 +195,15 @@ const PostCardBody = ({
     {embedUrl && <PostEmbed url={embedUrl} />}
     {images && images.length > 0 && (
       <PostImage images={images} withModal withModalActions={modalActions} />
+    )}
+    {poll && (
+      <PostPoll
+        options={poll.options}
+        votes={poll.votes}
+        totalVotes={poll.totalVotes}
+        userVotedIndex={poll.userVotedIndex}
+        onVote={onPollVote}
+      />
     )}
     {quotedPost && <PostQuote {...quotedPost} />}
     {reactions && reactions.length > 0 && (
@@ -201,6 +225,8 @@ const PostCardFooter = ({
   toggleLike,
   toggleRepost,
   giveDiamond,
+  postUrl,
+  postContent,
 }: {
   actions: PostActionProps;
   like: { active: boolean; count: number };
@@ -209,6 +235,8 @@ const PostCardFooter = ({
   toggleLike: () => void;
   toggleRepost: () => void;
   giveDiamond: () => void;
+  postUrl?: string;
+  postContent: string;
 }) => (
   <div className="mt-4 flex w-full items-center gap-x-4 text-muted-foreground">
     <PostAction
@@ -237,6 +265,7 @@ const PostCardFooter = ({
     />
     <div className="flex-grow" />
     <PostAction variant="view" count={actions.views} />
+    {postUrl && <PostShare url={postUrl} text={postContent} />}
   </div>
 );
 
@@ -308,6 +337,8 @@ const PostCardCore = (props: PostCardProps) => {
     videoUrl,
     audioUrl,
     reactions: initialReactions,
+    postUrl,
+    poll: initialPoll,
   } = props;
   const { data: userData } = useUsername(publicKey);
   const username = userData?.accountByPublicKey?.username;
@@ -323,6 +354,20 @@ const PostCardCore = (props: PostCardProps) => {
     value: actions.diamondValue,
   });
   const [reactions, setReactions] = useState(initialReactions || []);
+  const [poll, setPoll] = useState(initialPoll);
+
+  const handlePollVote = (index: number) => {
+    if (poll) {
+      const newVotes = [...poll.votes];
+      newVotes[index]++;
+      setPoll({
+        ...poll,
+        votes: newVotes,
+        totalVotes: poll.totalVotes + 1,
+        userVotedIndex: index,
+      });
+    }
+  };
 
   const toggleLike = () => {
     setLike((prev) => ({
@@ -399,6 +444,8 @@ const PostCardCore = (props: PostCardProps) => {
         quotedPost={quotedPost}
         videoUrl={videoUrl}
         audioUrl={audioUrl}
+        poll={poll}
+        onPollVote={handlePollVote}
       />
       <PostReactions
         reactions={reactions}
@@ -412,6 +459,8 @@ const PostCardCore = (props: PostCardProps) => {
         toggleLike={toggleLike}
         toggleRepost={toggleRepost}
         giveDiamond={giveDiamond}
+        postUrl={postUrl}
+        postContent={postContent}
       />
     </div>
   );

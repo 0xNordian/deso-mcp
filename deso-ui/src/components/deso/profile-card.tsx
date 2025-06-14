@@ -18,7 +18,7 @@ export interface ProfileCardProps {
 
 export function ProfileCard({ publicKey }: ProfileCardProps) {
   return (
-    <div className="w-full max-w-md mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
+    <div className="w-full max-w-lg mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
       {/* Cover Photo */}
       <ProfileCoverPhoto
         publicKey={publicKey}
@@ -38,8 +38,6 @@ export function ProfileCard({ publicKey }: ProfileCardProps) {
             className="z-10"
           />
           <div className="flex items-center gap-2">
-            <MessageButton variant="icon-only" showTooltip />
-            <FollowButton />
             <ActionMenu
               trigger={
                 <Button variant="outline" size="icon">
@@ -76,6 +74,8 @@ export function ProfileCard({ publicKey }: ProfileCardProps) {
                 Block user
               </ActionMenuItem>
             </ActionMenu>
+            <MessageButton variant="icon-only" showTooltip />
+            <FollowButton />            
           </div>
         </div>
         <div className="flex items-center gap-4">

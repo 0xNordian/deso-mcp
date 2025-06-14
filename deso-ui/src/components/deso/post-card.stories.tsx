@@ -78,6 +78,7 @@ export const Default: Story = {
     postContent: samplePost,
     actions: sampleActions,
     timestamp: new Date(),
+    postUrl: 'https://www.deso.org',
   },
   parameters: {
     msw: {
@@ -120,6 +121,7 @@ export const Live: Story = {
       'This is a post from a live user on the DeSo blockchain. The profile picture and username are fetched in real-time.',
     actions: sampleActions,
     timestamp: new Date(),
+    postUrl: 'https://www.deso.org',
   },
   parameters: {
     msw: {
@@ -134,6 +136,7 @@ export const WithFullDate: Story = {
     ...Default.args,
     timestamp: new Date('2023-01-01T12:00:00Z'),
     images: twoImages,
+    postUrl: 'https://www.deso.org',
   },
   parameters: {
     msw: {
@@ -147,6 +150,7 @@ export const WithBento3: Story = {
   args: {
     ...Default.args,
     images: threeImages,
+    postUrl: 'https://www.deso.org',
   },
   parameters: {
     msw: {
@@ -160,6 +164,7 @@ export const WithBento4: Story = {
   args: {
     ...Default.args,
     images: fourImages,
+    postUrl: 'https://www.deso.org',
   },
   parameters: {
     msw: {
@@ -173,6 +178,7 @@ export const WithCarousel: Story = {
   args: {
     ...Default.args,
     images: fiveImages,
+    postUrl: 'https://www.deso.org',
   },
   parameters: {
     msw: {
@@ -188,6 +194,7 @@ export const WithQuotePost: Story = {
     postContent: "I'm quoting this post, what do you all think?",
     quotedPost: quotedPostSample,
     images: [],
+    postUrl: 'https://www.deso.org',
   },
   parameters: {
     msw: {
@@ -204,6 +211,7 @@ export const WithYouTubeEmbed: Story = {
     className: containerWidth,
     embedUrl: 'https://www.youtube.com/watch?v=JGwWNGJdvx8',
     images: [],
+    postUrl: 'https://www.deso.org',
   },
   parameters: {
     msw: {
@@ -220,6 +228,7 @@ export const WithSpotifyEmbed: Story = {
     className: containerWidth,
     embedUrl: 'https://open.spotify.com/track/3n3Ppam7vgaVa1iaRUc9Lp',
     images: [],
+    postUrl: 'https://www.deso.org',
   },
   parameters: {
     msw: {
@@ -237,6 +246,7 @@ export const WithSoundCloudEmbed: Story = {
     embedUrl:
       'https://soundcloud.com/yungkaai/blue?in=trending-music-us/sets/folk',
     images: [],
+    postUrl: 'https://www.deso.org',
   },
   parameters: {
     msw: {
@@ -253,6 +263,7 @@ export const WithTwitterEmbed: Story = {
     className: containerWidth,
     embedUrl: 'https://x.com/desoprotocol/status/1933587613434458243',
     images: [],
+    postUrl: 'https://www.deso.org',
   },
   parameters: {
     msw: {
@@ -269,6 +280,7 @@ export const WithWebsiteEmbed: Story = {
     className: containerWidth,
     embedUrl: 'https://www.deso.org/',
     images: [],
+    postUrl: 'https://www.deso.org',
   },
   parameters: {
     msw: {
@@ -285,6 +297,7 @@ export const Reposted: Story = {
       type: 'repost',
       reposterPublicKey: LIVE_PUBLIC_KEY,
     },
+    postUrl: 'https://www.deso.org',
   },
   parameters: {
     msw: {
@@ -300,6 +313,7 @@ export const Pinned: Story = {
     status: {
       type: 'pinned',
     },
+    postUrl: 'https://www.deso.org',
   },
   parameters: {
     msw: {
@@ -321,6 +335,7 @@ export const SingleComment: Story = {
         publicKey: 'BC1YLgi66tdjAaVfYpmM447cxsve3TpvfXD9h8X6JMak7gbKABoEVaT',
         postContent: 'Keep up posting every day🔥🔥🔥',
         timestamp: new Date(),
+        postUrl: 'https://www.deso.org',
       },
     ],
   },
@@ -344,12 +359,14 @@ export const MultipleComments: Story = {
         publicKey: 'BC1YLgi66tdjAaVfYpmM447cxsve3TpvfXD9h8X6JMak7gbKABoEVaT',
         postContent: 'Keep up posting every day🔥🔥🔥',
         timestamp: new Date(),
+        postUrl: 'https://www.deso.org',
       },
       {
         ...Default.args,
         publicKey: DEFAULT_PUBLIC_KEY,
         postContent: 'This is another great point!',
         timestamp: new Date(),
+        postUrl: 'https://www.deso.org',
       },
     ],
   },
@@ -368,6 +385,7 @@ export const WithReactions: Story = {
       { emoji: '👍', count: 12, userHasReacted: true },
       { emoji: '🔥', count: 5, userHasReacted: false },
     ],
+    postUrl: 'https://www.deso.org',
   },
   parameters: {
     msw: {
@@ -384,6 +402,7 @@ export const WithAudio: Story = {
     audioUrl: '/audio-sample.mp3',
     className: containerWidth,
     images: [],
+    postUrl: 'https://www.deso.org',
   },
   parameters: {
     msw: {
@@ -400,6 +419,59 @@ export const WithVideo: Story = {
     videoUrl: '/public/video-sample.mp4',
     className: containerWidth,
     images: [],
+    postUrl: 'https://www.deso.org',
+  },
+  parameters: {
+    msw: {
+      handlers: successHandlers,
+    },
+  },
+};
+
+export const WithPollNotVoted: Story = {
+  name: 'With Poll (Not Voted)',
+  args: {
+    ...Default.args,
+    postContent: 'What is your favorite season?',
+    className: containerWidth,
+    images: [],
+    poll: {
+      options: [
+        { text: 'Spring 🌷' },
+        { text: 'Summer ☀️' },
+        { text: 'Autumn 🍂' },
+        { text: 'Winter ❄️' },
+      ],
+      votes: [120, 350, 210, 80],
+      totalVotes: 760,
+      userVotedIndex: null,
+    },
+  },
+  parameters: {
+    msw: {
+      handlers: successHandlers,
+    },
+  },
+};
+
+export const WithPollVoted: Story = {
+  name: 'With Poll (Voted)',
+  args: {
+    ...Default.args,
+    postContent: 'What is your favorite season?',
+    className: containerWidth,
+    images: [],
+    poll: {
+      options: [
+        { text: 'Spring 🌷' },
+        { text: 'Summer ☀️' },
+        { text: 'Autumn 🍂' },
+        { text: 'Winter ❄️' },
+      ],
+      votes: [120, 350, 210, 80],
+      totalVotes: 760,
+      userVotedIndex: 1,
+    },
   },
   parameters: {
     msw: {
