@@ -6,6 +6,8 @@ import { MessageButton } from './message-button';
 import { ProfileStat } from './profile-stat';
 import { ProfileActions } from './profile-actions';
 import { cn } from '@/lib/utils';
+import { ProfileTag } from './profile-tag';
+import { Calendar, LinkIcon, MapPin } from 'lucide-react';
 
 export interface ProfileCardProps {
   publicKey: string;
@@ -73,6 +75,24 @@ export function ProfileCard({
               showMoreText="Show more"
               showLessText="Show less"
             />
+            <div className="flex flex-wrap items-center gap-2">
+              <ProfileTag icon={<MapPin className="size-3" />}>
+                New York, NY
+              </ProfileTag>
+              <ProfileTag icon={<LinkIcon className="size-3" />}>
+                <a
+                  href="https://deso.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:underline"
+                >
+                  deso.com
+                </a>
+              </ProfileTag>
+              <ProfileTag icon={<Calendar className="size-3" />}>
+                Joined June 2024
+              </ProfileTag>
+            </div>
           </>
         )}
       </div>
