@@ -4,85 +4,77 @@ import { UserInfo } from './user-info';
 import { FollowButton } from './follow-button';
 import { MessageButton } from './message-button';
 import { ProfileStat } from './profile-stat';
-import {
-  ActionMenu,
-  ActionMenuItem,
-  ActionMenuSeparator,
-} from './action-menu';
-import { Button } from '../ui/button';
-import { MoreHorizontal, Share2, Flag, Ban } from 'lucide-react';
+import { ProfileActions } from './profile-actions';
+import { cn } from '@/lib/utils';
 
 export interface ProfileCardProps {
   publicKey: string;
+  variant?: 'default' | 'compact';
+  showFollowButton?: boolean;
+  showMessageButton?: boolean;
+  showActionMenu?: boolean;
+  followButtonVariant?: 'default' | 'icon-only';
+  messageButtonVariant?: 'default' | 'icon-only';
+  className?: string;
 }
 
-export function ProfileCard({ publicKey }: ProfileCardProps) {
+export function ProfileCard({
+  publicKey,
+  variant = 'default',
+  showFollowButton = true,
+  showMessageButton = true,
+  showActionMenu = true,
+  followButtonVariant = 'default',
+  messageButtonVariant = 'default',
+  className,
+}: ProfileCardProps) {
+  const isCompact = variant === 'compact';
+
   return (
-    <div className="w-full max-w-lg mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
-      {/* Cover Photo */}
-      <ProfileCoverPhoto
-        publicKey={publicKey}
-        aspectRatio="16:9"
-        showOverlay
-        overlayOpacity={0.3}
-        className="rounded-b-none"
-      />
-      {/* Profile Info */}
-      <div className="p-6 flex flex-col gap-4">
+    <div
+      className={cn(
+        'w-full max-w-lg mx-auto bg-white rounded-lg shadow-lg overflow-hidden',
+        className
+      )}
+    >
+      {!isCompact && (
+        <ProfileCoverPhoto
+          publicKey={publicKey}
+          aspectRatio="16:9"
+          showOverlay
+          overlayOpacity={0.3}
+          className="rounded-b-none"
+        />
+      )}
+      <div className={cn('p-6 flex flex-col gap-4', isCompact && 'p-4')}>
         <div className="flex items-center justify-between gap-2">
           <UserInfo
             publicKey={publicKey}
-            pictureSize="md"
+            pictureSize={isCompact ? 'sm' : 'md'}
             showVerification
             showPublicKey
             className="z-10"
           />
           <div className="flex items-center gap-2">
-            <ActionMenu
-              trigger={
-                <Button variant="outline" size="icon">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              }
-            >
-              <ActionMenuItem icon={Share2}>Share profile</ActionMenuItem>
-              <ActionMenuSeparator />
-              <ActionMenuItem
-                icon={Flag}
-                confirmation={{
-                  title: 'Report User?',
-                  description:
-                    'This will report the user for review. Please confirm.',
-                  confirmText: 'Report',
-                  onConfirm: () => console.log('User reported'),
-                }}
-              >
-                Report user
-              </ActionMenuItem>
-              <ActionMenuItem
-                icon={Ban}
-                variant="destructive"
-                confirmation={{
-                  title: 'Block User?',
-                  description:
-                    "This will block the user. You won't see their posts or notifications. They won't be able to follow you or message you.",
-                  variant: 'destructive',
-                  confirmText: 'Block',
-                  onConfirm: () => console.log('User blocked'),
-                }}
-              >
-                Block user
-              </ActionMenuItem>
-            </ActionMenu>
-            <MessageButton variant="icon-only" showTooltip />
-            <FollowButton />            
+            {showActionMenu && <ProfileActions />}
+            {showMessageButton && <MessageButton variant="icon-only" showTooltip />}
+            {showFollowButton && <FollowButton />}
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <ProfileStat variant="followers" count={32430} />
-          <ProfileStat variant="following" count={2540} />
-        </div>
-        <ProfileDescription publicKey={publicKey} lineClamp={4} showMoreText="Show more" showLessText="Show less" formatted />
+        {!isCompact && (
+          <>
+            <div className="flex items-center gap-4">
+              <ProfileStat variant="followers" count={32430} />
+              <ProfileStat variant="following" count={2540} />
+            </div>
+            <ProfileDescription
+              publicKey={publicKey}
+              lineClamp={4}
+              showMoreText="Show more"
+              showLessText="Show less"
+            />
+          </>
+        )}
       </div>
     </div>
   );

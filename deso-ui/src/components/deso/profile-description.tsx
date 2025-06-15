@@ -39,7 +39,7 @@ export const ProfileDescription = ({
   lineClamp,
   showMoreText = 'Show more',
   showLessText = 'Show less',
-  formatted = false,
+  formatted = true,
 }: ProfileDescriptionProps) => {
   const { profile, loading, error } = useProfile(publicKey);
   const [isExpanded, setIsExpanded] = useState(false);

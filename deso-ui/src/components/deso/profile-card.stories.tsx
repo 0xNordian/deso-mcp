@@ -55,11 +55,27 @@ const meta: Meta<typeof ProfileCard> = {
   component: ProfileCard,
   parameters: {
     layout: 'centered',
+    msw: {
+      handlers: successHandlers,
+    },
   },
   argTypes: {
     publicKey: {
       control: 'text',
       description: 'The public key of the DeSo user',
+    },
+    variant: {
+      control: 'radio',
+      options: ['default', 'compact'],
+    },
+    showFollowButton: {
+      control: 'boolean',
+    },
+    showMessageButton: {
+      control: 'boolean',
+    },
+    showActionMenu: {
+      control: 'boolean',
     },
   },
 }
@@ -67,8 +83,61 @@ const meta: Meta<typeof ProfileCard> = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const DefaultProfile: Story = {
+const containerWidth = 'max-w-full w-[500px]';
+
+export const Default: Story = {
   args: {
     publicKey: DEFAULT_PUBLIC_KEY,
+    messageButtonVariant: 'icon-only',
+  },
+};
+
+export const Compact: Story = {
+  args: {
+    ...Default.args,
+    variant: 'compact',
+    className: containerWidth,
+  },
+};
+
+export const CompactWithFollow: Story = {
+  name: 'Compact (Follow only)',
+  args: {
+    ...Compact.args,
+    showMessageButton: false,
+    showActionMenu: false,
+    className: containerWidth,
+  },
+};
+
+export const CompactWithMessage: Story = {
+  name: 'Compact (Message only)',
+  args: {
+    ...Compact.args,
+    showFollowButton: false,
+    messageButtonVariant: 'default',
+    showActionMenu: false,
+    className: containerWidth,
+  },
+};
+
+export const CompactWithActions: Story = {
+  name: 'Compact (Actions only)',
+  args: {
+    ...Compact.args,
+    showFollowButton: false,
+    showMessageButton: false,
+    className: containerWidth,
+  },
+};
+
+export const CompactNoButtons: Story = {
+  name: 'Compact (No Buttons)',
+  args: {
+    ...Compact.args,
+    showFollowButton: false,
+    showMessageButton: false,
+    showActionMenu: false,
+    className: containerWidth,
   },
 };
