@@ -598,7 +598,7 @@ export const RichText: Story = {
   name: 'With Rich Text',
   args: {
     ...Default.args,
-    postContent: richText,
+    postContent: longRichText,
     postBodyVariant: 'rich',
   },
   parameters: {

@@ -34,9 +34,9 @@ export const PostAudio: React.FC<PostAudioProps> = ({ url, className }) => {
       container: containerRef.current,
       waveColor: '#ddd',
       progressColor: '#333',
-      barWidth: 4,
-      barGap: 1,
-      barRadius: 2,
+      barWidth: 5,
+      barGap: 4,
+      barRadius: 100,
       height:40,
       url,
     });
@@ -76,7 +76,7 @@ export const PostAudio: React.FC<PostAudioProps> = ({ url, className }) => {
 
   return (
     <div className={cn('mt-2 rounded-lg border bg-muted', className)}>
-      <div className="p-8 bg-background rounded-t-lg" ref={containerRef} />
+      <div className="p-6 bg-background rounded-t-lg" ref={containerRef} />
       <div className="flex justify-between items-center border-t p-2">
         <div className="flex-grow flex gap-4">
           <Button onClick={onPlayPause} variant="outline" size="icon">
@@ -102,8 +102,11 @@ export const PostAudio: React.FC<PostAudioProps> = ({ url, className }) => {
             />
           </div>
         </div>
-        <div className="text-sm text-muted-foreground ml-auto text-right flex flex-row pr-2">
-          {formatTime(currentTime)} / {formatTime(duration)}
+        <div className="flex flex-col items-end">
+          <div className="text-sm text-foreground ml-auto text-right flex flex-row text-xs gap-1">
+            <span className="text-muted-foreground">{formatTime(currentTime)} / </span><span className="text-foreground">{formatTime(duration)}</span>
+          </div>
+          <div className="text-xs text-muted-foreground truncate w-32 text-right">{url}</div>
         </div>
       </div>
     </div>
