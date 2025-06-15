@@ -20,12 +20,14 @@ export interface UserInfoProps {
   layout?: 'row' | 'column';
   gap?: 'none' | 'sm' | 'md' | 'lg';
   showPublicKey?: boolean;
+  isVerified?: boolean;
 }
 
 export function UserInfo({
   publicKey,
   pictureSize = 'md',
   showVerification = true,
+  isVerified = false,
   showCopyButton = false,
   truncate = false,
   maxLength,
@@ -92,6 +94,7 @@ export function UserInfo({
         <UsernameDisplay 
           publicKey={publicKey}
           showVerification={showVerification}
+          isVerified={isVerified}
           showCopyButton={showCopyButton}
           truncate={truncate}
           maxLength={maxLength}

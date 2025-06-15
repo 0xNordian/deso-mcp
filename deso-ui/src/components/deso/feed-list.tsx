@@ -6,12 +6,14 @@ export interface FeedListProps {
   posts: PostCardProps[];
   variant?: 'cards' | 'seamless';
   className?: string;
+  gap?: number;
 }
 
 export const FeedList: React.FC<FeedListProps> = ({
   posts,
   variant = 'cards',
   className,
+  gap = 16,
 }) => {
   if (variant === 'seamless') {
     return (
@@ -37,7 +39,7 @@ export const FeedList: React.FC<FeedListProps> = ({
 
   // Default to 'cards' variant
   return (
-    <div className={cn('space-y-4', className)}>
+    <div className={cn('flex flex-col', className)} style={{ gap: `${gap}px` }}>
       {posts.map((post, index) => (
         <PostCard
           key={`${post.publicKey}-${post.timestamp?.toString()}-${index}`}
