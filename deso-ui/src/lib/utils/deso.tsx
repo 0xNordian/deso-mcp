@@ -1,13 +1,17 @@
 import React from 'react';
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import Linkify from 'linkify-react';
+import 'linkify-plugin-hashtag';
+import 'linkify-plugin-mention';
+import Link from 'next/link';
 
 // Utility function for combining Tailwind classes
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// DeSo-specific utility functions
+// Profile Picture URL Builder
 export function buildProfilePictureUrl(profilePic?: string, extraData?: Record<string, any>, variant: 'default' | 'nft' | 'highres' = 'default'): string | undefined {
   // Helper to get the first valid value from possible keys
   const getFirstValid = (obj: Record<string, any>, keys: string[]): string | undefined => {
@@ -277,6 +281,58 @@ export async function copyToClipboard(text: string): Promise<boolean> {
     return false;
   }
 }
+
+/**
+ * Parses text and transforms hashtags, mentions, and links into clickable elements.
+ * @param text The text to parse.
+ * @returns A React component with parsed text.
+ */
+export const ParsedText = ({ text }: { text: string }) => {
+  const options = {
+    format: {
+      url: (value: string) =>
+        value.length > 50 ? `${value.slice(0, 50)}…` : value,
+    },
+    formatHref: {
+      hashtag: (href: string) => `/search?q=${href.substring(1)}`,
+      mention: (href: string) => `/${href.substring(1)}`,
+    },
+    render: {
+      hashtag: ({ attributes, content }: { attributes: any; content: string }) => {
+        const { href, ...props } = attributes;
+        return (
+          <Link href={href} {...props} className="text-blue-500 hover:underline">
+            {content}
+          </Link>
+        );
+      },
+      mention: ({ attributes, content }: { attributes: any; content: string }) => {
+        const { href, ...props } = attributes;
+        return (
+          <Link href={href} {...props} className="text-blue-500 hover:underline">
+            {content}
+          </Link>
+        );
+      },
+      url: ({ attributes, content }: { attributes: any; content: string }) => {
+        const { href, ...props } = attributes;
+        return (
+          <a
+            href={href}
+            {...props}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-500 hover:underline"
+          >
+            {content}
+          </a>
+        );
+      },
+    },
+  };
+
+  return <Linkify options={options}>{text}</Linkify>;
+};
 
 /**
  * Returns the public DeSo endpoint for fetching a user's profile picture by public key.

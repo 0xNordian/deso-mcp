@@ -82,7 +82,7 @@ export function ProfileCard({ publicKey }: ProfileCardProps) {
           <ProfileStat variant="followers" count={32430} />
           <ProfileStat variant="following" count={2540} />
         </div>
-        <ProfileDescription publicKey={publicKey} formatted lineClamp={4} />
+        <ProfileDescription publicKey={publicKey} lineClamp={4} showMoreText="Show more" showLessText="Show less" formatted />
       </div>
     </div>
   );

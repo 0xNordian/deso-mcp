@@ -6,6 +6,7 @@ import {
   errorHandlers,
   loadingHandlers,
 } from '@/lib/mocks/msw-handlers';
+import { simpleText, longSimpleText, richText, longRichText } from '@/lib/constants';
 
 const meta: Meta<typeof PostCard> = {
   title: 'DeSo/PostCard',
@@ -29,9 +30,6 @@ const meta: Meta<typeof PostCard> = {
 export default meta;
 
 type Story = StoryObj<typeof PostCard>;
-
-const samplePost =
-  'This is a sample post content. It can be a short message or a longer paragraph.\\nThe purpose of this text is to demonstrate how the post content is displayed within the PostCard component. DeSo is a decentralized social network.';
 
 const sampleActions = {
   comments: 1,
@@ -75,10 +73,11 @@ export const Default: Story = {
   name: 'Default (No Image)',
   args: {
     publicKey: DEFAULT_PUBLIC_KEY,
-    postContent: samplePost,
+    postContent: simpleText,
     actions: sampleActions,
     timestamp: new Date(),
     postUrl: 'https://www.deso.org',
+    postBodyVariant: 'simple',
   },
   parameters: {
     msw: {
@@ -428,7 +427,6 @@ export const WithVideo: Story = {
   },
 };
 
-
 export const WithNFT: Story = {
   name: 'With NFT',
   args: {
@@ -520,8 +518,7 @@ export const FeaturedVideo: Story = {
       handlers: successHandlers,
     },
   },
-}; 
-
+};
 
 export const FeaturedImage: Story = {
   name: 'With Featured Image',
@@ -537,9 +534,7 @@ export const FeaturedImage: Story = {
       handlers: successHandlers,
     },
   },
-}; 
-
-
+};
 
 export const FeaturedAudio: Story = {
   name: 'With Featured Audio',
@@ -555,8 +550,7 @@ export const FeaturedAudio: Story = {
       handlers: successHandlers,
     },
   },
-}; 
-
+};
 
 export const FeaturedNFTCard: Story = {
   name: 'With Featured NFT',
@@ -580,7 +574,7 @@ export const FeaturedNFTCard: Story = {
       handlers: successHandlers,
     },
   },
-}; 
+};
 
 export const WithNotification: Story = {
   name: 'With Notification',
@@ -592,6 +586,36 @@ export const WithNotification: Story = {
       username: 'John Doe',
       timestamp: new Date(),
     },
+  },
+  parameters: {
+    msw: {
+      handlers: successHandlers,
+    },
+  },
+};
+
+export const RichText: Story = {
+  name: 'With Rich Text',
+  args: {
+    ...Default.args,
+    postContent: richText,
+    postBodyVariant: 'rich',
+  },
+  parameters: {
+    msw: {
+      handlers: successHandlers,
+    },
+  },
+}; 
+
+
+export const RichTextTruncated: Story = {
+  name: 'With Rich Text (Truncated)',
+  args: {
+    ...Default.args,
+    postContent: longRichText,
+    postBodyVariant: 'rich',
+    lineClamp: 4,
   },
   parameters: {
     msw: {

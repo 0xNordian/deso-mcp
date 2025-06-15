@@ -7,7 +7,7 @@ import {
   ActionMenuSeparator,
 } from './action-menu';
 import { Button } from '../ui/button';
-import { MoreHorizontal, UserPlus, Ban, Flag, Repeat, Pin, ExternalLink, ChevronUp, ChevronDown } from 'lucide-react';
+import { MoreHorizontal, UserPlus, Ban, Flag, Repeat, Pin, ExternalLink, ChevronUp, ChevronDown, AtSign, MessageSquare, Gem } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useUsername } from '@/hooks/useProfile';
@@ -21,6 +21,7 @@ import { PostAudio } from './post-audio';
 import { PostReactions, Reaction } from './post-reactions';
 import { PostShare } from './post-share';
 import { PostPoll, PollOption } from './post-poll';
+import { PostText } from './post-text';
 
 export interface PostActionProps {
   comments: number;
@@ -97,6 +98,8 @@ export interface PostCardProps {
   layout?: 'default' | 'featured-media';
   nft?: NFTCardProps;
   notification?: PostNotificationProps;
+  postBodyVariant?: 'simple' | 'rich';
+  lineClamp?: number;
 }
 
 const RepostedBy = ({ publicKey }: { publicKey: string }) => {
@@ -111,45 +114,43 @@ const RepostedBy = ({ publicKey }: { publicKey: string }) => {
 
 const PostNotification = ({ type, publicKey, username, timestamp }: PostNotificationProps) => {
   const notificationText = {
-    mention: `mentioned you on a post`,
-    repost: `reposted your post`,
-    comment: `commented on your post`,
-    diamond: `gave you a diamond`,
-    follow: `followed you`,
+    mention: {
+      text: `mentioned you on a post`,
+      icon: <AtSign />,
+    },
+    repost: {
+      text: `reposted your post`,
+      icon: <Repeat />,
+    },
+    comment: {
+      text: `commented on your post`,
+      icon: <MessageSquare />,
+    },
+    diamond: {
+      text: `gave you a diamond`,
+      icon: <Gem />,
+    },
+    follow: {
+      text: `followed you`,
+      icon: <UserPlus />,
+    },
   };
   const notificationClass = "flex items-center gap-1 text-sm text-muted-foreground border-b pb-2 -mx-4 px-4 -mt-2"
   const notificationViewLink = <Link href={`/post/${publicKey}`} className="text-sm text-muted-foreground ml-auto relative -top- self-end">View Post</Link>;
-  switch (type) {
-    case 'mention':
-      return (  
-        <div className={notificationClass}>
-          <ProfilePicture publicKey={publicKey} size="xxs" />
-          <UsernameDisplay publicKey={publicKey} linkToProfile />
-          {notificationText[type]}
-          {notificationViewLink}
-        </div>
-      );  
-    case 'repost':
-      return (
-        <div className={notificationClass}>
-          <ProfilePicture publicKey={publicKey} size="xxs" />
-          <RepostedBy publicKey={publicKey} />
-          {notificationText[type]}
-          {notificationViewLink}
-        </div>
-      );
-    case 'comment':
-      return (
-        <div className={notificationClass}>
-          <ProfilePicture publicKey={publicKey} size="xxs" />
-          <UsernameDisplay publicKey={publicKey} linkToProfile />
-          {notificationText[type]}
-          {notificationViewLink}
-        </div>
-      );
-    default:
-      return null;
-  }
+  
+  return (
+    <div className={notificationClass}>
+      <div className="flex items-center gap-1 size-3 text-muted-foreground">
+        {notificationText[type as keyof typeof notificationText].icon}
+      </div>
+      <ProfilePicture publicKey={publicKey} size="xxs" />
+      <div className="flex items-center gap-1">
+        <UsernameDisplay publicKey={publicKey} linkToProfile variant="social" truncate maxLength={10} />
+        {notificationText[type as keyof typeof notificationText].text}
+      </div>
+      {notificationViewLink}
+    </div>
+  );
 };
 
 
@@ -297,6 +298,8 @@ const PostCardBody = ({
   poll,
   onPollVote,
   hideMedia,
+  postBodyVariant,
+  lineClamp,
 }: {
   postContent: string;
   embedUrl?: string;
@@ -309,10 +312,12 @@ const PostCardBody = ({
   poll?: PostPollInfo;
   onPollVote: (index: number) => void;
   hideMedia?: boolean;
+  postBodyVariant?: 'simple' | 'rich';
+  lineClamp?: number;
 }) => (
   <>
     <div className="mt-2 text-foreground">
-      <p className="whitespace-pre-wrap">{postContent}</p>
+      <PostText text={postContent} variant={postBodyVariant} lineClamp={lineClamp} showMoreText="Show more" showLessText="Show less" />
     </div>
     {!hideMedia && audioUrl && <PostAudio url={audioUrl} />}
     {!hideMedia && videoUrl && <PostVideo url={videoUrl} />}
@@ -466,6 +471,8 @@ const PostCardContent = (props: PostCardContentProps) => {
     postUrl,
     poll: initialPoll,
     hideMedia,
+    postBodyVariant,
+    lineClamp,
   } = props;
   const { data: userData } = useUsername(publicKey);
   const username = userData?.accountByPublicKey?.username;
@@ -574,6 +581,8 @@ const PostCardContent = (props: PostCardContentProps) => {
         poll={poll}
         onPollVote={handlePollVote}
         hideMedia={hideMedia}
+        postBodyVariant={postBodyVariant}
+        lineClamp={lineClamp}
       />
       <PostReactions
         reactions={reactions}
