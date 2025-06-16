@@ -642,7 +642,7 @@ export function PostCard(props: PostCardProps) {
                 <div className="flex flex-col items-center flex-shrink-0">
                   <ProfilePicture publicKey={post.publicKey} size="md" />
                   {!isLast && (
-                    <div className="w-0.5 grow relative bg-gray-200 mt-2 before:content-[''] before:w-0.5 before:h-5 before:bg-gray-200 before:absolute before:-bottom-[10px]" />
+                    <div className="w-0.5 grow relative bg-muted mt-2 before:content-[''] before:w-0.5 before:h-5 before:bg-muted before:absolute before:-bottom-[10px]" />
                   )}
                 </div>
                 <div className="flex-1">

@@ -120,7 +120,7 @@ export const PostEmbed: React.FC<PostEmbedProps> = ({ url, className }) => {
   return (
     <div
       className={cn(
-        'mt-2 rounded-lg border bg-gray-100 dark:bg-gray-800 flex',
+        'mt-2 rounded-lg border bg-muted flex',
         className
       )}
     >
@@ -133,11 +133,11 @@ export const PostEmbed: React.FC<PostEmbedProps> = ({ url, className }) => {
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-blue-500 hover:underline text-xs"
+          className="text-primary hover:underline text-xs"
         >
           {url}
         </a>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+        <p className="text-sm text-muted-foreground">
           This is a placeholder for the OG meta tags.
         </p>
       </div>

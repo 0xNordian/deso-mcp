@@ -47,7 +47,7 @@ export function CopyButton({
     <button
       onClick={handleCopy}
       className={cn(
-        'flex items-center gap-1 p-1 text-gray-400 hover:text-gray-600 focus:outline-none',
+        'flex items-center gap-1 p-1 text-muted-foreground hover:text-foreground focus:outline-none',
         className
       )}
       aria-label={tooltipText}
