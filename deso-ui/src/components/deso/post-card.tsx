@@ -250,7 +250,7 @@ const PostCardHeader = ({
   <div className="flex justify-between items-start">
     <div className="flex flex-col">
       <UsernameDisplay publicKey={publicKey} showVerification linkToProfile />
-      <div className="flex items-center gap-2 text-muted-foreground">
+      <div className="flex items-center gap-1 text-muted-foreground">
         <UserPublicKey publicKey={publicKey} truncate />
         <span className="text-xs">·</span>
         <Timestamp timestamp={timestamp} className="text-sm text-muted-foreground" />
@@ -264,13 +264,11 @@ const PostCardHeader = ({
       }
     >
       <ActionMenuItem icon={UserPlus}>
-        Follow {username ? `@${username}` : 'user'}
+        Follow <UsernameDisplay publicKey={publicKey} linkToProfile variant="social" truncate maxLength={10} />
       </ActionMenuItem>
-      <ActionMenuSeparator />
       <ActionMenuItem icon={Flag}>Report post</ActionMenuItem>
       <ActionMenuItem
         icon={Ban}
-        variant="destructive"
         confirmation={{
           title: 'Block User?',
           description:
@@ -280,7 +278,7 @@ const PostCardHeader = ({
           onConfirm: () => console.log('User blocked'),
         }}
       >
-        Block {username ? `@${username}` : 'user'}
+        Block <UsernameDisplay publicKey={publicKey} linkToProfile variant="social" truncate maxLength={10} />
       </ActionMenuItem>
     </ActionMenu>
   </div>
@@ -319,11 +317,11 @@ const PostCardBody = ({
     <div className="mt-2 text-foreground">
       <PostText text={postContent} variant={postBodyVariant} lineClamp={lineClamp} showMoreText="Show more" showLessText="Show less" />
     </div>
-    {!hideMedia && audioUrl && <PostAudio url={audioUrl} />}
-    {!hideMedia && videoUrl && <PostVideo url={videoUrl} />}
-    {embedUrl && <PostEmbed url={embedUrl} />}
+    {!hideMedia && audioUrl && <PostAudio url={audioUrl} className="mt-4" />}
+    {!hideMedia && videoUrl && <PostVideo url={videoUrl} className="mt-4" />}
+    {embedUrl && <PostEmbed url={embedUrl} className="mt-4" />}
     {!hideMedia && images && images.length > 0 && (
-      <PostImage images={images} withModal withModalActions={modalActions} />
+      <PostImage images={images} withModal withModalActions={modalActions} className="mt-4" />
     )}
     {poll && (
       <PostPoll
@@ -420,7 +418,7 @@ const PostQuote = (props: PostQuoteProps) => {
   };
 
   return (
-    <div className="border rounded-lg mt-2 p-3">
+    <div className="border rounded-lg mt-4 p-6">
       <div className="flex gap-3">
         <div>
           <ProfilePicture publicKey={publicKey} size="sm" />
@@ -431,8 +429,8 @@ const PostQuote = (props: PostQuoteProps) => {
             username={username}
             timestamp={timestamp}
           />
-          <div className="mt-2 text-foreground">
-            <p className="whitespace-pre-wrap">{postContent}</p>
+          <div className="my-2 text-foreground">
+            <PostText text={postContent} variant="rich" lineClamp={10} showMoreText="Show more" showLessText="Show less" />
           </div>
           {embedUrl && <PostEmbed url={embedUrl} />}
           {images && images.length > 0 && (
