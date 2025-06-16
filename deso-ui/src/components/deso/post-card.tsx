@@ -628,7 +628,7 @@ export function PostCard(props: PostCardProps) {
         {status && <PostStatus {...status} />}
         <div
           className={cn(
-            'w-full bg-white rounded-xl shadow-sm p-4 border',
+            'w-full bg-background rounded-xl shadow-sm p-4 border',
             className
           )}
         >
@@ -662,7 +662,7 @@ export function PostCard(props: PostCardProps) {
       <div className="w-full max-w-2xl mx-auto">
         <div
           className={cn(
-            'w-full bg-white rounded-xl shadow-sm border overflow-hidden',
+            'w-full bg-background rounded-xl shadow-sm border overflow-hidden',
             className
           )}
         >
@@ -699,7 +699,7 @@ export function PostCard(props: PostCardProps) {
     <div className="w-full max-w-2xl mx-auto">
       <div
         className={cn(
-          'w-full bg-white rounded-xl shadow-sm p-4 border',
+          'w-full bg-background rounded-xl shadow-sm p-4 border',
           className,
           status && 'flex-col'
         )}

@@ -4,6 +4,7 @@ import { ApolloProvider } from '@apollo/client'
 import { apolloClient } from '../src/lib/graphql/client'
 import { initialize, mswLoader } from 'msw-storybook-addon'
 import '../src/app/globals.css'
+import { withThemeByClassName } from '@storybook/addon-themes';
 
 // Initialize MSW
 initialize({
@@ -31,6 +32,14 @@ const preview: Preview = {
           </div>
         </ApolloProvider>
     ),
+    withThemeByClassName({
+      themes: {
+        light: 'light',
+        dark: 'dark',
+      },
+      defaultTheme: 'light',
+      parentSelector: 'html'
+    }),
   ],
 };
 

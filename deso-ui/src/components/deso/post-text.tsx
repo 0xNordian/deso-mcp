@@ -45,7 +45,7 @@ export const PostText: React.FC<PostTextProps> = ({
         {text}
       </ReactMarkdown>
     ) : (
-      <p className="whitespace-pre-wrap">
+      <p className="whitespace-pre-wrap text-foreground">
         <ParsedText text={text} />
       </p>
     );
