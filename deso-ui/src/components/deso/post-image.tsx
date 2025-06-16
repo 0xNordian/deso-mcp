@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/carousel';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
-import { PostAction } from './post-action';
+import { PostEngagement } from './post-engagement';
 import { Button } from '../ui/button';
 
 export interface PostImageActions {
@@ -136,27 +136,27 @@ export function PostImage({
         </Carousel>
         {withModalActions && (
           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-x-6 bg-black/50 text-white p-2 px-4 rounded-full border border-white/20">
-            <PostAction
+            <PostEngagement
               variant="comment"
               count={withModalActions.comments.count}
               onClick={withModalActions.onComment}
               className="hover:text-white"
             />
-            <PostAction
+            <PostEngagement
               variant="repost"
               count={withModalActions.reposts.count}
               active={withModalActions.reposts.active}
               onClick={withModalActions.onRepost}
               className="hover:text-white"
             />
-            <PostAction
+            <PostEngagement
               variant="like"
               count={withModalActions.likes.count}
               active={withModalActions.likes.active}
               onClick={withModalActions.onLike}
               className="hover:text-white"
             />
-            <PostAction
+            <PostEngagement
               variant="diamond"
               count={withModalActions.diamonds.count}
               value={withModalActions.diamonds.value}

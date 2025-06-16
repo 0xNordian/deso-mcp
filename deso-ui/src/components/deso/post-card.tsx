@@ -11,7 +11,7 @@ import { MoreHorizontal, UserPlus, Ban, Flag, Repeat, Pin, ExternalLink, Chevron
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { useUsername } from '@/hooks/useProfile';
-import { PostAction } from './post-action';
+import { PostEngagement } from './post-engagement';
 import { useState } from 'react';
 import { Timestamp } from './timestamp';
 import { PostImage, PostImageActions } from './post-image';
@@ -23,7 +23,7 @@ import { PostShare } from './post-share';
 import { PostPoll, PollOption } from './post-poll';
 import { PostText } from './post-text';
 
-export interface PostActionProps {
+export interface PostEngagementProps {
   comments: number;
   likes: number;
   reposts: number;
@@ -83,7 +83,7 @@ export interface PostCardProps {
   publicKey: string;
   postContent: string;
   className?: string;
-  actions?: PostActionProps;
+  actions?: PostEngagementProps;
   timestamp: string | Date;
   images?: string[];
   embedUrl?: string;
@@ -357,7 +357,7 @@ const PostCardFooter = ({
   postUrl,
   postContent,
 }: {
-  actions: PostActionProps;
+  actions: PostEngagementProps;
   like: { active: boolean; count: number };
   repost: { active: boolean; count: number };
   diamond: { active: boolean; count: number; value: string };
@@ -368,32 +368,36 @@ const PostCardFooter = ({
   postContent: string;
 }) => (
   <div className="mt-4 flex w-full items-center gap-x-4 text-muted-foreground">
-    <PostAction
+    <PostEngagement
       variant="comment"
       count={actions.comments}
       onClick={() => alert('Comment!')}
+      size="sm"
     />
-    <PostAction
+    <PostEngagement
       variant="repost"
       count={repost.count}
       active={repost.active}
       onClick={toggleRepost}
+      size="sm"
     />
-    <PostAction
+    <PostEngagement
       variant="like"
       count={like.count}
       active={like.active}
       onClick={toggleLike}
+      size="sm"
     />
-    <PostAction
+    <PostEngagement
       variant="diamond"
       count={diamond.count}
       value={diamond.value}
       active={diamond.active}
       onClick={giveDiamond}
+      size="sm"
     />
     <div className="flex-grow" />
-    <PostAction variant="view" count={actions.views} />
+    <PostEngagement variant="view" count={actions.views} size="sm" />
     {postUrl && <PostShare url={postUrl} text={postContent} />}
   </div>
 );

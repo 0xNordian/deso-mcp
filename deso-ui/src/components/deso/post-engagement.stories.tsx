@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { PostAction } from './post-action';
+import { PostEngagement } from './post-engagement';
 import React, { useState, useEffect } from 'react';
 
-const meta: Meta<typeof PostAction> = {
-  title: 'DeSo/PostAction',
-  component: PostAction,
+const meta: Meta<typeof PostEngagement> = {
+  title: 'DeSo/PostEngagement',
+  component: PostEngagement,
   parameters: {
     layout: 'centered',
   },
@@ -19,10 +19,10 @@ const meta: Meta<typeof PostAction> = {
 };
 
 export default meta;
-type Story = StoryObj<typeof PostAction>;
+type Story = StoryObj<typeof PostEngagement>;
 
-const StatefulPostAction = (
-  props: React.ComponentProps<typeof PostAction>
+const StatefulPostEngagement = (
+  props: React.ComponentProps<typeof PostEngagement>
 ) => {
   const [active, setActive] = useState(props.active || false);
   const [count, setCount] = useState(props.count);
@@ -57,7 +57,7 @@ const StatefulPostAction = (
   };
 
   return (
-    <PostAction
+    <PostEngagement
       {...props}
       active={active}
       count={count}
@@ -69,7 +69,7 @@ const StatefulPostAction = (
 
 export const Default: Story = {
   name: 'Default (Like)',
-  render: (args) => <StatefulPostAction {...args} />,
+  render: (args) => <StatefulPostEngagement {...args} />,
   args: {
     variant: 'like',
     count: 11,
@@ -77,16 +77,56 @@ export const Default: Story = {
   },
 };
 
+export const Repost: Story = {
+  name: 'Repost',
+  render: (args) => <StatefulPostEngagement {...args} />,
+  args: {
+    variant: 'repost',
+    count: 1,
+    active: false,
+  },
+};
+
+export const Comment: Story = {
+  name: 'Comment',
+  render: (args) => <StatefulPostEngagement {...args} />,
+  args: {
+    variant: 'comment',
+    count: 1,
+    active: false,
+  },
+};
+
+export const Diamond: Story = {
+  name: 'Diamond',
+  render: (args) => <StatefulPostEngagement {...args} />,
+  args: {
+    variant: 'diamond',
+    count: 1,
+    active: false,
+    value: '($0.12)',
+  },
+};
+
+export const View: Story = {
+  name: 'View',
+  render: (args) => <StatefulPostEngagement {...args} />,
+  args: {
+    variant: 'view',
+    count: 1,
+  },
+};
+
 export const AllActions: Story = {
   name: 'Post Actions Bar',
   render: () => (
-    <div className="flex w-full max-w-lg items-center gap-x-4 rounded-lg bg-background p-4 border">
-      <StatefulPostAction variant="comment" count={4} />
-      <StatefulPostAction variant="repost" count={12} />
-      <StatefulPostAction variant="like" count={43} active />
-      <StatefulPostAction variant="diamond" count={5} value="($0.12)" />
+    <div className="flex w-[500px] items-center gap-x-6 rounded-lg bg-background p-4 border">
+      <StatefulPostEngagement variant="comment" count={4} />
+      <StatefulPostEngagement variant="repost" count={12} />
+      <StatefulPostEngagement variant="like" count={43} active />
+      <StatefulPostEngagement variant="diamond" count={5} value="($0.12)" />
       <div className="flex-grow" />
-      <PostAction variant="view" count={1450} />
+      <PostEngagement variant="view" count={1450} />
     </div>
   ),
 }; 
