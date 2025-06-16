@@ -101,7 +101,7 @@ export function UserInfo({
           className={cn("text-sm", usernameClassName)}
         />
         {showPublicKey && (
-          <UserPublicKey publicKey={publicKey} truncate showCopyButton />
+          <UserPublicKey publicKey={publicKey} truncate showCopyButton className="text-muted-foreground" />
         )}
       </div>
     </div>

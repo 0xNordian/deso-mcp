@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { CheckCircle } from 'lucide-react';
+import NumberFlow, { continuous } from '@number-flow/react'; // Import NumberFlow
 
 export interface PollOption {
   text: string;
@@ -32,7 +33,7 @@ export const PostPoll: React.FC<PostPollProps> = ({
       const newPercentages = options.map((_, index) =>
         totalVotes > 0 ? (votes[index] / totalVotes) * 100 : 0
       );
-      // A timeout is used to ensure the transition is applied after the component has rendered.
+      // A timeout to ensure the transition is applied after the component has rendered.
       const timer = setTimeout(() => {
         setAnimatedPercentages(newPercentages);
       }, 100);
@@ -71,9 +72,10 @@ export const PostPoll: React.FC<PostPollProps> = ({
                     <CheckCircle className="h-5 w-5 text-green-500" />
                   )}
                 </div>
-                <span className="font-semibold">{`${Math.round(
-                  percentage
-                )}%`}</span>
+                <span className="font-semibold">
+                  <NumberFlow value={Math.round(animatedPercentages[index])} plugins={[continuous]} />
+                  %
+                </span>
               </div>
             </div>
           );
@@ -83,7 +85,7 @@ export const PostPoll: React.FC<PostPollProps> = ({
             <button
               key={index}
               onClick={() => handleVote(index)}
-              className="w-full rounded-lg border p-3 text-left text-foreground hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-lg cursor-pointer border p-3 text-left text-foreground hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               disabled={userVotedIndex !== null}
             >
               {option.text}
@@ -96,4 +98,4 @@ export const PostPoll: React.FC<PostPollProps> = ({
       </div>
     </div>
   );
-}; 
+};

@@ -56,6 +56,7 @@ export const ColumnLayout: Story = {
   args: {
     publicKey: DEFAULT_PUBLIC_KEY,
     layout: 'column',
+    showPublicKey: true,
   },
 };
 

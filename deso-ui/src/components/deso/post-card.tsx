@@ -398,7 +398,7 @@ const PostCardFooter = ({
     />
     <div className="flex-grow" />
     <PostEngagement variant="view" count={actions.views} size="sm" />
-    {postUrl && <PostShare url={postUrl} text={postContent} />}
+    {postUrl && <PostShare url={postUrl} text={postContent} className="p-0 h-auto hover:bg-transparent w-auto" />}
   </div>
 );
 
@@ -628,7 +628,7 @@ export function PostCard(props: PostCardProps) {
         {status && <PostStatus {...status} />}
         <div
           className={cn(
-            'w-full bg-background rounded-xl shadow-sm p-4 border',
+            'w-full bg-background rounded-xl shadow-sm p-6 border',
             className
           )}
         >
@@ -671,7 +671,7 @@ export function PostCard(props: PostCardProps) {
           {images && images.length > 0 && !videoUrl && !audioUrl && (
             <PostImage images={images} withModal className="mt-0 border-none rounded-b-none" />
           )}
-          <div className="p-4">
+          <div className="p-6">
             {status && (
               <div className="mb-4">
                 <PostStatus {...status} />
@@ -699,7 +699,7 @@ export function PostCard(props: PostCardProps) {
     <div className="w-full max-w-2xl mx-auto">
       <div
         className={cn(
-          'w-full bg-background rounded-xl shadow-sm p-4 border',
+          'w-full bg-background rounded-xl shadow-sm p-6 border',
           className,
           status && 'flex-col'
         )}

@@ -4,13 +4,15 @@ import React from 'react';
 import { ActionMenu, ActionMenuItem } from './action-menu';
 import { Button } from '../ui/button';
 import { Share } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export interface PostShareProps {
   url: string;
   text: string;
+  className?: string;
 }
 
-export const PostShare: React.FC<PostShareProps> = ({ url, text }) => {
+export const PostShare: React.FC<PostShareProps> = ({ url, text, className }) => {
   const encodedUrl = encodeURIComponent(url);
   const encodedText = encodeURIComponent(text);
 
@@ -26,7 +28,7 @@ export const PostShare: React.FC<PostShareProps> = ({ url, text }) => {
   return (
     <ActionMenu
       trigger={
-        <Button variant="ghost" size="icon">
+        <Button variant="ghost" size="icon" className={cn(className)}>
           <Share className="h-4 w-4" />
         </Button>
       }

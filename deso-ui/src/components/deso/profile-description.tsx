@@ -28,7 +28,7 @@ function formatDescription(text: string): React.ReactNode[] {
     // URLs
     let formatted = line.replace(urlRegex, (url) => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
     // Mentions
-    formatted = formatted.replace(mentionRegex, (match, space, handle) => `${space}<a href="/u/${handle.slice(1)}" class="text-blue-600 underline">${handle}</a>`);
+    formatted = formatted.replace(mentionRegex, (match, space, handle) => `${space}<a href="/u/${handle.slice(1)}" class="text-primary underline">${handle}</a>`);
     return <span key={i} dangerouslySetInnerHTML={{ __html: formatted }} />;
   });
 }
@@ -88,7 +88,7 @@ export const ProfileDescription = ({
       {shouldTruncate && (
         <Button
           variant="link"
-          className="p-0 h-auto text-sm underline mt-4"
+          className="p-0 h-auto text-sm underline mt-4 text-muted-foreground"
           onClick={() => setIsExpanded(!isExpanded)}
         >
           {isExpanded ? showLessText : showMoreText}
