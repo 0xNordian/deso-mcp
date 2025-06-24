@@ -5,6 +5,8 @@ A comprehensive Model Context Protocol (MCP) server that provides **complete DeS
 ## 🔥 **What's New in v3.0**
 - **🛠️ Comprehensive Debugging Guide**: Real solutions for all major DeSo integration issues
 - **🏗️ Implementation Patterns**: Best practices learned from building production DeSo apps
+- **🎨 DeSo UI Component Library**: Complete frontend component system with 40+ ready-to-use React components
+- **📦 Component Installation**: Automated shadcn CLI integration with installation commands and examples
 - **📱 Complete Example App**: Full DeSo messaging application with Next.js, TypeScript, and Tailwind
 - **🐛 Real Debugging Experience**: Solutions based on actual debugging sessions and common pitfalls
 
@@ -24,6 +26,8 @@ This MCP server transforms Cursor's AI assistant into a **DeSo development exper
 - **Code Generation**: Production-ready examples in JavaScript, TypeScript, React, and cURL
 - **Architecture Guidance**: Deep understanding of DeSo's transaction flows and systems
 - **Backend Integration**: Direct mapping to `routes/transaction.go` and other backend files
+- **🎨 UI Component Library**: 40+ professional React components for DeSo applications
+- **📦 Component Installation**: Automated shadcn CLI commands and dependency management
 - **🛠️ Debugging Solutions**: Real fixes for common DeSo integration problems
 - **🏗️ Best Practices**: Implementation patterns from production DeSo applications
 
@@ -41,10 +45,14 @@ This MCP server transforms Cursor's AI assistant into a **DeSo development exper
 5. **🔎 `repository_search`** - Search across all DeSo documentation and repositories
 6. **📖 `read_repository_document`** - Read specific documentation files from DeSo repos
 
+### **UI Development Tools (NEW in v3.0)**
+
+7. **🎨 `deso_ui_components`** - Complete DeSo UI component library with installation and usage examples
+
 ### **Advanced Debugging Tools (NEW in v3.0)**
 
-7. **🛠️ `deso_debugging_guide`** - Comprehensive debugging for common DeSo issues
-8. **🏗️ `deso_implementation_patterns`** - Best practices from real DeSo application development
+8. **🛠️ `deso_debugging_guide`** - Comprehensive debugging for common DeSo issues
+9. **🏗️ `deso_implementation_patterns`** - Best practices from real DeSo application development
 
 ## 🛠️ Complete Tool Reference
 
@@ -137,7 +145,30 @@ Read the DeSo tutorial for building apps
 Show me the content of the DeSo backend documentation for transactions
 ```
 
-### 7. **`deso_debugging_guide`** - Debugging Guide (NEW in v3.0)
+### 7. **`deso_ui_components`** - UI Component Library (NEW in v3.0)
+Comprehensive DeSo UI component library explorer with installation commands, usage examples, and component relationships.
+
+**Parameters:**
+- `action` (required): Action to perform with the UI component library
+  - Options: `"explore"`, `"install"`, `"usage"`, `"dependencies"`, `"examples"`, `"layouts"`, `"categories"`, `"search"`
+- `component` (optional): Specific component name (e.g., 'post-card', 'editor', 'profile-picture')
+- `category` (optional): Component category to explore
+  - Options: `"social"`, `"user"`, `"messaging"`, `"media"`, `"interactive"`, `"navigation"`, `"layout"`, `"all"`
+- `framework` (optional): Target framework for examples
+  - Options: `"react"`, `"nextjs"`, `"vanilla"`
+- `query` (optional): Search query for components
+
+**Example Usage:**
+```
+Show me all available DeSo UI components
+Install the post-card component with examples
+Explore social media components for React
+Generate usage examples for the message-inbox component
+Show me complete layout patterns for a Twitter-like app
+Search for components related to user profiles
+```
+
+### 8. **`deso_debugging_guide`** - Debugging Guide (NEW in v3.0)
 Comprehensive debugging guide for common DeSo integration issues with real solutions.
 
 **Parameters:**
@@ -152,7 +183,7 @@ Show me how to fix infinite loops in React DeSo components
 Debug DeSo authentication problems with code examples
 ```
 
-### 8. **`deso_implementation_patterns`** - Implementation Patterns (NEW in v3.0)
+### 9. **`deso_implementation_patterns`** - Implementation Patterns (NEW in v3.0)
 Best practices and implementation patterns learned from real DeSo application development.
 
 **Parameters:**
@@ -166,6 +197,44 @@ Best practices and implementation patterns learned from real DeSo application de
 Show me best practices for DeSo messaging flow in React
 What are the recommended error handling patterns for DeSo apps?
 How should I implement real-time updates in a DeSo application?
+```
+
+## 🎨 DeSo UI Component Library Integration
+
+The MCP server now includes **complete integration** with the official DeSo UI component library, providing:
+
+### **Component Categories:**
+- **🏃 Social** - Post cards, feeds, engagement metrics, reactions (10 components)
+- **👤 User** - Profile cards, avatars, authentication, user search (8 components)  
+- **💬 Messaging** - Chat interfaces, conversation management, message bubbles (5 components)
+- **🎬 Media** - Image galleries, video players, media cards, video reels (4 components)
+- **⚡ Interactive** - Rich text editor, search bars, action menus, dialogs (6 components)
+- **🧭 Navigation** - Sidebars, menus, logos (2 components)
+- **🔧 Utility** - Timestamps, copy buttons, verification badges (3 components)
+
+### **Key Features:**
+- **🎯 Instant Installation**: Generate exact `shadcn` CLI commands
+- **📚 Usage Examples**: React/TypeScript code examples with DeSo SDK integration
+- **🔗 Dependency Management**: Automatic dependency resolution and installation order
+- **🏗️ Complete Layouts**: Ready-to-use patterns for Twitter-like apps, messaging, profiles
+- **🔍 Smart Search**: Find components by name, description, or functionality
+- **📱 Responsive Design**: Mobile-first components with Tailwind CSS
+
+### **Example Component Usage:**
+```typescript
+// Install a component
+npx shadcn@latest add http://ui.deso.com/r/post-card.json
+
+// Use in your React app
+import { PostCard } from '@/components/deso-ui/post-card';
+
+<PostCard
+  publicKey="BC1YLi..."
+  postContent="Hello DeSo! 🚀"
+  timestamp={new Date()}
+  images={["https://example.com/image.jpg"]}
+  actions={{ comments: 5, likes: 25, reposts: 3 }}
+/>
 ```
 
 ## 🎯 Real-World Example: DeSo Messaging App
@@ -235,7 +304,7 @@ Create or update your Cursor MCP configuration file:
 {
   "deso-mcp": {
     "command": "node",
-    "args": ["deso-mcp-final.js"],
+    "args": ["deso-mcp.js"],
     "cwd": "/absolute/path/to/your/deso-mcp",
     "type": "stdio"
   }
@@ -285,6 +354,14 @@ Once configured, you can ask Cursor's AI assistant questions like:
 - *"Generate a React component for creating and minting NFTs"*
 - *"Create a complete DeSo messaging interface with TypeScript"*
 
+### **UI Component Development**
+- *"Show me all available DeSo UI components for social media"*
+- *"Install the post-card component with usage examples"*
+- *"Generate a complete Twitter-like layout using DeSo UI components"*
+- *"Show me messaging components for building a chat interface"*
+- *"Find components for user profiles and authentication"*
+- *"Create a media gallery layout with DeSo UI components"*
+
 ### **Debugging & Troubleshooting**
 - *"Help me debug DeSo message decryption that's returning undefined"*
 - *"Fix infinite loops in my React DeSo authentication component"*
@@ -312,23 +389,27 @@ npm run test              # Test tools list
 npm run test-follow       # Test follow endpoint with code
 
 # Run the server manually
-node deso-mcp-final.js
+node deso-mcp.js
 
 # Test specific tools manually
-echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "deso_api_explorer", "arguments": {"category": "social"}}}' | node deso-mcp-final.js
+echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "deso_api_explorer", "arguments": {"category": "social"}}}' | node deso-mcp.js
 
 # Test debugging guide
-echo '{"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "deso_debugging_guide", "arguments": {"issue": "all", "includeCode": true}}}' | node deso-mcp-final.js
+echo '{"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "deso_debugging_guide", "arguments": {"issue": "all", "includeCode": true}}}' | node deso-mcp.js
 
 # Test implementation patterns
-echo '{"jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {"name": "deso_implementation_patterns", "arguments": {"pattern": "messaging-flow", "framework": "react"}}}' | node deso-mcp-final.js
+echo '{"jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {"name": "deso_implementation_patterns", "arguments": {"pattern": "messaging-flow", "framework": "react"}}}' | node deso-mcp.js
+
+# Test UI components
+echo '{"jsonrpc": "2.0", "id": 4, "method": "tools/call", "params": {"name": "deso_ui_components", "arguments": {"action": "explore", "category": "social"}}}' | node deso-mcp.js
 ```
 
 ## 📁 Project Structure
 
 ```
 deso-mcp/
-├── deso-mcp-final.js      # Main MCP server implementation (v3.0)
+├── deso-mcp.js            # Main MCP server implementation (v3.0 with UI components)
+├── deso-mcp-final.js      # Legacy comprehensive server (v3.0)
 ├── mcp-server.js          # Legacy server (v2.3)
 ├── package.json           # Dependencies and scripts
 ├── .cursor/
@@ -336,7 +417,8 @@ deso-mcp/
 ├── repos/                 # DeSo repository clones
 │   ├── docs/             # DeSo documentation
 │   ├── backend/          # DeSo backend code
-│   └── deso-js/          # DeSo JavaScript SDK
+│   ├── deso-js/          # DeSo JavaScript SDK
+│   └── deso-ui/          # DeSo UI component library
 ├── example-app/          # Complete DeSo messaging application
 │   ├── src/              # Next.js app source
 │   ├── package.json      # App dependencies
@@ -349,12 +431,12 @@ deso-mcp/
 ### MCP Server Not Connecting
 
 1. **Check the path** in `.cursor/mcp.json` is absolute and correct
-2. **Update to use `deso-mcp-final.js`** instead of `mcp-server.js`
+2. **Update to use `deso-mcp.js`** (latest) instead of `deso-mcp-final.js` or `mcp-server.js`
 3. **Restart Cursor** completely
 4. **Check server runs manually:**
    ```bash
-   node deso-mcp-final.js
-   # Should output: "DeSo MCP Comprehensive Server running on stdio"
+   node deso-mcp.js
+   # Should output: "🚀 DeSo MCP Server v3.0 connected successfully with 9 comprehensive tools!"
    ```
 
 ### Tools Not Available in Chat
@@ -444,7 +526,7 @@ npm run test
 npm run test-follow
 
 # 3. Test debugging guide
-echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "deso_debugging_guide", "arguments": {"issue": "authentication", "includeCode": true}}}' | node deso-mcp-final.js
+echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "deso_debugging_guide", "arguments": {"issue": "authentication", "includeCode": true}}}' | node deso-mcp.js
 
 # 4. Check Cursor MCP connection
 # Open Cursor → Settings → Features → MCP → Should show "deso-mcp" as Connected ✅
@@ -460,6 +542,8 @@ echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "de
 
 ✅ **Explore any DeSo API** with complete documentation and code examples  
 ✅ **Generate production-ready code** for any DeSo operation in multiple languages  
+✅ **Build beautiful UIs** with 40+ professional React components from DeSo UI library  
+✅ **Install components instantly** with automated shadcn CLI integration  
 ✅ **Debug real DeSo integration problems** with tested solutions  
 ✅ **Implement best practices** learned from production DeSo applications  
 ✅ **Understand DeSo architecture** with deep technical explanations  
