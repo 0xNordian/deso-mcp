@@ -173,7 +173,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             },
             repository: {
               type: "string",
-              enum: ["docs", "core", "identity", "frontend", "backend", "deso-js"],
+              enum: ["docs", "core", "identity", "frontend", "backend", "deso-js", "deso-chat", "deso-ui", "graphql"],
               description: "Repository name"
             }
           },
@@ -251,6 +251,42 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ["action"]
         }
+      },
+      {
+        name: "deso_graphql_helper",
+        description: "GraphQL query builder and schema explorer for DeSo blockchain data. Helps write GraphQL queries to get user data, posts, followers, and more from the DeSo GraphQL API.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            action: {
+              type: "string",
+              enum: ["query", "schema", "examples", "build", "explain"],
+              description: "Action to perform with GraphQL"
+            },
+            queryType: {
+              type: "string",
+              enum: ["user", "posts", "followers", "following", "likes", "diamonds", "messages", "nfts", "custom"],
+              description: "Type of query to build or explain"
+            },
+            username: {
+              type: "string",
+              description: "Username to query for (e.g., 'nader')"
+            },
+            publicKey: {
+              type: "string",
+              description: "Public key to query for"
+            },
+            question: {
+              type: "string",
+              description: "Natural language question to convert to GraphQL (e.g., 'how many followers does nader have?')"
+            },
+            customQuery: {
+              type: "string",
+              description: "Custom GraphQL query to explain or validate"
+            }
+          },
+          required: ["action"]
+        }
       }
     ];
     
@@ -288,6 +324,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return await desoImplementationPatterns(args);
       case "deso_ui_components":
         return await desoUIComponents(args);
+      case "deso_graphql_helper":
+        return await desoGraphQLHelper(args);
       default:
         throw new Error(`Unknown DeSo tool: ${name}`);
     }
@@ -1648,7 +1686,7 @@ This might be due to repository access permissions or path issues.`
 
 // Repository document search implementation
 async function searchRepositoryDocuments(query) {
-  const repositories = ['docs', 'core', 'identity', 'frontend', 'backend', 'deso-js'];
+  const repositories = ['docs', 'core', 'identity', 'frontend', 'backend', 'deso-js', 'deso-chat', 'deso-ui', 'graphql'];
   const reposPath = path.join(process.cwd(), 'repos');
   const results = [];
   const searchTerms = query.toLowerCase().split(' ');
@@ -1681,7 +1719,10 @@ async function searchInDirectory(dirPath, repository, searchTerms) {
     for (const entry of entries) {
       const fullPath = path.join(dirPath, entry.name);
       
-      if (entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'node_modules') {
+      if (entry.isDirectory() && !entry.name.startsWith('.') && 
+          entry.name !== 'node_modules' && entry.name !== '.next' && 
+          entry.name !== 'dist' && entry.name !== 'build' && 
+          entry.name !== 'storybook-static') {
         // Recursively search subdirectories
         const subResults = await searchInDirectory(fullPath, repository, searchTerms);
         results.push(...subResults);
@@ -1704,9 +1745,13 @@ async function searchInDirectory(dirPath, repository, searchTerms) {
 }
 
 function isSearchableFile(filename) {
-  const searchableExtensions = ['.md', '.txt', '.js', '.ts', '.go', '.json', '.yaml', '.yml', '.tsx', '.jsx'];
+  const searchableExtensions = [
+    '.md', '.txt', '.js', '.ts', '.go', '.json', '.yaml', '.yml', '.tsx', '.jsx',
+    '.graphql', '.gql', '.css', '.scss', '.html', '.vue', '.py', '.sh', '.env',
+    '.toml', '.ini', '.conf', '.config', '.lock'
+  ];
   const ext = path.extname(filename).toLowerCase();
-  return searchableExtensions.includes(ext);
+  return searchableExtensions.includes(ext) || filename === 'README' || filename === 'LICENSE';
 }
 
 function findMatches(content, searchTerms, filePath, repository) {
@@ -1837,7 +1882,7 @@ ${content}`
 
 Error reading document: ${error.message}
 
-**Available repositories:** docs, core, identity, frontend, backend, deso-js
+**Available repositories:** docs, core, identity, frontend, backend, deso-js, deso-chat, deso-ui, graphql
 
 Try using the \`repository_search\` tool first to find the correct document path.`
       }]
@@ -3946,6 +3991,634 @@ Found ${results.length} matching components:
   return { content: [{ type: "text", text: response }] };
 }
 
+// Comprehensive DeSo GraphQL Helper based on schema analysis
+async function desoGraphQLHelper(args) {
+  const { action, queryType, username, publicKey, question, customQuery } = args;
+  
+  switch (action) {
+    case "query":
+      return buildGraphQLQuery(queryType, username, publicKey, question);
+    case "schema":
+      return exploreGraphQLSchema(queryType);
+    case "examples":
+      return getGraphQLExamples(queryType);
+    case "build":
+      return buildQueryFromQuestion(question, username, publicKey);
+    case "explain":
+      return explainGraphQLQuery(customQuery);
+    default:
+      return { content: [{ type: "text", text: `Unknown GraphQL action: ${action}. Available: query, schema, examples, build, explain` }] };
+  }
+}
+
+function buildGraphQLQuery(queryType, username, publicKey, question) {
+  const queries = {
+    user: {
+      title: "Get User Information",
+      description: "Fetch user profile data including username, description, follower counts, and coin price",
+      query: `query GetUser($username: String!) {
+  accounts(filter: { username: { equalToInsensitive: $username } }, first: 1) {
+    nodes {
+      id
+      publicKey
+      username
+      description
+      profilePic
+      creatorBasisPoints
+      coinPriceDesoNanos
+      desoLockedNanos
+      ccCoinsInCirculationNanos
+      followers {
+        totalCount
+      }
+      following {
+        totalCount
+      }
+      posts {
+        totalCount
+      }
+    }
+  }
+}`,
+      variables: username ? `{ "username": "${username}" }` : `{ "username": "YOUR_USERNAME_HERE" }`,
+      example: username ? `// Example: Get user info for ${username}` : "// Example: Get user info for a specific username"
+    },
+    
+    followers: {
+      title: "Get User Followers",
+      description: "Fetch all followers of a specific user with their profile information",
+      query: `query GetFollowers($username: String!, $first: Int = 10) {
+  accounts(filter: { username: { equalToInsensitive: $username } }, first: 1) {
+    nodes {
+      username
+      followers(first: $first, orderBy: [PRIMARY_KEY_DESC]) {
+        totalCount
+        nodes {
+          follower {
+            username
+            publicKey
+            description
+            profilePic
+          }
+        }
+      }
+    }
+  }
+}`,
+      variables: username ? `{ "username": "${username}", "first": 10 }` : `{ "username": "YOUR_USERNAME_HERE", "first": 10 }`,
+      example: username ? `// Example: Get followers for ${username}` : "// Example: Get followers for a specific user"
+    },
+    
+    following: {
+      title: "Get Users Following",
+      description: "Fetch all users that a specific user is following",
+      query: `query GetFollowing($username: String!, $first: Int = 10) {
+  accounts(filter: { username: { equalToInsensitive: $username } }, first: 1) {
+    nodes {
+      username
+      following(first: $first, orderBy: [PRIMARY_KEY_DESC]) {
+        totalCount
+        nodes {
+          followee {
+            username
+            publicKey
+            description
+            profilePic
+          }
+        }
+      }
+    }
+  }
+}`,
+      variables: username ? `{ "username": "${username}", "first": 10 }` : `{ "username": "YOUR_USERNAME_HERE", "first": 10 }`,
+      example: username ? `// Example: Get users ${username} is following` : "// Example: Get users a specific user is following"
+    },
+    
+    posts: {
+      title: "Get User Posts",
+      description: "Fetch recent posts by a specific user with engagement metrics",
+      query: `query GetUserPosts($username: String!, $first: Int = 10) {
+  accounts(filter: { username: { equalToInsensitive: $username } }, first: 1) {
+    nodes {
+      username
+      posts(first: $first, orderBy: [TIMESTAMP_DESC]) {
+        totalCount
+        nodes {
+          postHash
+          body
+          imageUrls
+          videoUrls
+          timestamp
+          isQuotedRepost
+          isPinned
+          likes {
+            totalCount
+          }
+          diamonds {
+            totalCount
+          }
+          parentPost {
+            postHash
+            body
+            poster {
+              username
+            }
+          }
+          repostedPost {
+            postHash
+            body
+            poster {
+              username
+            }
+          }
+        }
+      }
+    }
+  }
+}`,
+      variables: username ? `{ "username": "${username}", "first": 10 }` : `{ "username": "YOUR_USERNAME_HERE", "first": 10 }`,
+      example: username ? `// Example: Get recent posts by ${username}` : "// Example: Get recent posts by a specific user"
+    },
+    
+    likes: {
+      title: "Get User Likes",
+      description: "Fetch posts that a user has liked",
+      query: `query GetUserLikes($username: String!, $first: Int = 10) {
+  accounts(filter: { username: { equalToInsensitive: $username } }, first: 1) {
+    nodes {
+      username
+      likes(first: $first, orderBy: [PRIMARY_KEY_DESC]) {
+        totalCount
+        nodes {
+          post {
+            postHash
+            body
+            timestamp
+            poster {
+              username
+              profilePic
+            }
+            likes {
+              totalCount
+            }
+          }
+        }
+      }
+    }
+  }
+}`,
+      variables: username ? `{ "username": "${username}", "first": 10 }` : `{ "username": "YOUR_USERNAME_HERE", "first": 10 }`,
+      example: username ? `// Example: Get posts liked by ${username}` : "// Example: Get posts liked by a specific user"
+    },
+    
+    diamonds: {
+      title: "Get User Diamonds",
+      description: "Fetch diamonds sent and received by a user",
+      query: `query GetUserDiamonds($username: String!, $first: Int = 10) {
+  accounts(filter: { username: { equalToInsensitive: $username } }, first: 1) {
+    nodes {
+      username
+      diamondsSent(first: $first, orderBy: [PRIMARY_KEY_DESC]) {
+        totalCount
+        nodes {
+          diamondLevel
+          post {
+            postHash
+            body
+            poster {
+              username
+            }
+          }
+          receiver {
+            username
+          }
+        }
+      }
+      diamondsReceived(first: $first, orderBy: [PRIMARY_KEY_DESC]) {
+        totalCount
+        nodes {
+          diamondLevel
+          post {
+            postHash
+            body
+          }
+          sender {
+            username
+          }
+        }
+      }
+    }
+  }
+}`,
+      variables: username ? `{ "username": "${username}", "first": 10 }` : `{ "username": "YOUR_USERNAME_HERE", "first": 10 }`,
+      example: username ? `// Example: Get diamonds for ${username}` : "// Example: Get diamonds for a specific user"
+    },
+    
+    nfts: {
+      title: "Get User NFTs",
+      description: "Fetch NFTs created or owned by a user",
+      query: `query GetUserNFTs($username: String!, $first: Int = 10) {
+  accounts(filter: { username: { equalToInsensitive: $username } }, first: 1) {
+    nodes {
+      username
+      posts(filter: { isNft: { equalTo: true } }, first: $first, orderBy: [TIMESTAMP_DESC]) {
+        totalCount
+        nodes {
+          postHash
+          body
+          imageUrls
+          isNft
+          numNftCopies
+          numNftCopiesForSale
+          numNftCopiesBurned
+          nftRoyaltyToCreatorBasisPoints
+          nfts(first: 5) {
+            nodes {
+              serialNumber
+              isForSale
+              minBidAmountNanos
+              owner {
+                username
+              }
+            }
+          }
+          nftBids(first: 5, orderBy: [BID_AMOUNT_NANOS_DESC]) {
+            nodes {
+              bidAmountNanos
+              bidder {
+                username
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}`,
+      variables: username ? `{ "username": "${username}", "first": 10 }` : `{ "username": "YOUR_USERNAME_HERE", "first": 10 }`,
+      example: username ? `// Example: Get NFTs by ${username}` : "// Example: Get NFTs by a specific user"
+    }
+  };
+  
+  if (!queryType || !queries[queryType]) {
+    return { content: [{ type: "text", text: `Available query types: ${Object.keys(queries).join(', ')}` }] };
+  }
+  
+  const queryInfo = queries[queryType];
+  let response = `# ${queryInfo.title}\n\n${queryInfo.description}\n\n## GraphQL Query\n\n\`\`\`graphql\n${queryInfo.query}\n\`\`\`\n\n## Variables\n\n\`\`\`json\n${queryInfo.variables}\n\`\`\`\n\n## Usage Example\n\n\`\`\`javascript\n${queryInfo.example}\nconst response = await fetch('https://graphql.deso.com/graphql', {\n  method: 'POST',\n  headers: {\n    'Content-Type': 'application/json',\n  },\n  body: JSON.stringify({\n    query: \`${queryInfo.query.replace(/`/g, '\\`')}\`,\n    variables: ${queryInfo.variables}\n  })\n});\n\nconst data = await response.json();\nconsole.log(data);\n\`\`\``;
+  
+  // Add specific usage tips based on query type
+  if (queryType === 'followers' || queryType === 'following') {
+    response += `\n\n## Tips\n\n- Use \`totalCount\` to get the exact number of ${queryType}\n- Adjust \`first\` parameter to get more/fewer results\n- Use \`orderBy: [PRIMARY_KEY_DESC]\` for most recent ${queryType}`;
+  }
+  
+  return { content: [{ type: "text", text: response }] };
+}
+
+function exploreGraphQLSchema(queryType) {
+  const schemas = {
+    user: {
+      title: "Account/User Schema",
+      description: "The Account type represents a user profile on DeSo",
+      fields: `
+**Core Fields:**
+- \`id\`: Globally unique identifier
+- \`publicKey\`: User's public key (unique identifier)
+- \`username\`: Display username (can be null)
+- \`description\`: Profile bio/description
+- \`profilePic\`: Profile picture URL
+- \`creatorBasisPoints\`: Creator coin creator basis points
+- \`coinPriceDesoNanos\`: Current creator coin price in DeSo nanos
+- \`desoLockedNanos\`: Amount of DeSo locked in creator coin
+- \`ccCoinsInCirculationNanos\`: Creator coins in circulation
+
+**Relationships:**
+- \`followers\`: Users following this account
+- \`following\`: Users this account follows
+- \`posts\`: Posts created by this user
+- \`likes\`: Posts liked by this user
+- \`diamondsSent\`/\`diamondsReceived\`: Diamond transactions
+- \`creatorCoinBalances\`: Creator coin holdings`,
+      filters: `
+**Filtering Options:**
+- \`username: { equalToInsensitive: "username" }\` - Find by username (case-insensitive)
+- \`publicKey: { equalTo: "publickey" }\` - Find by public key
+- \`description: { includesInsensitive: "keyword" }\` - Search in bio
+- \`coinPriceDesoNanos: { greaterThan: "1000000000" }\` - Filter by coin price`
+    },
+    
+    posts: {
+      title: "Post Schema", 
+      description: "The Post type represents a post/content on DeSo",
+      fields: `
+**Core Fields:**
+- \`postHash\`: Unique identifier for the post
+- \`posterPublicKey\`: Public key of the post creator
+- \`body\`: Text content of the post
+- \`imageUrls\`: Array of image URLs
+- \`videoUrls\`: Array of video URLs
+- \`timestamp\`: When the post was created
+- \`isQuotedRepost\`: Whether this is a quote repost
+- \`isPinned\`: Whether the post is pinned
+- \`isNft\`: Whether the post is an NFT
+
+**NFT Fields:**
+- \`numNftCopies\`: Total NFT copies
+- \`numNftCopiesForSale\`: Copies currently for sale
+- \`nftRoyaltyToCreatorBasisPoints\`: Creator royalty percentage
+
+**Relationships:**
+- \`poster\`: Account that created the post
+- \`parentPost\`: Post being replied to (for comments)
+- \`repostedPost\`: Post being reposted
+- \`likes\`: Users who liked this post
+- \`diamonds\`: Diamonds given to this post
+- \`nfts\`: NFT copies if this is an NFT post`,
+      filters: `
+**Filtering Options:**
+- \`posterPublicKey: { equalTo: "publickey" }\` - Posts by specific user
+- \`body: { includesInsensitive: "keyword" }\` - Search post content
+- \`isNft: { equalTo: true }\` - Only NFT posts
+- \`timestamp: { greaterThan: "2024-01-01" }\` - Posts after date
+- \`isPinned: { equalTo: true }\` - Only pinned posts`
+    },
+    
+    followers: {
+      title: "Follow Schema",
+      description: "The Follow type represents follower relationships",
+      fields: `
+**Core Fields:**
+- \`followerPkid\`: PKID of the user doing the following
+- \`followedPkid\`: PKID of the user being followed
+
+**Relationships:**
+- \`follower\`: Account doing the following
+- \`followee\`: Account being followed`,
+      filters: `
+**Filtering Options:**
+- \`followerPkid: { equalTo: "pkid" }\` - Find who a user follows
+- \`followedPkid: { equalTo: "pkid" }\` - Find who follows a user`
+    }
+  };
+  
+  const schema = schemas[queryType] || schemas.user;
+  
+  let response = `# DeSo GraphQL Schema: ${schema.title}\n\n${schema.description}\n\n## Fields\n${schema.fields}\n\n## Filtering\n${schema.filters}`;
+  
+  response += `\n\n## Common Patterns\n\n**Pagination:**\n\`\`\`graphql\n{\n  accounts(first: 10, after: "cursor") {\n    nodes { ... }\n    pageInfo {\n      hasNextPage\n      endCursor\n    }\n    totalCount\n  }\n}\n\`\`\`\n\n**Ordering:**\n\`\`\`graphql\n{\n  posts(orderBy: [TIMESTAMP_DESC]) {\n    nodes { ... }\n  }\n}\n\`\`\``;
+  
+  return { content: [{ type: "text", text: response }] };
+}
+
+function getGraphQLExamples(queryType) {
+  const examples = {
+    user: [
+      {
+        title: "Get User Follower Count",
+        query: `query GetFollowerCount($username: String!) {
+  accounts(filter: { username: { equalToInsensitive: $username } }) {
+    nodes {
+      username
+      followers {
+        totalCount
+      }
+    }
+  }
+}`,
+        description: "Simple query to get just the follower count for a user"
+      },
+      {
+        title: "Get User Profile Summary",
+        query: `query GetUserSummary($username: String!) {
+  accounts(filter: { username: { equalToInsensitive: $username } }) {
+    nodes {
+      username
+      description
+      profilePic
+      followers { totalCount }
+      following { totalCount }
+      posts { totalCount }
+      coinPriceDesoNanos
+    }
+  }
+}`,
+        description: "Complete user profile summary with all key metrics"
+      }
+    ],
+    
+    posts: [
+      {
+        title: "Get Recent Posts with Engagement",
+        query: `query GetRecentPosts($first: Int = 10) {
+  posts(first: $first, orderBy: [TIMESTAMP_DESC]) {
+    nodes {
+      postHash
+      body
+      timestamp
+      poster {
+        username
+        profilePic
+      }
+      likes { totalCount }
+      diamonds { totalCount }
+    }
+  }
+}`,
+        description: "Get recent posts across the platform with engagement metrics"
+      },
+      {
+        title: "Get User's Last Post",
+        query: `query GetLastPost($username: String!) {
+  accounts(filter: { username: { equalToInsensitive: $username } }) {
+    nodes {
+      posts(first: 1, orderBy: [TIMESTAMP_DESC]) {
+        nodes {
+          body
+          timestamp
+          likes { totalCount }
+        }
+      }
+    }
+  }
+}`,
+        description: "Get the most recent post by a specific user"
+      }
+    ]
+  };
+  
+  const typeExamples = examples[queryType] || examples.user;
+  
+  let response = `# GraphQL Examples: ${queryType}\n\n`;
+  
+  typeExamples.forEach((example, index) => {
+    response += `## ${index + 1}. ${example.title}\n\n${example.description}\n\n\`\`\`graphql\n${example.query}\n\`\`\`\n\n`;
+  });
+  
+  response += `## Usage with JavaScript\n\n\`\`\`javascript\nconst query = \`...\`; // Your GraphQL query\nconst variables = { username: "nader" };\n\nconst response = await fetch('https://graphql.deso.com/graphql', {\n  method: 'POST',\n  headers: { 'Content-Type': 'application/json' },\n  body: JSON.stringify({ query, variables })\n});\n\nconst data = await response.json();\nconsole.log(data.data);\n\`\`\``;
+  
+  return { content: [{ type: "text", text: response }] };
+}
+
+function buildQueryFromQuestion(question, username, publicKey) {
+  if (!question) {
+    return { content: [{ type: "text", text: "Please provide a question to convert to GraphQL. Example: 'How many followers does nader have?'" }] };
+  }
+  
+  const questionLower = question.toLowerCase();
+  let queryType, queryTemplate, explanation;
+  
+  // Determine query type based on question
+  if (questionLower.includes('follower') && questionLower.includes('how many')) {
+    queryType = 'follower-count';
+    queryTemplate = `query GetFollowerCount($username: String!) {
+  accounts(filter: { username: { equalToInsensitive: $username } }) {
+    nodes {
+      username
+      followers {
+        totalCount
+      }
+    }
+  }
+}`;
+    explanation = "This query gets the total follower count for a user";
+  } else if (questionLower.includes('following') && questionLower.includes('how many')) {
+    queryType = 'following-count';
+    queryTemplate = `query GetFollowingCount($username: String!) {
+  accounts(filter: { username: { equalToInsensitive: $username } }) {
+    nodes {
+      username
+      following {
+        totalCount
+      }
+    }
+  }
+}`;
+    explanation = "This query gets the total count of users being followed";
+  } else if (questionLower.includes('last post') || questionLower.includes('recent post')) {
+    queryType = 'last-post';
+    queryTemplate = `query GetLastPost($username: String!) {
+  accounts(filter: { username: { equalToInsensitive: $username } }) {
+    nodes {
+      username
+      posts(first: 1, orderBy: [TIMESTAMP_DESC]) {
+        nodes {
+          postHash
+          body
+          timestamp
+          likes { totalCount }
+          diamonds { totalCount }
+        }
+      }
+    }
+  }
+}`;
+    explanation = "This query gets the most recent post by a user";
+  } else if (questionLower.includes('posts') && questionLower.includes('how many')) {
+    queryType = 'post-count';
+    queryTemplate = `query GetPostCount($username: String!) {
+  accounts(filter: { username: { equalToInsensitive: $username } }) {
+    nodes {
+      username
+      posts {
+        totalCount
+      }
+    }
+  }
+}`;
+    explanation = "This query gets the total number of posts by a user";
+  } else if (questionLower.includes('profile') || questionLower.includes('info')) {
+    queryType = 'profile';
+    queryTemplate = `query GetProfile($username: String!) {
+  accounts(filter: { username: { equalToInsensitive: $username } }) {
+    nodes {
+      username
+      description
+      profilePic
+      followers { totalCount }
+      following { totalCount }
+      posts { totalCount }
+      coinPriceDesoNanos
+    }
+  }
+}`;
+    explanation = "This query gets complete profile information for a user";
+  } else {
+    // Default to profile query
+    queryType = 'general';
+    queryTemplate = `query GetUserInfo($username: String!) {
+  accounts(filter: { username: { equalToInsensitive: $username } }) {
+    nodes {
+      username
+      description
+      followers { totalCount }
+      following { totalCount }
+      posts { totalCount }
+    }
+  }
+}`;
+    explanation = "This is a general user information query based on your question";
+  }
+  
+  const targetUsername = username || (questionLower.match(/\b(\w+)\s+have/)?.[1]) || "YOUR_USERNAME_HERE";
+  const variables = `{ "username": "${targetUsername}" }`;
+  
+  let response = `# GraphQL Query for: "${question}"\n\n${explanation}\n\n## Generated Query\n\n\`\`\`graphql\n${queryTemplate}\n\`\`\`\n\n## Variables\n\n\`\`\`json\n${variables}\n\`\`\`\n\n## Complete Example\n\n\`\`\`javascript\nconst query = \`${queryTemplate.replace(/`/g, '\\`')}\`;\nconst variables = ${variables};\n\nconst response = await fetch('https://graphql.deso.com/graphql', {\n  method: 'POST',\n  headers: { 'Content-Type': 'application/json' },\n  body: JSON.stringify({ query, variables })\n});\n\nconst data = await response.json();\nconsole.log(data.data.accounts.nodes[0]);\n\`\`\``;
+  
+  if (targetUsername === "YOUR_USERNAME_HERE") {
+    response += `\n\n**Note:** Replace "YOUR_USERNAME_HERE" with the actual username you want to query.`;
+  }
+  
+  return { content: [{ type: "text", text: response }] };
+}
+
+function explainGraphQLQuery(customQuery) {
+  if (!customQuery) {
+    return { content: [{ type: "text", text: "Please provide a GraphQL query to explain." }] };
+  }
+  
+  let explanation = `# GraphQL Query Explanation\n\n## Your Query\n\n\`\`\`graphql\n${customQuery}\n\`\`\`\n\n## Analysis\n\n`;
+  
+  // Basic query analysis
+  if (customQuery.includes('accounts')) {
+    explanation += "- **accounts**: Querying user/account data from the DeSo blockchain\n";
+  }
+  if (customQuery.includes('posts')) {
+    explanation += "- **posts**: Querying post/content data\n";
+  }
+  if (customQuery.includes('follows')) {
+    explanation += "- **follows**: Querying follower relationship data\n";
+  }
+  if (customQuery.includes('filter:')) {
+    explanation += "- **filter**: Applying conditions to narrow down results\n";
+  }
+  if (customQuery.includes('first:')) {
+    explanation += "- **first**: Limiting the number of results (pagination)\n";
+  }
+  if (customQuery.includes('orderBy:')) {
+    explanation += "- **orderBy**: Sorting the results\n";
+  }
+  if (customQuery.includes('totalCount')) {
+    explanation += "- **totalCount**: Getting the total count without fetching all records\n";
+  }
+  
+  // Check for common patterns
+  if (customQuery.includes('username') && customQuery.includes('equalToInsensitive')) {
+    explanation += "\n## Pattern Detected: User Lookup\nThis query is looking up a user by username (case-insensitive).\n";
+  }
+  
+  if (customQuery.includes('followers') || customQuery.includes('following')) {
+    explanation += "\n## Pattern Detected: Social Relationships\nThis query is examining follower/following relationships.\n";
+  }
+  
+  if (customQuery.includes('TIMESTAMP_DESC')) {
+    explanation += "\n## Pattern Detected: Recent Content\nThis query is ordering by timestamp to get the most recent items first.\n";
+  }
+  
+  explanation += `\n## Tips for Optimization\n\n1. **Use pagination**: Always include \`first\` parameter to limit results\n2. **Request only needed fields**: Don't fetch unnecessary data\n3. **Use totalCount**: For counts, use \`totalCount\` instead of fetching all records\n4. **Case-insensitive search**: Use \`equalToInsensitive\` for username lookups\n5. **Proper ordering**: Use appropriate \`orderBy\` for your use case\n\n## Execution\n\nTo run this query:\n\n\`\`\`javascript\nconst response = await fetch('https://graphql.deso.com/graphql', {\n  method: 'POST',\n  headers: { 'Content-Type': 'application/json' },\n  body: JSON.stringify({\n    query: \`${customQuery.replace(/`/g, '\\`')}\`,\n    variables: {} // Add your variables here\n  })\n});\n\nconst data = await response.json();\nconsole.log(data);\n\`\`\``;
+  
+  return { content: [{ type: "text", text: explanation }] };
+}
+
 // Start server with robust error handling
 async function main() {
   try {
@@ -3957,8 +4630,8 @@ async function main() {
     };
     
     await server.connect(transport);
-          console.error("🚀 DeSo MCP Server v3.0 connected successfully with 9 comprehensive tools!");
-    console.error("🛠️ NEW: Advanced debugging guide, implementation patterns, and UI component library included!");
+          console.error("🚀 DeSo MCP Server v3.0 connected successfully with 10 comprehensive tools!");
+    console.error("🛠️ NEW: Advanced debugging guide, implementation patterns, UI component library, and GraphQL helper included!");
     
     // Keep process alive
     process.on('SIGINT', () => {

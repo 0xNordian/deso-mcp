@@ -7,6 +7,8 @@ A comprehensive Model Context Protocol (MCP) server that provides **complete DeS
 - **🏗️ Implementation Patterns**: Best practices learned from building production DeSo apps
 - **🎨 DeSo UI Component Library**: Complete frontend component system with 40+ ready-to-use React components
 - **📦 Component Installation**: Automated shadcn CLI integration with installation commands and examples
+- **🔍 GraphQL Query Builder**: Natural language to GraphQL conversion with complete DeSo blockchain schema coverage
+- **📊 Blockchain Data Access**: Query user profiles, posts, followers, NFTs, and more with ready-to-use GraphQL queries
 - **📱 Complete Example App**: Full DeSo messaging application with Next.js, TypeScript, and Tailwind
 - **🐛 Real Debugging Experience**: Solutions based on actual debugging sessions and common pitfalls
 
@@ -28,6 +30,8 @@ This MCP server transforms Cursor's AI assistant into a **DeSo development exper
 - **Backend Integration**: Direct mapping to `routes/transaction.go` and other backend files
 - **🎨 UI Component Library**: 40+ professional React components for DeSo applications
 - **📦 Component Installation**: Automated shadcn CLI commands and dependency management
+- **🔍 GraphQL Query Builder**: Convert natural language questions to optimized GraphQL queries
+- **📊 Blockchain Data Explorer**: Complete access to DeSo's GraphQL API with 15,000+ schema lines
 - **🛠️ Debugging Solutions**: Real fixes for common DeSo integration problems
 - **🏗️ Best Practices**: Implementation patterns from production DeSo applications
 
@@ -49,10 +53,14 @@ This MCP server transforms Cursor's AI assistant into a **DeSo development exper
 
 7. **🎨 `deso_ui_components`** - Complete DeSo UI component library with installation and usage examples
 
+### **Data Query Tools (NEW in v3.0)**
+
+8. **🔍 `deso_graphql_helper`** - GraphQL query builder and blockchain data explorer
+
 ### **Advanced Debugging Tools (NEW in v3.0)**
 
-8. **🛠️ `deso_debugging_guide`** - Comprehensive debugging for common DeSo issues
-9. **🏗️ `deso_implementation_patterns`** - Best practices from real DeSo application development
+9. **🛠️ `deso_debugging_guide`** - Comprehensive debugging for common DeSo issues
+10. **🏗️ `deso_implementation_patterns`** - Best practices from real DeSo application development
 
 ## 🛠️ Complete Tool Reference
 
@@ -168,7 +176,29 @@ Show me complete layout patterns for a Twitter-like app
 Search for components related to user profiles
 ```
 
-### 8. **`deso_debugging_guide`** - Debugging Guide (NEW in v3.0)
+### 8. **`deso_graphql_helper`** - GraphQL Query Builder (NEW in v3.0)
+GraphQL query builder and schema explorer for DeSo blockchain data. Converts natural language questions into optimized GraphQL queries and provides complete blockchain data access.
+
+**Parameters:**
+- `action` (required): Action to perform with GraphQL
+  - Options: `"query"`, `"schema"`, `"examples"`, `"build"`, `"explain"`
+- `queryType` (optional): Type of query to build or explain
+  - Options: `"user"`, `"posts"`, `"followers"`, `"following"`, `"likes"`, `"diamonds"`, `"messages"`, `"nfts"`, `"custom"`
+- `username` (optional): Username to query for (e.g., 'nader')
+- `publicKey` (optional): Public key to query for
+- `question` (optional): Natural language question to convert to GraphQL
+- `customQuery` (optional): Custom GraphQL query to explain or validate
+
+**Example Usage:**
+```
+Convert this question to GraphQL: "How many followers does nader have?"
+Generate a GraphQL query to get user posts with engagement metrics
+Explain the DeSo GraphQL schema for user accounts
+Build a query to find when nader last posted
+Show me GraphQL examples for getting user diamonds and NFTs
+```
+
+### 9. **`deso_debugging_guide`** - Debugging Guide (NEW in v3.0)
 Comprehensive debugging guide for common DeSo integration issues with real solutions.
 
 **Parameters:**
@@ -183,7 +213,7 @@ Show me how to fix infinite loops in React DeSo components
 Debug DeSo authentication problems with code examples
 ```
 
-### 9. **`deso_implementation_patterns`** - Implementation Patterns (NEW in v3.0)
+### 10. **`deso_implementation_patterns`** - Implementation Patterns (NEW in v3.0)
 Best practices and implementation patterns learned from real DeSo application development.
 
 **Parameters:**
@@ -236,6 +266,82 @@ import { PostCard } from '@/components/deso-ui/post-card';
   actions={{ comments: 5, likes: 25, reposts: 3 }}
 />
 ```
+
+## 🔍 DeSo GraphQL Query Builder Integration
+
+The MCP server now includes **complete GraphQL integration** with DeSo's blockchain data, providing:
+
+### **Natural Language to GraphQL:**
+Convert plain English questions into optimized GraphQL queries:
+
+```
+Question: "How many followers does nader have?"
+↓
+Generated GraphQL:
+query GetFollowerCount($username: String!) {
+  accounts(filter: { username: { equalToInsensitive: $username } }) {
+    nodes {
+      username
+      followers { totalCount }
+    }
+  }
+}
+```
+
+### **Complete Schema Coverage:**
+- **15,574 lines** of GraphQL schema fully mapped
+- **User profiles** with follower/following counts, creator coins
+- **Posts** with engagement metrics, timestamps, media
+- **Social interactions** - likes, diamonds, comments, reposts
+- **NFT marketplace** data - bids, sales, royalties
+- **Messaging** - DMs and group conversations
+- **Financial data** - creator coin prices, transactions
+
+### **Smart Query Optimization:**
+- **Case-insensitive lookups** for usernames
+- **Efficient pagination** with proper `first` parameters
+- **Relationship traversal** through nested GraphQL fields
+- **Count optimization** using `totalCount` without fetching all records
+- **Proper sorting** with `orderBy: [TIMESTAMP_DESC]` for recent content
+
+### **Ready-to-Use Query Templates:**
+```javascript
+// Get user profile with all metrics
+const userQuery = `
+  query GetUser($username: String!) {
+    accounts(filter: { username: { equalToInsensitive: $username } }) {
+      nodes {
+        username
+        description
+        profilePic
+        followers { totalCount }
+        following { totalCount }
+        posts { totalCount }
+        coinPriceDesoNanos
+      }
+    }
+  }
+`;
+
+// Execute the query
+const response = await fetch('https://graphql.deso.com/graphql', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ 
+    query: userQuery, 
+    variables: { username: "nader" } 
+  })
+});
+```
+
+### **Supported Data Types:**
+- **👤 Users**: Profiles, followers, following, creator coins
+- **📝 Posts**: Content, engagement, timestamps, media
+- **💎 Diamonds**: Sent/received with levels and recipients
+- **❤️ Likes**: User interactions with posts
+- **🖼️ NFTs**: Marketplace data, bids, ownership
+- **💬 Messages**: DMs and group conversations
+- **💰 Financial**: Creator coin prices, transactions
 
 ## 🎯 Real-World Example: DeSo Messaging App
 
@@ -362,6 +468,14 @@ Once configured, you can ask Cursor's AI assistant questions like:
 - *"Find components for user profiles and authentication"*
 - *"Create a media gallery layout with DeSo UI components"*
 
+### **GraphQL Data Queries**
+- *"Convert this to GraphQL: How many followers does nader have?"*
+- *"Generate a query to get user posts with engagement metrics"*
+- *"Show me the GraphQL schema for DeSo user accounts"*
+- *"Build a query to find when a user last posted"*
+- *"Get GraphQL examples for diamonds and NFT data"*
+- *"Explain this GraphQL query and optimize it"*
+
 ### **Debugging & Troubleshooting**
 - *"Help me debug DeSo message decryption that's returning undefined"*
 - *"Fix infinite loops in my React DeSo authentication component"*
@@ -402,13 +516,16 @@ echo '{"jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {"name": "de
 
 # Test UI components
 echo '{"jsonrpc": "2.0", "id": 4, "method": "tools/call", "params": {"name": "deso_ui_components", "arguments": {"action": "explore", "category": "social"}}}' | node deso-mcp.js
+
+# Test GraphQL helper
+echo '{"jsonrpc": "2.0", "id": 5, "method": "tools/call", "params": {"name": "deso_graphql_helper", "arguments": {"action": "build", "question": "How many followers does nader have?"}}}' | node deso-mcp.js
 ```
 
 ## 📁 Project Structure
 
 ```
 deso-mcp/
-├── deso-mcp.js            # Main MCP server implementation (v3.0 with UI components)
+├── deso-mcp.js            # Main MCP server implementation (v3.0 with UI + GraphQL)
 ├── deso-mcp-final.js      # Legacy comprehensive server (v3.0)
 ├── mcp-server.js          # Legacy server (v2.3)
 ├── package.json           # Dependencies and scripts
@@ -418,7 +535,8 @@ deso-mcp/
 │   ├── docs/             # DeSo documentation
 │   ├── backend/          # DeSo backend code
 │   ├── deso-js/          # DeSo JavaScript SDK
-│   └── deso-ui/          # DeSo UI component library
+│   ├── deso-ui/          # DeSo UI component library
+│   └── graphql/          # DeSo GraphQL schema (15,574 lines)
 ├── example-app/          # Complete DeSo messaging application
 │   ├── src/              # Next.js app source
 │   ├── package.json      # App dependencies
@@ -431,12 +549,12 @@ deso-mcp/
 ### MCP Server Not Connecting
 
 1. **Check the path** in `.cursor/mcp.json` is absolute and correct
-2. **Update to use `deso-mcp.js`** (latest) instead of `deso-mcp-final.js` or `mcp-server.js`
+2. **Update to use `deso-mcp.js`** (latest with UI + GraphQL) instead of `deso-mcp-final.js` or `mcp-server.js`
 3. **Restart Cursor** completely
 4. **Check server runs manually:**
    ```bash
    node deso-mcp.js
-   # Should output: "🚀 DeSo MCP Server v3.0 connected successfully with 9 comprehensive tools!"
+   # Should output: "🚀 DeSo MCP Server v3.0 connected successfully with 10 comprehensive tools!"
    ```
 
 ### Tools Not Available in Chat
@@ -544,6 +662,8 @@ echo '{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "de
 ✅ **Generate production-ready code** for any DeSo operation in multiple languages  
 ✅ **Build beautiful UIs** with 40+ professional React components from DeSo UI library  
 ✅ **Install components instantly** with automated shadcn CLI integration  
+✅ **Query blockchain data** with natural language to GraphQL conversion  
+✅ **Access complete DeSo data** through optimized GraphQL queries (15,574 schema lines)  
 ✅ **Debug real DeSo integration problems** with tested solutions  
 ✅ **Implement best practices** learned from production DeSo applications  
 ✅ **Understand DeSo architecture** with deep technical explanations  

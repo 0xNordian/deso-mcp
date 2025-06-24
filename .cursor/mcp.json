@@ -2,7 +2,7 @@
   "mcpServers": {
     "deso-mcp-final": {
       "command": "/opt/homebrew/bin/node",
-      "args": ["/Users/mossified/Sites/deso-mcp/deso-mcp-final.js"],
+      "args": ["/Users/mossified/Sites/deso-mcp/deso-mcp.js"],
       "cwd": "/Users/mossified/Sites/deso-mcp"
     }
   }
