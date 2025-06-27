@@ -7,8 +7,8 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install dependencies and pm2 for process management
+RUN npm ci --only=production && npm install -g pm2
 
 # Copy the MCP server code
 COPY deso-mcp.js ./
@@ -24,12 +24,12 @@ RUN adduser -S mcp -u 1001
 RUN chown -R mcp:nodejs /app
 USER mcp
 
-# Expose port (optional, for health checks)
+# Expose port for health checks
 EXPOSE 3000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "console.log('MCP server health check passed')" || exit 1
 
-# Default command
-CMD ["node", "deso-mcp.js"] 
+# Use pm2 to keep process running
+CMD ["pm2-runtime", "start", "deso-mcp.js", "--name", "mcp-server"]
