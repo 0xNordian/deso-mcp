@@ -41,7 +41,7 @@ import http from 'http';
 
 // Get port from environment variable or default to 3000
 const PORT = process.env.PORT || 3000;
-const HOST = process.env.HOST || 'localhost';
+const HOST = process.env.HOST || '0.0.0.0'; // Bind to all interfaces for Docker compatibility
 
 // Create server with explicit error handling
 const server = new Server(

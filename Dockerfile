@@ -29,9 +29,9 @@ USER mcp
 # Expose port for HTTP MCP server
 EXPOSE 3000
 
-# Health check via HTTP
+# Health check via HTTP - simple connectivity test
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3000/ || exit 1
+  CMD curl -s http://localhost:3000/ -H "Accept: application/json, text/event-stream" | grep -q "jsonrpc" || exit 1
 
 # Use pm2 to keep process running
 CMD ["pm2-runtime", "start", "deso-mcp.js", "--name", "mcp-server"]
