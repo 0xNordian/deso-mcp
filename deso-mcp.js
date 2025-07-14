@@ -30,13 +30,18 @@
  */
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import fs from 'fs/promises';
 import path from 'path';
+import http from 'http';
+
+// Get port from environment variable or default to 3000
+const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || '0.0.0.0'; // Bind to all interfaces for Docker compatibility
 
 // Create server with explicit error handling
 const server = new Server(
@@ -4622,21 +4627,84 @@ function explainGraphQLQuery(customQuery) {
 // Start server with robust error handling
 async function main() {
   try {
-    const transport = new StdioServerTransport();
+    // Create HTTP transport for MCP (stateless mode for simpler integration)
+    const transport = new StreamableHTTPServerTransport({
+      sessionIdGenerator: undefined, // Stateless mode
+      enableJsonResponse: true // Enable JSON responses instead of SSE for simpler integration
+    });
     
-    // Add transport error handling
-    transport.onerror = (error) => {
-      console.error("DeSo MCP Transport error:", error);
-    };
-    
+    // Connect the MCP server to the transport
     await server.connect(transport);
-          console.error("🚀 DeSo MCP Server v3.0 connected successfully with 10 comprehensive tools!");
-    console.error("🛠️ NEW: Advanced debugging guide, implementation patterns, UI component library, and GraphQL helper included!");
     
-    // Keep process alive
+    // Create HTTP server to handle the transport
+    const httpServer = http.createServer(async (req, res) => {
+      // Set CORS headers
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, DELETE');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Session-Id');
+      res.setHeader('Access-Control-Max-Age', '86400');
+      
+      // Handle CORS preflight requests
+      if (req.method === 'OPTIONS') {
+        res.writeHead(200);
+        res.end();
+        return;
+      }
+      
+      // Handle MCP requests
+      if (req.method === 'POST' || req.method === 'GET' || req.method === 'DELETE') {
+        let body = '';
+        if (req.method === 'POST') {
+          req.on('data', chunk => {
+            body += chunk.toString();
+          });
+          req.on('end', () => {
+            const parsedBody = body ? JSON.parse(body) : undefined;
+            transport.handleRequest(req, res, parsedBody);
+          });
+        } else {
+          transport.handleRequest(req, res);
+        }
+        return;
+      }
+      
+      // 404 for other routes
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ 
+        error: 'Not found',
+        message: 'This is a Model Context Protocol server. Send JSON-RPC requests to this endpoint.'
+      }));
+    });
+    
+    // Start the HTTP server
+    httpServer.listen(PORT, HOST, () => {
+      console.error(`🚀 DeSo MCP Server v3.0 running on http://${HOST}:${PORT}`);
+      console.error("🛠️ NEW: Advanced debugging guide, implementation patterns, UI component library, and GraphQL helper included!");
+      console.error(`📡 MCP endpoint available at: http://${HOST}:${PORT}/`);
+      console.error(`🔧 Tools available: 10 comprehensive DeSo development tools`);
+    });
+    
+    // Handle server errors
+    httpServer.on('error', (error) => {
+      console.error("HTTP Server error:", error);
+      process.exit(1);
+    });
+    
+    // Graceful shutdown handling
     process.on('SIGINT', () => {
       console.error("DeSo MCP Server shutting down...");
-      process.exit(0);
+      httpServer.close(() => {
+        transport.close?.();
+        process.exit(0);
+      });
+    });
+    
+    process.on('SIGTERM', () => {
+      console.error("DeSo MCP Server shutting down...");
+      httpServer.close(() => {
+        transport.close?.();
+        process.exit(0);
+      });
     });
     
   } catch (error) {

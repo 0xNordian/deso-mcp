@@ -1,20 +1,35 @@
 {
-  "name": "deso-mcp",
-  "version": "2.3.0",
+  "name": "deso-mcp-server",
+  "version": "3.0.0",
+  "description": "Comprehensive DeSo Development Assistant MCP Server with HTTP transport",
+  "main": "deso-mcp.js",
   "type": "module",
-  "main": "mcp-server.js",
   "scripts": {
-    "start": "node mcp-server.js",
-    "dev": "node --watch mcp-server.js",
-    "test": "echo '{\"jsonrpc\": \"2.0\", \"id\": 1, \"method\": \"tools/list\"}' | node mcp-server.js",
-    "test-follow": "echo '{\"jsonrpc\": \"2.0\", \"id\": 1, \"method\": \"tools/call\", \"params\": {\"name\": \"deso_api_explorer\", \"arguments\": {\"endpoint\": \"create-follow-txn-stateless\", \"includeCode\": true}}}' | node mcp-server.js"
+    "start": "node deso-mcp.js",
+    "dev": "node --watch deso-mcp.js",
+    "test": "node test-http.js",
+    "docker:build": "docker build -t deso-mcp-server .",
+    "docker:run": "docker run -p 3000:3000 -e PORT=3000 -e HOST=0.0.0.0 deso-mcp-server"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^0.6.0",
-    "express": "^5.1.0"
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "deso",
+    "blockchain",
+    "development",
+    "debugging",
+    "http"
+  ],
+  "author": "DeSo Development Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/deso-protocol/mcp-server"
   }
 }
